@@ -1,37 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Coming Soon</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
-  <meta name="description" content="We're cooking something awesome. Stay tuned!" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Back Office - Coming Soon</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #2b5876, #4e4376);
+      color: #fff;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 600px;
+      padding: 20px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: #ffde59;
+    }
+
+    .contact {
+      margin-top: 20px;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="logo">🚧</div>
-    <h1>Coming&nbsp;Soon</h1>
-    <p class="tagline">We're building something exciting. Check back shortly.</p>
-
-    <form id="notify-form" class="notify" onsubmit="return false;">
-      <input type="email" id="email" placeholder="Enter your email to get notified" required />
-      <button id="notify-btn" type="submit">Notify me</button>
-      <div id="msg" class="msg" role="status" aria-live="polite"></div>
-    </form>
-
-    <div class="social">
-      <a href="#" aria-label="Twitter/X">X</a>
-      <a href="#" aria-label="Instagram">Instagram</a>
-      <a href="#" aria-label="LinkedIn">LinkedIn</a>
+  <div class="container">
+    <h1>🚀 Virtual Back Office</h1>
+    <p>Automate all your business activities to <span class="highlight">optimally utilise resources</span>.</p>
+    <p><strong>We are coming soon...</strong></p>
+    <div class="contact">
+      📞 Contact: 7007902103
     </div>
-
-    <footer>
-      <span id="year"></span> © Your Brand
-    </footer>
-  </main>
-  <script src="script.js"></script>
+  </div>
 </body>
 </html>
