@@ -74,13 +74,13 @@
 
         async function fetchData(selectedWindow) {
             const sheetId = '12hMlwNb1TfQuC_rh9Wuz1iaLdMk_ftwtDRRYcTuAoEg';
-            const sheetName = 'TheMaster'; // Adjusted to 'TheMaster' based on likely casing; change if different
+            const sheetName = 'TheMaster';
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
 
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch data. Ensure the sheet is shared publicly.');
+                    throw new Error('Failed to fetch data. Status: ' + response.status);
                 }
                 const csvText = await response.text();
                 const rows = parseCSV(csvText);
@@ -89,7 +89,7 @@
                 const data = rows.slice(1).map(row => ({
                     window: row[0] || '',      // Column A (index 0)
                     pon: row[33] || '',        // Column AH (index 33)
-                    userId: row[13] || '',     // Column N (index 13)
+                    userId: row[19] || '',     // Column T (index 19) - down users user ID
                     mobile: row[15] || '',     // Column P (index 15)
                     location: row[16] || '',   // Column Q (index 16)
                     timestamp: row[27] || '',  // Column AB (index 27)
@@ -105,15 +105,34 @@
                 populateTable(filtered);
             } catch (error) {
                 console.error(error);
-                alert('Error fetching data: ' + error.message + '. Make sure the Google Sheet is shared with "Anyone with the link" as "Viewer".');
+                alert('Error fetching data: ' + error.message + '. Make sure the Google Sheet is published to the web for public access without login. Go to File > Share > Publish to the web, select the sheet "TheMaster", choose CSV, and note if the URL works. Alternatively, ensure it\'s shared with "Anyone with the link" as "Viewer" and test the fetch URL in browser (it should download CSV without login prompt). Sheet name is case-sensitive.');
             }
         }
 
         function parseCSV(text) {
-            const lines = text.split(/\r?\n/);
-            return lines.map(line => {
-                return line.split(',').map(field => field.trim().replace(/^["']|["']$/g, ''));
-            });
+            // Improved CSV parsing to handle quoted fields with commas
+            const lines = [];
+            let line = [];
+            let inQuote = false;
+            let field = '';
+            for (let char of text + '\n') {  // Add newline to handle last field
+                if (char === '"' && !inQuote) {
+                    inQuote = true;
+                } else if (char === '"' && inQuote) {
+                    inQuote = false;
+                } else if (char === ',' && !inQuote) {
+                    line.push(field.trim());
+                    field = '';
+                } else if (char === '\n' && !inQuote) {
+                    line.push(field.trim());
+                    lines.push(line);
+                    line = [];
+                    field = '';
+                } else {
+                    field += char;
+                }
+            }
+            return lines;
         }
 
         function sortTable(key) {
@@ -138,6 +157,9 @@
                     valA = parseFloat(valA) || 0;
                     valB = parseFloat(valB) || 0;
                 }
+
+                if (isNaN(valA)) valA = 0;
+                if (isNaN(valB)) valB = 0;
 
                 if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -169,4 +191,3 @@
     </script>
 </body>
 </html>
-                                                                            
