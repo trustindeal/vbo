@@ -272,6 +272,16 @@
     document.body.classList.toggle("light");
   }
 
+  // ✅ Default Mode by Time (Day = Light, Night = Dark)
+  window.onload = () => {
+    let hour = new Date().getHours();
+    if (hour >= 6 && hour < 18) {
+      document.body.classList.add("light"); // Daytime = Light Mode
+    } else {
+      document.body.classList.remove("light"); // Nighttime = Dark Mode
+    }
+  };
+
   // Toast Message
   function showToast() {
     let toast = document.getElementById("toast");
