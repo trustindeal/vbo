@@ -1,174 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-BGW8N9PZMG"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-BGW8N9PZMG');
-</script>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Virtual Back Office | Automate Business & Network Management</title>
 
-<!-- ✅ SEO Meta -->
+<!-- ✅ SEO + Social meta intact -->
 <meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Contact us at 7007902103. Coming soon!">
 <meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement">
-<meta name="author" content="Virtual Back Office">
-
-<!-- ✅ Social Share -->
-<meta property="og:title" content="Virtual Back Office - Coming Soon">
-<meta property="og:description" content="Automate your business and network operations with Virtual Back Office. We are coming soon! Contact: 7007902103">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://vbo.co.in">
-<meta property="og:image" content="https://vbo.co.in/preview.jpg">
+<meta name="author" content="Virtual Back Office" />
+<meta property="og:title" content="Virtual Back Office - Coming Soon" />
+<meta property="og:description" content="Automate your business and network operations with Virtual Back Office. We are coming soon! Contact: 7007902103" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vbo.co.in" />
+<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
 
 <style>
+  /* ===== Global Style (Apple Inspired) ===== */
   body {
     margin: 0;
     padding: 0;
-    font-family: "SF Pro Display", "Segoe UI", sans-serif;
-    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, #0a0a0a, #1c1c1e);
+    color: #f5f5f7;
     text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* ✅ Top Menu */
+  /* ===== Navigation Menu ===== */
   nav {
+    position: fixed;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border-radius: 40px;
+    padding: 10px 25px;
     display: flex;
-    justify-content: center;
-    gap: 25px;
-    padding: 15px 10px;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(6px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    gap: 20px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+    z-index: 1000;
   }
   nav a {
-    color: #fff;
-    font-weight: 500;
     text-decoration: none;
-    font-size: 1rem;
-    transition: 0.3s;
+    color: #f5f5f7;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
   }
   nav a:hover {
+    background: rgba(255,255,255,0.15);
     color: #00d4ff;
   }
 
+  /* ===== Headings ===== */
   h1 {
-    font-size: 2.5rem;
-    margin: 20px 0 10px;
+    font-size: 2.8rem;
+    margin-top: 100px;
+    background: linear-gradient(90deg,#00d4ff,#4facfe,#00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
-
   h2 {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 400;
-    margin-bottom: 25px;
-    color: #d1d1d1;
+    color: #a1a1a6;
+    margin-bottom: 30px;
   }
 
-  .highlight {
-    color: #00d4ff;
-    font-weight: bold;
-  }
+  .highlight { color: #00d4ff; font-weight: 600; }
 
   p {
     max-width: 700px;
-    line-height: 1.6;
+    line-height: 1.7;
     font-size: 1rem;
-    margin: 0 auto 20px;
+    margin: 0 auto 18px;
+    color: #d1d1d6;
   }
 
+  /* ===== Contact Button ===== */
   .contact {
-    margin-top: 20px;
-    font-size: 1.2rem;
-    background: #00d4ff;
+    margin-top: 25px;
+    display: inline-block;
+    font-size: 1.05rem;
+    background: linear-gradient(90deg,#00d4ff,#4facfe);
     color: #000;
-    padding: 10px 25px;
-    border-radius: 25px;
-    text-decoration: none;
+    padding: 12px 28px;
+    border-radius: 30px;
     font-weight: bold;
-    transition: background 0.3s;
+    text-decoration: none;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
-  .contact:hover { background: #00a5c8; }
+  .contact:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,212,255,0.35);
+  }
 
-  /* ✅ Countdown Timer */
+  /* ===== Countdown Timer ===== */
   #countdown {
-    margin: 30px auto;
     display: flex;
     justify-content: center;
     gap: 15px;
+    margin: 40px 0;
   }
   .time-box {
-    background: rgba(255,255,255,0.1);
-    padding: 15px 20px;
-    border-radius: 15px;
-    font-size: 1.2rem;
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 15px 18px;
     min-width: 70px;
-    position: relative;
-    overflow: hidden;
+    box-shadow: inset 0 0 8px rgba(255,255,255,0.05);
+    animation: pulse 2s infinite alternate;
   }
   .time-box span {
     display: block;
-    font-size: 1.8rem;
-    font-weight: bold;
-    background: linear-gradient(90deg, #00d4ff, #ff00ff, #00ff88);
+    font-size: 1.7rem;
+    font-weight: 600;
+    background: linear-gradient(90deg,#00f2fe,#4facfe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: pulse 2s infinite alternate;
+  }
+  .time-box small {
+    font-size: 0.75rem;
+    color: #a1a1a6;
   }
   @keyframes pulse {
-    0% { transform: scale(1); opacity: 0.9; }
-    100% { transform: scale(1.1); opacity: 1; }
+    from { transform: scale(1); }
+    to { transform: scale(1.05); }
   }
 
+  /* ===== Footer ===== */
   footer {
-    margin-top: 50px;
-    padding: 15px;
-    font-size: 0.85rem;
-    color: #aaa;
-  }
-
-  /* ✅ Toast */
-  #toast {
-    visibility: hidden;
-    min-width: 200px;
-    background: #00d4ff;
-    color: #000;
-    text-align: center;
-    border-radius: 25px;
-    padding: 10px;
     position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 999;
-    font-weight: bold;
+    bottom: 15px;
+    font-size: 0.85rem;
+    color: #8e8e93;
   }
-  #toast.show {
-    visibility: visible;
-    animation: fadein 0.5s, fadeout 0.5s 2s;
-  }
-  @keyframes fadein { from { bottom: 10px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
-  @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 10px; opacity: 0; } }
 </style>
 </head>
 <body>
 
 <!-- ✅ Menu -->
 <nav>
-  <a href="#" onclick="showToast()">Login</a>
-  <a href="#" onclick="showToast()">Join our team</a>
-  <a href="#" onclick="showToast()">Query</a>
-  <a href="#" onclick="showToast()">Contact us</a>
-  <a href="#" onclick="showToast()">About us</a>
+  <a href="#" onclick="notify('Login')">Login</a>
+  <a href="#" onclick="notify('Join our team')">Join our team</a>
+  <a href="#" onclick="notify('Query')">Query</a>
+  <a href="#" onclick="notify('Contact us')">Contact us</a>
+  <a href="#" onclick="notify('About us')">About us</a>
 </nav>
 
+<!-- ✅ Content (unchanged text for SEO) -->
 <h1>🚀 Virtual Back Office</h1>
 <h2>Automate all your business and network operations</h2>
 
@@ -176,7 +164,7 @@
   At <span class="highlight">Virtual Back Office</span>, we specialise in 
   <strong>business automation</strong>, <strong>fiber line marking</strong>, 
   <strong>fiber splitter marking</strong>, and complete 
-  <strong>network complaint management</strong>.
+  <strong>network complaint management</strong>.  
 </p>
 
 <p>
@@ -184,56 +172,58 @@
   <em>customer query handling</em>, <em>leads handling</em>, and 
   <em>business accounting</em>. We also provide 
   <strong>ISP partner support</strong> and <strong>network management</strong> 
-  tools to help optimise resources and boost efficiency.
+  tools to help optimise resources and boost efficiency.  
 </p>
 
 <p>
   With our expertise in <strong>business flow enhancement</strong> and 
   <strong>resource optimisation</strong>, you can focus on growth while 
-  we handle your back office operations.
+  we handle your back office operations.  
 </p>
 
-<!-- ✅ Timer -->
-<div id="countdown">
-  <div class="time-box"><span id="days">00</span>Days</div>
-  <div class="time-box"><span id="hours">00</span>Hrs</div>
-  <div class="time-box"><span id="minutes">00</span>Min</div>
-  <div class="time-box"><span id="seconds">00</span>Sec</div>
-  <div class="time-box"><span id="ms">000</span>ms</div>
-</div>
-
 <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
+
+<!-- ✅ Countdown -->
+<div id="countdown"></div>
 
 <footer>
   Virtual Back Office © 2025 | We are coming soon!
 </footer>
 
-<!-- ✅ Toast -->
-<div id="toast">Coming Soon!!</div>
-
 <script>
-function showToast() {
-  let x = document.getElementById("toast");
-  x.className = "show";
-  setTimeout(() => { x.className = x.className.replace("show", ""); }, 2500);
-}
+  // Toast Notification
+  function notify(text) {
+    alert(text + " — Coming Soon!!");
+  }
 
-/* Countdown */
-const endDate = new Date("Sep 10, 2025 00:00:00").getTime();
-function updateTimer() {
-  const now = new Date().getTime();
-  const distance = endDate - now;
+  // Countdown Timer
+  const targetDate = new Date("September 10, 2025 23:59:59").getTime();
+  const countdown = document.getElementById("countdown");
 
-  if (distance < 0) return;
+  function updateTimer() {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
 
-  document.getElementById("days").innerText = Math.floor(distance / (1000*60*60*24));
-  document.getElementById("hours").innerText = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
-  document.getElementById("minutes").innerText = Math.floor((distance % (1000*60*60)) / (1000*60));
-  document.getElementById("seconds").innerText = Math.floor((distance % (1000*60)) / 1000);
-  document.getElementById("ms").innerText = ("00" + Math.floor((distance % 1000))).slice(-3);
-}
-setInterval(updateTimer, 50);
+    if (distance < 0) {
+      countdown.innerHTML = "<h3>🎉 We have Launched!</h3>";
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
+    const minutes = Math.floor((distance % (1000*60*60)) / (1000*60));
+    const seconds = Math.floor((distance % (1000*60)) / 1000);
+    const ms = Math.floor((distance % 1000) / 10); // hundredths
+
+    countdown.innerHTML = `
+      <div class="time-box"><span>${days}</span><small>Days</small></div>
+      <div class="time-box"><span>${hours}</span><small>Hours</small></div>
+      <div class="time-box"><span>${minutes}</span><small>Minutes</small></div>
+      <div class="time-box"><span>${seconds}</span><small>Seconds</small></div>
+      <div class="time-box"><span>${ms}</span><small>ms</small></div>
+    `;
+  }
+  setInterval(updateTimer, 10);
 </script>
-
 </body>
 </html>
