@@ -2,223 +2,235 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Virtual Back Office | Coming Soon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Virtual Back Office | Automate Business & Network Management</title>
 
-<!-- SEO intact -->
+<!-- ✅ SEO Meta -->
 <meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Contact us at 7007902103. Coming soon!">
-<meta name="keywords" content="Virtual Back Office, Business Automation, Fiber line marking, Network management, ISP partner support, Business accounting, Business flow enhancement">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement">
 <meta name="author" content="Virtual Back Office" />
 
+<!-- ✅ Social Share -->
+<meta property="og:title" content="Virtual Back Office - Coming Soon" />
+<meta property="og:description" content="Automate your business and network operations with Virtual Back Office. We are coming soon! Contact: 7007902103" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vbo.co.in" />
+<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
+
 <style>
-  /* ===== Base Apple Style ===== */
+  /* -------- Reset -------- */
+  * { margin:0; padding:0; box-sizing:border-box; }
+
   body {
-    margin: 0;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: linear-gradient(160deg,#0a0a0a,#1c1c1e);
-    color: #f5f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+    background: var(--bg);
+    color: var(--text);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    padding: 20px;
     text-align: center;
-    -webkit-font-smoothing: antialiased;
+    transition: background 0.4s, color 0.4s;
   }
 
-  /* ===== Top Nav (Floating like iOS) ===== */
-  nav {
-    position: fixed;
-    top: env(safe-area-inset-top, 10px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(14px);
-    border-radius: 30px;
-    padding: 6px 18px;
-    display: flex;
-    gap: 15px;
-    z-index: 1000;
+  :root {
+    --bg: linear-gradient(to bottom right, #f7f7f7, #eaeaea);
+    --text: #111;
+    --card: #fff;
+    --accent: #007aff;
   }
-  nav a {
-    text-decoration: none;
-    color: #f5f5f7;
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 6px 10px;
-    border-radius: 16px;
-    transition: all 0.25s ease;
-  }
-  nav a:hover, nav a:active {
-    background: rgba(255,255,255,0.15);
-    color: #00d4ff;
+  body.dark {
+    --bg: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+    --text: #fff;
+    --card: #1c1c1e;
+    --accent: #0a84ff;
   }
 
-  /* ===== Hero Section ===== */
   h1 {
-    font-size: 2rem;
-    margin: 100px 20px 10px;
-    background: linear-gradient(90deg,#00d4ff,#4facfe,#00f2fe);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+    font-weight: 600;
   }
   h2 {
-    font-size: 1rem;
-    font-weight: 400;
-    color: #a1a1a6;
-    margin: 0 20px 20px;
-  }
-
-  p {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin: 12px 18px;
-    color: #d1d1d6;
-  }
-
-  .highlight { color: #00d4ff; font-weight: 600; }
-
-  /* ===== Contact Button ===== */
-  .contact {
-    margin: 20px auto;
-    display: inline-block;
-    font-size: 1rem;
-    background: linear-gradient(90deg,#00d4ff,#4facfe);
-    color: #000;
-    padding: 12px 28px;
-    border-radius: 28px;
-    font-weight: 600;
-    text-decoration: none;
-    box-shadow: 0 6px 16px rgba(0,212,255,0.25);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-  .contact:active {
-    transform: scale(0.97);
-    box-shadow: 0 4px 10px rgba(0,212,255,0.25);
-  }
-
-  /* ===== Countdown Timer ===== */
-  #countdown {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 25px 0;
-    flex-wrap: wrap;
-  }
-  .time-box {
-    background: rgba(255,255,255,0.07);
-    backdrop-filter: blur(12px);
-    border-radius: 14px;
-    padding: 10px 12px;
-    min-width: 60px;
-    animation: pulse 2s infinite alternate;
-  }
-  .time-box span {
-    display: block;
     font-size: 1.2rem;
-    font-weight: 600;
-    background: linear-gradient(90deg,#00f2fe,#4facfe);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    margin-bottom: 25px;
+    font-weight: 400;
+    color: var(--accent);
   }
-  .time-box small {
-    font-size: 0.7rem;
-    color: #a1a1a6;
+  p {
+    max-width: 700px;
+    margin: 10px auto;
+    line-height: 1.6;
+    font-size: 1rem;
   }
-  @keyframes pulse {
-    from { transform: scale(1); }
-    to { transform: scale(1.05); }
+  .highlight { font-weight: 600; color: var(--accent); }
+
+  /* -------- Contact Button -------- */
+  .contact {
+    display:inline-block;
+    margin-top:20px;
+    padding:12px 24px;
+    font-size:1rem;
+    background:var(--accent);
+    color:#fff;
+    border-radius:28px;
+    font-weight:600;
+    text-decoration:none;
+    transition:0.3s;
+  }
+  .contact:hover { opacity:0.8; }
+
+  /* -------- Menu -------- */
+  .menu {
+    margin: 25px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .menu button {
+    background: var(--card);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 0.95rem;
+    color: var(--text);
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: 0.3s;
+  }
+  .menu button:hover {
+    transform: translateY(-2px);
+    background: var(--accent);
+    color: #fff;
   }
 
-  /* ===== Footer ===== */
+  /* -------- Dark/Light Toggle -------- */
+  .toggle-mode {
+    position: absolute;
+    top:15px;
+    right:15px;
+    background:var(--card);
+    border:none;
+    padding:8px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:0.9rem;
+    color:var(--text);
+    box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  }
+
   footer {
-    font-size: 0.8rem;
-    color: #8e8e93;
-    margin-bottom: env(safe-area-inset-bottom, 10px);
-    padding: 8px;
+    position:absolute;
+    bottom:15px;
+    font-size:0.85rem;
+    color: #aaa;
+  }
+
+  /* -------- Spinner -------- */
+  #loader {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:#000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+  }
+  .spin {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #00d4ff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform:rotate(0deg);}
+    100% { transform:rotate(360deg);}
+  }
+
+  @media (max-width:600px){
+    h1 { font-size:1.8rem; }
+    p { font-size:0.9rem; }
+    .menu button { flex:1 1 40%; }
   }
 </style>
 </head>
 <body>
+<div id="loader"><div class="spin"></div></div>
 
-<!-- ✅ Menu -->
-<nav>
-  <a href="#" onclick="notify('Login')">Login</a>
-  <a href="#" onclick="notify('Join Team')">Team</a>
-  <a href="#" onclick="notify('Query')">Query</a>
-  <a href="#" onclick="notify('Contact')">Contact</a>
-  <a href="#" onclick="notify('About')">About</a>
-</nav>
+<button class="toggle-mode" onclick="toggleMode()">☀️ / 🌙</button>
 
-<!-- ✅ Hero Section -->
-<main>
-  <h1>🚀 Virtual Back Office</h1>
-  <h2>Automate your business and network operations</h2>
+<h1>🚀 Virtual Back Office</h1>
+<h2>Automate all your business and network operations</h2>
 
-  <p>
-    At <span class="highlight">Virtual Back Office</span>, we specialise in 
-    <strong>business automation</strong>, <strong>fiber line marking</strong>, 
-    <strong>fiber splitter marking</strong>, and complete 
-    <strong>network complaint management</strong>.
-  </p>
-  <p>
-    Our solutions streamline <em>customer complaint handling</em>, 
-    <em>customer query handling</em>, <em>leads handling</em>, and 
-    <em>business accounting</em>. We also provide 
-    <strong>ISP partner support</strong> and 
-    <strong>network management</strong> tools to optimise resources.
-  </p>
-  <p>
-    With our expertise in <strong>business flow enhancement</strong> and 
-    <strong>resource optimisation</strong>, you can focus on growth while 
-    we handle your back office operations.
-  </p>
+<div class="menu">
+  <button onclick="toast('Login Coming soon!!')">Login</button>
+  <button onclick="toast('Join our team Coming soon!!')">Join our team</button>
+  <button onclick="toast('Query Coming soon!!')">Query</button>
+  <button onclick="toast('Contact us Coming soon!!')">Contact us</button>
+  <button onclick="toast('About us Coming soon!!')">About us</button>
+</div>
 
-  <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
+<p>
+  At <span class="highlight">Virtual Back Office</span>, we specialise in 
+  <strong>business automation</strong>, <strong>fiber line marking</strong>, 
+  <strong>fiber splitter marking</strong>, and complete 
+  <strong>network complaint management</strong>.  
+</p>
 
-  <!-- Countdown -->
-  <div id="countdown"></div>
-</main>
+<p>
+  Our solutions streamline <em>customer complaint handling</em>, 
+  <em>customer query handling</em>, <em>leads handling</em>, and 
+  <em>business accounting</em>. We also provide 
+  <strong>ISP partner support</strong> and <strong>network management</strong> 
+  tools to help optimise resources and boost efficiency.  
+</p>
+
+<p>
+  With our expertise in <strong>business flow enhancement</strong> and 
+  <strong>resource optimisation</strong>, you can focus on growth while 
+  we handle your back office operations.  
+</p>
+
+<a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
 
 <footer>
   Virtual Back Office © 2025 | We are coming soon!
 </footer>
 
 <script>
-  // Toast (simple alert for now)
-  function notify(text) {
-    alert(text + " — Coming Soon!!");
+  // Loader hide after 3 sec
+  window.addEventListener("load", () => {
+    setTimeout(()=>{ document.getElementById("loader").style.display="none"; }, 3000);
+  });
+
+  // Light/Dark Mode
+  function toggleMode(){
+    document.body.classList.toggle("dark");
   }
 
-  // Countdown Timer
-  const targetDate = new Date("September 10, 2025 23:59:59").getTime();
-  const countdown = document.getElementById("countdown");
-
-  function updateTimer() {
-    const now = new Date().getTime();
-    const distance = targetDate - now;
-
-    if (distance < 0) {
-      countdown.innerHTML = "<h3>🎉 We have Launched!</h3>";
-      return;
-    }
-
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
-    const minutes = Math.floor((distance % (1000*60*60)) / (1000*60));
-    const seconds = Math.floor((distance % (1000*60)) / 1000);
-    const ms = Math.floor((distance % 1000) / 10);
-
-    countdown.innerHTML = `
-      <div class="time-box"><span>${days}</span><small>Days</small></div>
-      <div class="time-box"><span>${hours}</span><small>Hrs</small></div>
-      <div class="time-box"><span>${minutes}</span><small>Min</small></div>
-      <div class="time-box"><span>${seconds}</span><small>Sec</small></div>
-      <div class="time-box"><span>${ms}</span><small>ms</small></div>
-    `;
+  // Toast Message
+  function toast(msg){
+    let t = document.createElement("div");
+    t.innerText = msg;
+    t.style.position="fixed";
+    t.style.bottom="20px";
+    t.style.left="50%";
+    t.style.transform="translateX(-50%)";
+    t.style.background="rgba(0,0,0,0.7)";
+    t.style.color="#fff";
+    t.style.padding="10px 20px";
+    t.style.borderRadius="20px";
+    t.style.fontSize="0.9rem";
+    t.style.zIndex="99999";
+    document.body.appendChild(t);
+    setTimeout(()=>{t.remove();},2000);
   }
-  setInterval(updateTimer, 10);
 </script>
 </body>
 </html>
