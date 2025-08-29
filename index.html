@@ -1,147 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-BGW8N9PZMG"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-BGW8N9PZMG');
-</script>
-
- 
- <link rel="icon" href="favicon.ico?v=2">
-  
-<!-- Favicon (classic) -->
-<link rel="icon" href="favicon.ico" sizes="any">
-
-<!-- PNG favicons for modern browsers -->
-<link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
-<link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
-
-<!-- iOS / Apple -->
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-
-<!-- (Optional) Larger icon for Android/others -->
-<link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
-
-<!-- (Optional) Browser UI color -->
-<meta name="theme-color" content="#0a4a7a">
-
-
-  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Virtual Back Office | Automate Business & Network Management</title>
-  
-  <!-- ✅ SEO Meta -->
-  <meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Contact us at 7007902103. Coming soon!">
-  <meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement">
-  <meta name="author" content="Virtual Back Office" />
-  
-  <!-- ✅ Social Share -->
-  <meta property="og:title" content="Virtual Back Office - Coming Soon" />
-  <meta property="og:description" content="Automate your business and network operations with Virtual Back Office. We are coming soon! Contact: 7007902103" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://vbo.co.in" />
-  <meta property="og:image" content="https://vbo.co.in/preview.jpg" /> <!-- Optional thumbnail -->
+  <title>Virtual Back Office | Coming Soon</title>
+  <meta name="theme-color" content="#0a4a7a" />
 
   <style>
     body {
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1a2a3a);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
       color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       text-align: center;
     }
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
     }
 
-    h2 {
-      font-size: 1.3rem;
-      font-weight: normal;
-      margin-bottom: 25px;
-      color: #d1d1d1;
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .highlight {
-      color: #00d4ff;
-      font-weight: bold;
-    }
-
-    p {
-      max-width: 700px;
-      line-height: 1.6;
-      font-size: 1rem;
-      margin: 0 auto 20px;
-    }
-
-    .contact {
-      margin-top: 20px;
+    .logo {
       font-size: 1.2rem;
+      font-weight: bold;
+      color: #00d4ff;
+    }
+
+    .menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.9);
+      border-radius: 12px;
+      overflow: hidden;
+      animation: slideDown 0.4s ease;
+    }
+
+    .menu a {
+      padding: 12px 20px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 500;
+      display: block;
+      transition: background 0.3s;
+    }
+
+    .menu a:hover {
       background: #00d4ff;
       color: #000;
-      padding: 10px 25px;
-      border-radius: 25px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: background 0.3s ease;
     }
 
-    .contact:hover {
-      background: #00a5c8;
+    .hamburger {
+      cursor: pointer;
+      font-size: 1.6rem;
+    }
+
+    @keyframes slideDown {
+      from {opacity: 0; transform: translateY(-10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    /* Timer */
+    .timer {
+      margin: 40px auto 20px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      display: inline-block;
+      padding: 18px 28px;
+      border-radius: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      animation: glowPulse 2s infinite alternate;
+    }
+
+    .timer span {
+      background: linear-gradient(45deg, #00d4ff, #ff00c3, #ff6600);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      animation: gradientShift 3s infinite linear;
+    }
+
+    @keyframes gradientShift {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    @keyframes glowPulse {
+      from {box-shadow: 0 0 10px #00d4ff;}
+      to {box-shadow: 0 0 25px #ff00c3;}
+    }
+
+    /* Toast */
+    .toast {
+      visibility: hidden;
+      min-width: 200px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 14px;
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%) scale(0.9);
+      font-size: 1rem;
+      opacity: 0;
+      transition: all 0.4s ease;
+    }
+
+    .toast.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 50px;
+      transform: translateX(-50%) scale(1);
     }
 
     footer {
-      position: absolute;
-      bottom: 15px;
-      font-size: 0.85rem;
-      color: #aaa;
+      margin-top: 50px;
+      font-size: 0.9rem;
+      color: #ccc;
+      padding-bottom: 25px;
     }
   </style>
 </head>
 <body>
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="logo">🚀 VBO</div>
+    <div class="hamburger" onclick="toggleMenu()">☰</div>
+    <div class="menu" id="menu">
+      <a href="#" onclick="showToast()">Login</a>
+      <a href="#" onclick="showToast()">Join our team</a>
+      <a href="#" onclick="showToast()">Query</a>
+      <a href="#" onclick="showToast()">Contact us</a>
+      <a href="#" onclick="showToast()">About us</a>
+    </div>
+  </div>
+
   <h1>🚀 Virtual Back Office</h1>
-  <h2>Automate all your business and network operations</h2>
+  <h2>Automating your business & network operations</h2>
 
   <p>
-    At <span class="highlight">Virtual Back Office</span>, we specialise in 
-    <strong>business automation</strong>, <strong>fiber line marking</strong>, 
-    <strong>fiber splitter marking</strong>, and complete 
-    <strong>network complaint management</strong>.  
+    We specialise in <strong>business automation</strong>, 
+    <strong>fiber line marking</strong>, 
+    <strong>network complaint management</strong> and more.  
   </p>
 
-  <p>
-    Our solutions streamline <em>customer complaint handling</em>, 
-    <em>customer query handling</em>, <em>leads handling</em>, and 
-    <em>business accounting</em>. We also provide 
-    <strong>ISP partner support</strong> and <strong>network management</strong> 
-    tools to help optimise resources and boost efficiency.  
-  </p>
-
-  <p>
-    With our expertise in <strong>business flow enhancement</strong> and 
-    <strong>resource optimisation</strong>, you can focus on growth while 
-    we handle your back office operations.  
-  </p>
-
-  <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
+  <!-- Countdown Timer -->
+  <div class="timer" id="countdown">Loading countdown...</div>
 
   <footer>
     Virtual Back Office © 2025 | We are coming soon!
   </footer>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">Coming soon!!</div>
+
+  <script>
+    // Toggle menu
+    function toggleMenu() {
+      const menu = document.getElementById("menu");
+      if (menu.style.display === "flex") {
+        menu.style.display = "none";
+      } else {
+        menu.style.display = "flex";
+      }
+    }
+
+    // Toast function
+    function showToast() {
+      let toast = document.getElementById("toast");
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2000);
+    }
+
+    // Countdown Timer
+    const countdownElement = document.getElementById("countdown");
+    const launchDate = new Date("Sep 10, 2025 00:00:00").getTime();
+
+    setInterval(() => {
+      const now = new Date().getTime();
+      const distance = launchDate - now;
+
+      if (distance < 0) {
+        countdownElement.innerHTML = "🎉 <span>We are Live!</span>";
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      countdownElement.innerHTML = 
+        "<span>" + days + "d</span> " +
+        "<span>" + hours + "h</span> " +
+        "<span>" + minutes + "m</span> " +
+        "<span>" + seconds + "s</span>";
+    }, 1000);
+  </script>
 </body>
 </html>
