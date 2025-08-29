@@ -2,133 +2,128 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Virtual Back Office | Automate Business & Network Management</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Virtual Back Office | Coming Soon</title>
 
-<!-- ✅ SEO + Social meta intact -->
+<!-- SEO intact -->
 <meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Contact us at 7007902103. Coming soon!">
-<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Fiber line marking, Network management, ISP partner support, Business accounting, Business flow enhancement">
 <meta name="author" content="Virtual Back Office" />
-<meta property="og:title" content="Virtual Back Office - Coming Soon" />
-<meta property="og:description" content="Automate your business and network operations with Virtual Back Office. We are coming soon! Contact: 7007902103" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://vbo.co.in" />
-<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
 
 <style>
-  /* ===== Global Style (Apple Inspired) ===== */
+  /* ===== Base Apple Style ===== */
   body {
     margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, #0a0a0a, #1c1c1e);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(160deg,#0a0a0a,#1c1c1e);
     color: #f5f5f7;
-    text-align: center;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
+    text-align: center;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ===== Navigation Menu ===== */
+  /* ===== Top Nav (Floating like iOS) ===== */
   nav {
     position: fixed;
-    top: 15px;
+    top: env(safe-area-inset-top, 10px);
     left: 50%;
     transform: translateX(-50%);
     background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
-    border-radius: 40px;
-    padding: 10px 25px;
+    backdrop-filter: blur(14px);
+    border-radius: 30px;
+    padding: 6px 18px;
     display: flex;
-    gap: 20px;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+    gap: 15px;
     z-index: 1000;
   }
   nav a {
     text-decoration: none;
     color: #f5f5f7;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
-    padding: 6px 14px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
+    padding: 6px 10px;
+    border-radius: 16px;
+    transition: all 0.25s ease;
   }
-  nav a:hover {
+  nav a:hover, nav a:active {
     background: rgba(255,255,255,0.15);
     color: #00d4ff;
   }
 
-  /* ===== Headings ===== */
+  /* ===== Hero Section ===== */
   h1 {
-    font-size: 2.8rem;
-    margin-top: 100px;
+    font-size: 2rem;
+    margin: 100px 20px 10px;
     background: linear-gradient(90deg,#00d4ff,#4facfe,#00f2fe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   h2 {
-    font-size: 1.3rem;
+    font-size: 1rem;
     font-weight: 400;
     color: #a1a1a6;
-    margin-bottom: 30px;
+    margin: 0 20px 20px;
+  }
+
+  p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 12px 18px;
+    color: #d1d1d6;
   }
 
   .highlight { color: #00d4ff; font-weight: 600; }
 
-  p {
-    max-width: 700px;
-    line-height: 1.7;
-    font-size: 1rem;
-    margin: 0 auto 18px;
-    color: #d1d1d6;
-  }
-
   /* ===== Contact Button ===== */
   .contact {
-    margin-top: 25px;
+    margin: 20px auto;
     display: inline-block;
-    font-size: 1.05rem;
+    font-size: 1rem;
     background: linear-gradient(90deg,#00d4ff,#4facfe);
     color: #000;
     padding: 12px 28px;
-    border-radius: 30px;
-    font-weight: bold;
+    border-radius: 28px;
+    font-weight: 600;
     text-decoration: none;
+    box-shadow: 0 6px 16px rgba(0,212,255,0.25);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
-  .contact:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,212,255,0.35);
+  .contact:active {
+    transform: scale(0.97);
+    box-shadow: 0 4px 10px rgba(0,212,255,0.25);
   }
 
   /* ===== Countdown Timer ===== */
   #countdown {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin: 40px 0;
+    gap: 10px;
+    margin: 25px 0;
+    flex-wrap: wrap;
   }
   .time-box {
     background: rgba(255,255,255,0.07);
     backdrop-filter: blur(12px);
-    border-radius: 18px;
-    padding: 15px 18px;
-    min-width: 70px;
-    box-shadow: inset 0 0 8px rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 10px 12px;
+    min-width: 60px;
     animation: pulse 2s infinite alternate;
   }
   .time-box span {
     display: block;
-    font-size: 1.7rem;
+    font-size: 1.2rem;
     font-weight: 600;
     background: linear-gradient(90deg,#00f2fe,#4facfe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   .time-box small {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #a1a1a6;
   }
   @keyframes pulse {
@@ -138,10 +133,10 @@
 
   /* ===== Footer ===== */
   footer {
-    position: fixed;
-    bottom: 15px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #8e8e93;
+    margin-bottom: env(safe-area-inset-bottom, 10px);
+    padding: 8px;
   }
 </style>
 </head>
@@ -150,48 +145,48 @@
 <!-- ✅ Menu -->
 <nav>
   <a href="#" onclick="notify('Login')">Login</a>
-  <a href="#" onclick="notify('Join our team')">Join our team</a>
+  <a href="#" onclick="notify('Join Team')">Team</a>
   <a href="#" onclick="notify('Query')">Query</a>
-  <a href="#" onclick="notify('Contact us')">Contact us</a>
-  <a href="#" onclick="notify('About us')">About us</a>
+  <a href="#" onclick="notify('Contact')">Contact</a>
+  <a href="#" onclick="notify('About')">About</a>
 </nav>
 
-<!-- ✅ Content (unchanged text for SEO) -->
-<h1>🚀 Virtual Back Office</h1>
-<h2>Automate all your business and network operations</h2>
+<!-- ✅ Hero Section -->
+<main>
+  <h1>🚀 Virtual Back Office</h1>
+  <h2>Automate your business and network operations</h2>
 
-<p>
-  At <span class="highlight">Virtual Back Office</span>, we specialise in 
-  <strong>business automation</strong>, <strong>fiber line marking</strong>, 
-  <strong>fiber splitter marking</strong>, and complete 
-  <strong>network complaint management</strong>.  
-</p>
+  <p>
+    At <span class="highlight">Virtual Back Office</span>, we specialise in 
+    <strong>business automation</strong>, <strong>fiber line marking</strong>, 
+    <strong>fiber splitter marking</strong>, and complete 
+    <strong>network complaint management</strong>.
+  </p>
+  <p>
+    Our solutions streamline <em>customer complaint handling</em>, 
+    <em>customer query handling</em>, <em>leads handling</em>, and 
+    <em>business accounting</em>. We also provide 
+    <strong>ISP partner support</strong> and 
+    <strong>network management</strong> tools to optimise resources.
+  </p>
+  <p>
+    With our expertise in <strong>business flow enhancement</strong> and 
+    <strong>resource optimisation</strong>, you can focus on growth while 
+    we handle your back office operations.
+  </p>
 
-<p>
-  Our solutions streamline <em>customer complaint handling</em>, 
-  <em>customer query handling</em>, <em>leads handling</em>, and 
-  <em>business accounting</em>. We also provide 
-  <strong>ISP partner support</strong> and <strong>network management</strong> 
-  tools to help optimise resources and boost efficiency.  
-</p>
+  <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
 
-<p>
-  With our expertise in <strong>business flow enhancement</strong> and 
-  <strong>resource optimisation</strong>, you can focus on growth while 
-  we handle your back office operations.  
-</p>
-
-<a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
-
-<!-- ✅ Countdown -->
-<div id="countdown"></div>
+  <!-- Countdown -->
+  <div id="countdown"></div>
+</main>
 
 <footer>
   Virtual Back Office © 2025 | We are coming soon!
 </footer>
 
 <script>
-  // Toast Notification
+  // Toast (simple alert for now)
   function notify(text) {
     alert(text + " — Coming Soon!!");
   }
@@ -213,13 +208,13 @@
     const hours = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
     const minutes = Math.floor((distance % (1000*60*60)) / (1000*60));
     const seconds = Math.floor((distance % (1000*60)) / 1000);
-    const ms = Math.floor((distance % 1000) / 10); // hundredths
+    const ms = Math.floor((distance % 1000) / 10);
 
     countdown.innerHTML = `
       <div class="time-box"><span>${days}</span><small>Days</small></div>
-      <div class="time-box"><span>${hours}</span><small>Hours</small></div>
-      <div class="time-box"><span>${minutes}</span><small>Minutes</small></div>
-      <div class="time-box"><span>${seconds}</span><small>Seconds</small></div>
+      <div class="time-box"><span>${hours}</span><small>Hrs</small></div>
+      <div class="time-box"><span>${minutes}</span><small>Min</small></div>
+      <div class="time-box"><span>${seconds}</span><small>Sec</small></div>
       <div class="time-box"><span>${ms}</span><small>ms</small></div>
     `;
   }
