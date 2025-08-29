@@ -1,8 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BGW8N9PZMG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-BGW8N9PZMG');
+</script>
+
+<link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
+<meta name="theme-color" content="#0a4a7a">
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 <title>Virtual Back Office | Automate Business & Network Management</title>
 
 <!-- ✅ SEO Meta -->
@@ -18,218 +37,173 @@
 <meta property="og:image" content="https://vbo.co.in/preview.jpg" />
 
 <style>
-  /* -------- Reset -------- */
-  * { margin:0; padding:0; box-sizing:border-box; }
-
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    height: 100vh;
     text-align: center;
-    transition: background 0.4s, color 0.4s;
+    transition: background 1.5s ease, color 1.5s ease;
   }
 
-  :root {
-    --bg: linear-gradient(to bottom right, #f7f7f7, #eaeaea);
-    --text: #111;
-    --card: #fff;
-    --accent: #007aff;
-  }
-  body.dark {
-    --bg: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
-    --text: #fff;
-    --card: #1c1c1e;
-    --accent: #0a84ff;
+  body.light {
+    background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
+    color: #111;
   }
 
   h1 {
-    font-size: 2.2rem;
-    margin-bottom: 8px;
-    font-weight: 600;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
   }
+
   h2 {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    font-weight: normal;
     margin-bottom: 25px;
-    font-weight: 400;
-    color: var(--accent);
+    color: #d1d1d1;
+    transition: color 1.5s ease;
   }
+
+  body.light h2 {
+    color: #444;
+  }
+
+  .highlight {
+    color: #00d4ff;
+    font-weight: bold;
+  }
+
   p {
     max-width: 700px;
-    margin: 10px auto;
     line-height: 1.6;
     font-size: 1rem;
+    margin: 0 auto 20px;
   }
-  .highlight { font-weight: 600; color: var(--accent); }
 
-  /* -------- Contact Button -------- */
   .contact {
-    display:inline-block;
-    margin-top:20px;
-    padding:12px 24px;
-    font-size:1rem;
-    background:var(--accent);
-    color:#fff;
-    border-radius:28px;
-    font-weight:600;
-    text-decoration:none;
-    transition:0.3s;
-  }
-  .contact:hover { opacity:0.8; }
-
-  /* -------- Menu -------- */
-  .menu {
-    margin: 25px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-  }
-  .menu button {
-    background: var(--card);
-    border: none;
-    border-radius: 12px;
-    padding: 12px 18px;
-    font-size: 0.95rem;
-    color: var(--text);
-    font-weight: 500;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    transition: 0.3s;
-  }
-  .menu button:hover {
-    transform: translateY(-2px);
-    background: var(--accent);
-    color: #fff;
+    margin-top: 20px;
+    font-size: 1.2rem;
+    background: #00d4ff;
+    color: #000;
+    padding: 10px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s ease;
   }
 
-  /* -------- Dark/Light Toggle -------- */
-  .toggle-mode {
-    position: absolute;
-    top:15px;
-    right:15px;
-    background:var(--card);
-    border:none;
-    padding:8px 12px;
-    border-radius:20px;
-    cursor:pointer;
-    font-size:0.9rem;
-    color:var(--text);
-    box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  .contact:hover {
+    background: #00a5c8;
   }
 
   footer {
-    position:absolute;
-    bottom:15px;
-    font-size:0.85rem;
+    position: absolute;
+    bottom: 15px;
+    font-size: 0.85rem;
     color: #aaa;
   }
 
-  /* -------- Spinner -------- */
-  #loader {
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:#000;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:9999;
-  }
-  .spin {
-    border: 6px solid #f3f3f3;
-    border-top: 6px solid #00d4ff;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin {
-    0% { transform:rotate(0deg);}
-    100% { transform:rotate(360deg);}
+  /* Timer */
+  #countdown {
+    font-size: 1.8rem;
+    margin: 20px 0;
+    font-weight: bold;
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  @media (max-width:600px){
-    h1 { font-size:1.8rem; }
-    p { font-size:0.9rem; }
-    .menu button { flex:1 1 40%; }
+  /* Mode Toggle */
+  .mode-toggle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background: #00d4ff;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .mode-toggle:hover {
+    background: #00a5c8;
   }
 </style>
 </head>
 <body>
-<div id="loader"><div class="spin"></div></div>
+  <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
 
-<button class="toggle-mode" onclick="toggleMode()">☀️ / 🌙</button>
+  <h1>🚀 Virtual Back Office</h1>
+  <h2>Automate all your business and network operations</h2>
 
-<h1>🚀 Virtual Back Office</h1>
-<h2>Automate all your business and network operations</h2>
+  <div id="countdown"></div>
 
-<div class="menu">
-  <button onclick="toast('Login Coming soon!!')">Login</button>
-  <button onclick="toast('Join our team Coming soon!!')">Join our team</button>
-  <button onclick="toast('Query Coming soon!!')">Query</button>
-  <button onclick="toast('Contact us Coming soon!!')">Contact us</button>
-  <button onclick="toast('About us Coming soon!!')">About us</button>
-</div>
+  <p>
+    At <span class="highlight">Virtual Back Office</span>, we specialise in 
+    <strong>business automation</strong>, <strong>fiber line marking</strong>, 
+    <strong>fiber splitter marking</strong>, and complete 
+    <strong>network complaint management</strong>.  
+  </p>
 
-<p>
-  At <span class="highlight">Virtual Back Office</span>, we specialise in 
-  <strong>business automation</strong>, <strong>fiber line marking</strong>, 
-  <strong>fiber splitter marking</strong>, and complete 
-  <strong>network complaint management</strong>.  
-</p>
+  <p>
+    Our solutions streamline <em>customer complaint handling</em>, 
+    <em>customer query handling</em>, <em>leads handling</em>, and 
+    <em>business accounting</em>. We also provide 
+    <strong>ISP partner support</strong> and <strong>network management</strong> 
+    tools to help optimise resources and boost efficiency.  
+  </p>
 
-<p>
-  Our solutions streamline <em>customer complaint handling</em>, 
-  <em>customer query handling</em>, <em>leads handling</em>, and 
-  <em>business accounting</em>. We also provide 
-  <strong>ISP partner support</strong> and <strong>network management</strong> 
-  tools to help optimise resources and boost efficiency.  
-</p>
+  <p>
+    With our expertise in <strong>business flow enhancement</strong> and 
+    <strong>resource optimisation</strong>, you can focus on growth while 
+    we handle your back office operations.  
+  </p>
 
-<p>
-  With our expertise in <strong>business flow enhancement</strong> and 
-  <strong>resource optimisation</strong>, you can focus on growth while 
-  we handle your back office operations.  
-</p>
+  <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
 
-<a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
-
-<footer>
-  Virtual Back Office © 2025 | We are coming soon!
-</footer>
+  <footer>
+    Virtual Back Office © 2025 | We are coming soon!
+  </footer>
 
 <script>
-  // Loader hide after 3 sec
-  window.addEventListener("load", () => {
-    setTimeout(()=>{ document.getElementById("loader").style.display="none"; }, 3000);
-  });
+  // Countdown Timer
+  const countdownElement = document.getElementById("countdown");
+  const launchDate = new Date("September 10, 2025 00:00:00").getTime();
 
-  // Light/Dark Mode
-  function toggleMode(){
-    document.body.classList.toggle("dark");
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = launchDate - now;
+
+    if (distance <= 0) {
+      countdownElement.innerHTML = "🎉 We have launched!";
+      clearInterval(timerInterval);
+      return;
+    }
+
+    let days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    let milliseconds = Math.floor((distance % 1000));
+
+    countdownElement.innerHTML = 
+      `${days}d ${hours}h ${minutes}m ${seconds}s ${milliseconds}ms`;
   }
 
-  // Toast Message
-  function toast(msg){
-    let t = document.createElement("div");
-    t.innerText = msg;
-    t.style.position="fixed";
-    t.style.bottom="20px";
-    t.style.left="50%";
-    t.style.transform="translateX(-50%)";
-    t.style.background="rgba(0,0,0,0.7)";
-    t.style.color="#fff";
-    t.style.padding="10px 20px";
-    t.style.borderRadius="20px";
-    t.style.fontSize="0.9rem";
-    t.style.zIndex="99999";
-    document.body.appendChild(t);
-    setTimeout(()=>{t.remove();},2000);
+  let timerInterval = setInterval(updateCountdown, 50);
+
+  // Dark/Light Mode Toggle
+  function toggleMode() {
+    document.body.classList.toggle("light");
   }
 </script>
 </body>
