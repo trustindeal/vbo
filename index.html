@@ -40,14 +40,9 @@
   body {
     margin: 0;
     padding: 0;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
     color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
     text-align: center;
     transition: background 1.5s ease, color 1.5s ease;
   }
@@ -57,13 +52,46 @@
     color: #111;
   }
 
+  header {
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+  }
+
+  nav {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  nav a {
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px 15px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  nav a:hover {
+    background: #00d4ff;
+    color: #000;
+  }
+
+  body.light nav a {
+    color: #111;
+    background: rgba(0, 0, 0, 0.1);
+  }
+
   h1 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+    font-size: 2.2rem;
+    margin-top: 20px;
   }
 
   h2 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: normal;
     margin-bottom: 25px;
     color: #d1d1d1;
@@ -83,7 +111,7 @@
     max-width: 700px;
     line-height: 1.6;
     font-size: 1rem;
-    margin: 0 auto 20px;
+    margin: 10px auto;
   }
 
   .contact {
@@ -95,6 +123,7 @@
     border-radius: 25px;
     text-decoration: none;
     font-weight: bold;
+    display: inline-block;
     transition: background 0.3s ease;
   }
 
@@ -103,15 +132,14 @@
   }
 
   footer {
-    position: absolute;
-    bottom: 15px;
+    margin: 20px 0;
     font-size: 0.85rem;
     color: #aaa;
   }
 
   /* Timer */
   #countdown {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     margin: 20px 0;
     font-weight: bold;
     background: linear-gradient(90deg, #00d4ff, #ff6ec7);
@@ -124,7 +152,7 @@
     position: absolute;
     top: 15px;
     right: 15px;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border: none;
     border-radius: 20px;
     background: #00d4ff;
@@ -137,10 +165,46 @@
   .mode-toggle:hover {
     background: #00a5c8;
   }
+
+  /* Toast */
+  #toast {
+    visibility: hidden;
+    min-width: 200px;
+    margin-left: -100px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 25px;
+    padding: 12px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+  }
+
+  #toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px;
+  }
 </style>
 </head>
 <body>
   <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
+
+  <!-- ✅ Menu -->
+  <header>
+    <nav>
+      <a href="#" onclick="showToast()">Login</a>
+      <a href="#" onclick="showToast()">Join our team</a>
+      <a href="#" onclick="showToast()">Query</a>
+      <a href="#" onclick="showToast()">Contact us</a>
+      <a href="#" onclick="showToast()">About us</a>
+    </nav>
+  </header>
 
   <h1>🚀 Virtual Back Office</h1>
   <h2>Automate all your business and network operations</h2>
@@ -174,10 +238,12 @@
     Virtual Back Office © 2025 | We are coming soon!
   </footer>
 
+  <div id="toast">Coming soon!!</div>
+
 <script>
-  // Countdown Timer
+  // Countdown Timer (with milliseconds 2 digits)
   const countdownElement = document.getElementById("countdown");
-  const launchDate = new Date("September 10, 2025 00:00:00").getTime();
+  const launchDate = new Date("September 10, 2025 00:00:00 GMT+0530").getTime(); // IST
 
   function updateCountdown() {
     const now = new Date().getTime();
@@ -193,10 +259,10 @@
     let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    let milliseconds = Math.floor((distance % 1000));
+    let milliseconds = Math.floor((distance % 1000) / 10); // 2 digit
 
     countdownElement.innerHTML = 
-      `${days}d ${hours}h ${minutes}m ${seconds}s ${milliseconds}ms`;
+      `${days}d ${hours}h ${minutes}m ${seconds}s ${milliseconds.toString().padStart(2,"0")}ms`;
   }
 
   let timerInterval = setInterval(updateCountdown, 50);
@@ -204,6 +270,13 @@
   // Dark/Light Mode Toggle
   function toggleMode() {
     document.body.classList.toggle("light");
+  }
+
+  // Toast Message
+  function showToast() {
+    let toast = document.getElementById("toast");
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
   }
 </script>
 </body>
