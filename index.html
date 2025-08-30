@@ -127,38 +127,38 @@
   .menu-icon {
     font-size: 1.2rem;
   }
-
 .dropdown {
   position: absolute;
   top: 100%;
   left: 0;
-  background: rgba(255, 255, 255, 0.25); /* Thoda zyada opaque */
-  backdrop-filter: blur(15px);            /* Glass blur effect */
+  width: 220px;
+  margin-top: 10px;
   border-radius: 15px;
   overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.8s ease-in-out, opacity 0.8s ease-in-out;
-  width: 220px;
+  background: rgba(255, 255, 255, 0.25); /* Light opacity */
+  backdrop-filter: blur(15px);           /* Blur effect */
+  -webkit-backdrop-filter: blur(15px);   /* Safari support */
+  border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-height: 0;
   opacity: 0;
+  transition: all 0.4s ease-in-out;
   padding: 0;
-  margin-top: 10px;
 }
 
-/* Light Mode ke liye bhi clear contrast */
 body.light .dropdown {
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
+.dropdown.open {
+  max-height: 500px; /* Show dropdown */
+  opacity: 1;        /* Make visible */
+  padding: 10px 0;   /* Restore padding */
+}
 
-  .dropdown.open {
-    max-height: 400px;
-    opacity: 1;
-    padding: 10px 0;
-  }
 
   .dropdown a {
     display: flex;
