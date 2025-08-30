@@ -109,6 +109,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.3s ease;
+    display: flex;
     align-items: center;
     justify-content: center;
     animation: blink 2s ease-in-out infinite;
@@ -138,7 +139,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 220px;
+    width: 250px;
     height: 100%;
     overflow-y: auto;
     background: rgba(255, 255, 255, 0.3); /* Increased opacity for better readability */
@@ -147,6 +148,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     padding: 15px 0; /* Increased padding for better spacing */
+    z-index: 10;
   }
 
   body.light .sidebar {
@@ -321,6 +323,21 @@
     bottom: 50px;
   }
 
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+    display: none;
+  }
+
+  body.menu-open #overlay {
+    display: block;
+  }
+
   @media (max-width: 768px) {
     .menu-btn {
       display: flex;
@@ -331,13 +348,13 @@
     }
 
     body.menu-open main {
-      transform: translateX(220px);
+      transform: translateX(80vw);
     }
 
     .sidebar {
       transform: translateX(-100%);
       transition: transform 0.8s ease-in-out;
-      width: 220px;
+      width: 80vw;
     }
 
     .sidebar.open {
@@ -392,6 +409,8 @@
     <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
   </div>
 
+  <div id="overlay" onclick="toggleMenu()"></div>
+
   <main id="main">
     <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
 
@@ -427,7 +446,7 @@
     </p>
 
     <div class="contact-container">
-      <a href="tel:+917007902103" class="contact">📞 Slide to Contact: 7007902103</a>
+      <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
     </div>
 
     <div id="countdown"></div>
