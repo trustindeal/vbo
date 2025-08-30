@@ -22,11 +22,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>Virtual Back Office | Automate Business & Network Management</title>
+<title>Virtual Back Office | Automate Business, Network Management & Fiber Operations</title>
 
 <!-- ✅ SEO Meta -->
-<meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Contact us at 7007902103. Coming soon!">
-<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement">
+<meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Specializing in fiber optic management, ISP management software, business process automation, customer support automation, and network optimization tools. Contact us at 7007902103. Coming soon!">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools">
 <meta name="author" content="Virtual Back Office" />
 
 <!-- ✅ Social Share -->
@@ -45,6 +45,7 @@
     color: #fff;
     text-align: center;
     transition: background 1.5s ease, color 1.5s ease;
+    overflow: hidden;
   }
 
   body.light {
@@ -52,42 +53,110 @@
     color: #111;
   }
 
+  #loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .spinner {
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid #00d4ff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
   header {
     display: flex;
     justify-content: center;
     padding: 15px;
     backdrop-filter: blur(10px);
+    position: relative;
   }
 
-  nav {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+  .menu-container {
+    position: relative;
   }
 
-  nav a {
-    text-decoration: none;
-    font-weight: 600;
-    padding: 8px 15px;
-    border-radius: 20px;
+  .menu-btn {
     background: rgba(255, 255, 255, 0.1);
     color: #fff;
-    transition: background 0.3s, color 0.3s;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
   }
 
-  nav a:hover {
+  body.light .menu-btn {
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  .menu-btn:hover {
     background: #00d4ff;
     color: #000;
   }
 
-  body.light nav a {
-    color: #111;
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.5s ease-in-out;
+    width: 200px;
+    backdrop-filter: blur(10px);
+  }
+
+  body.light .dropdown {
     background: rgba(0, 0, 0, 0.1);
+  }
+
+  .dropdown.open {
+    max-height: 300px;
+  }
+
+  .dropdown a {
+    display: block;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 15px;
+    color: #fff;
+    transition: background 0.3s ease;
+  }
+
+  body.light .dropdown a {
+    color: #111;
+  }
+
+  .dropdown a:hover {
+    background: #00d4ff;
+    color: #000;
   }
 
   h1 {
     font-size: 2.2rem;
     margin-top: 20px;
+    padding: 0 15px;
   }
 
   h2 {
@@ -96,6 +165,7 @@
     margin-bottom: 25px;
     color: #d1d1d1;
     transition: color 1.5s ease;
+    padding: 0 15px;
   }
 
   body.light h2 {
@@ -112,39 +182,67 @@
     line-height: 1.6;
     font-size: 1rem;
     margin: 10px auto;
+    padding: 0 15px;
+  }
+
+  .contact-container {
+    margin-top: 20px;
+    position: relative;
+    display: inline-block;
   }
 
   .contact {
-    margin-top: 20px;
     font-size: 1.2rem;
-    background: #00d4ff;
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
     color: #000;
     padding: 10px 25px;
     border-radius: 25px;
     text-decoration: none;
     font-weight: bold;
     display: inline-block;
-    transition: background 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: left 0.5s ease;
+  }
+
+  .contact:hover::before {
+    left: 0;
   }
 
   .contact:hover {
-    background: #00a5c8;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
   }
 
   footer {
     margin: 20px 0;
     font-size: 0.85rem;
     color: #aaa;
+    padding: 0 15px;
   }
 
   /* Timer */
   #countdown {
-    font-size: 1.6rem;
-    margin: 20px 0;
+    font-size: 1.8rem;
+    margin: 30px 0 20px;
     font-weight: bold;
     background: linear-gradient(90deg, #00d4ff, #ff6ec7);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
   }
 
   /* Mode Toggle */
@@ -159,11 +257,16 @@
     color: #000;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: background 0.3s ease, opacity 0.5s ease;
   }
 
   .mode-toggle:hover {
     background: #00a5c8;
+  }
+
+  .mode-toggle.hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 
   /* Toast */
@@ -190,26 +293,62 @@
     opacity: 1;
     bottom: 50px;
   }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 1.8rem;
+    }
+    h2 {
+      font-size: 1rem;
+    }
+    p {
+      font-size: 0.95rem;
+    }
+    .dropdown {
+      width: 180px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    header {
+      padding: 10px;
+    }
+    .menu-btn {
+      padding: 8px 15px;
+    }
+    .contact {
+      padding: 8px 20px;
+      font-size: 1rem;
+    }
+    #countdown {
+      font-size: 1.4rem;
+    }
+  }
 </style>
 </head>
 <body>
+  <div id="loader">
+    <div class="spinner"></div>
+  </div>
+
   <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
 
   <!-- ✅ Menu -->
   <header>
-    <nav>
-      <a href="#" onclick="showToast()">Login</a>
-      <a href="#" onclick="showToast()">Join our team</a>
-      <a href="#" onclick="showToast()">Query</a>
-      <a href="#" onclick="showToast()">Contact us</a>
-      <a href="#" onclick="showToast()">About us</a>
-    </nav>
+    <div class="menu-container">
+      <button class="menu-btn" onclick="toggleMenu()">Menu</button>
+      <div class="dropdown" id="dropdown">
+        <a href="#" onclick="showToast()">Login</a>
+        <a href="#" onclick="showToast()">Join our team</a>
+        <a href="#" onclick="showToast()">Query</a>
+        <a href="#" onclick="showToast()">Contact us</a>
+        <a href="#" onclick="showToast()">About us</a>
+      </div>
+    </div>
   </header>
 
   <h1>🚀 Virtual Back Office</h1>
   <h2>Automate all your business and network operations</h2>
-
-  <div id="countdown"></div>
 
   <p>
     At <span class="highlight">Virtual Back Office</span>, we specialise in 
@@ -232,7 +371,11 @@
     we handle your back office operations.  
   </p>
 
-  <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
+  <div class="contact-container">
+    <a href="tel:+917007902103" class="contact">📞 Slide to Contact: 7007902103</a>
+  </div>
+
+  <div id="countdown"></div>
 
   <footer>
     Virtual Back Office © 2025 | We are coming soon!
@@ -241,6 +384,16 @@
   <div id="toast">Coming soon!!</div>
 
 <script>
+  // Loader
+  function hideLoader() {
+    const loader = document.getElementById('loader');
+    loader.style.opacity = '0';
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }, 500);
+  }
+
   // Countdown Timer (with milliseconds 2 digits)
   const countdownElement = document.getElementById("countdown");
   const launchDate = new Date("September 10, 2025 00:00:00 GMT+0530").getTime(); // IST
@@ -272,15 +425,30 @@
     document.body.classList.toggle("light");
   }
 
-  // ✅ Default Mode by Time (Day = Light, Night = Dark)
-  window.onload = () => {
-    let hour = new Date().getHours();
+  // Default Mode by Indian Time (Day = Light, Night = Dark)
+  function setDefaultMode() {
+    const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
+    const hour = parseInt(hourStr);
     if (hour >= 6 && hour < 18) {
       document.body.classList.add("light"); // Daytime = Light Mode
     } else {
       document.body.classList.remove("light"); // Nighttime = Dark Mode
     }
-  };
+  }
+
+  // Hide Mode Toggle after 10 seconds
+  function hideModeToggle() {
+    const toggleBtn = document.querySelector('.mode-toggle');
+    setTimeout(() => {
+      toggleBtn.classList.add('hidden');
+    }, 10000);
+  }
+
+  // Menu Toggle with Animation
+  function toggleMenu() {
+    const dropdown = document.getElementById('dropdown');
+    dropdown.classList.toggle('open');
+  }
 
   // Toast Message
   function showToast() {
@@ -288,6 +456,13 @@
     toast.className = "show";
     setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
   }
+
+  // On Load
+  window.addEventListener('load', () => {
+    setDefaultMode();
+    hideModeToggle();
+    setTimeout(hideLoader, 2500);
+  });
 </script>
 </body>
 </html>
