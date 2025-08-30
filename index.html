@@ -331,11 +331,18 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 9;
-    display: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease-in-out;
   }
 
   body.menu-open #overlay {
-    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  body.light #overlay {
+    background: rgba(0, 0, 0, 0.3);
   }
 
   @media (max-width: 768px) {
@@ -446,7 +453,7 @@
     </p>
 
     <div class="contact-container">
-      <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
+      <a href="tel:+917007902103" class="contact">📞 Slide to Contact: 7007902103</a>
     </div>
 
     <div id="countdown"></div>
