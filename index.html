@@ -26,7 +26,7 @@
 
 <!-- ✅ SEO Meta -->
 <meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Specializing in fiber optic management, ISP management software, business process automation, customer support automation, and network optimization tools. Contact us at 7007902103. Coming soon!">
-<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools, fiber network automation, ISP operations software, automated customer service, network resource management, business efficiency tools">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools, fiber network automation, ISP operations software, automated customer service, network resource management, business efficiency tools, fiber optic software, automated ISP tools, telecom automation solutions, back office automation, fiber infrastructure management">
 <meta name="author" content="Virtual Back Office" />
 
 <!-- ✅ Social Share -->
@@ -94,7 +94,7 @@
   }
 
   .menu-btn {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
     color: #fff;
     border: none;
     padding: 10px 20px;
@@ -128,49 +128,44 @@
     font-size: 1.2rem;
   }
 
-  
-.dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 220px;
-  margin-top: 10px;
-  border-radius: 15px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.1); /* lower opacity for stronger blur effect */
-  backdrop-filter: blur(0px);           /* start with no blur */
-  -webkit-backdrop-filter: blur(0px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  max-height: 0;
-  opacity: 0;
-  transition: all 0.4s ease-in-out, backdrop-filter 0.4s ease-in-out; /* add blur transition */
-  padding: 0;
-}
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 220px;
+    margin-top: 10px;
+    border-radius: 15px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.3); /* Increased opacity for better readability */
+    backdrop-filter: blur(20px); /* Stronger blur for premium glass effect without mixup */
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.8s ease-in-out, opacity 0.8s ease-in-out, backdrop-filter 0.8s ease-in-out; /* Slower animation */
+    padding: 0;
+  }
 
-body.light .dropdown {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-}
+  body.light .dropdown {
+    background: rgba(0, 0, 0, 0.3); /* Adjusted for light mode readability */
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
 
-.dropdown.open {
-  max-height: 500px;
-  opacity: 1;
-  padding: 10px 0;
-  background: rgba(255, 255, 255, 0.45); /* slightly more opaque when open */
-  backdrop-filter: blur(55px);           /* animate to full blur */
-  -webkit-backdrop-filter: blur(15px);
-}
-
+  .dropdown.open {
+    max-height: 500px;
+    opacity: 1;
+    padding: 15px 0; /* Increased padding for better spacing */
+  }
 
   .dropdown a {
     display: flex;
     align-items: center;
     text-decoration: none;
     font-weight: 600;
-    padding: 12px 20px;
+    padding: 15px 25px; /* Increased padding for iPhone-like spacing */
     color: #fff;
     transition: background 0.3s ease, transform 0.3s ease;
   }
@@ -180,12 +175,12 @@ body.light .dropdown {
   }
 
   .dropdown a:hover {
-    background: rgba(0, 212, 255, 0.2);
+    background: rgba(0, 212, 255, 0.3);
     transform: translateX(5px);
   }
 
   .menu-item-icon {
-    margin-right: 10px;
+    margin-right: 12px; /* Slightly increased spacing */
     font-size: 1.1rem;
   }
 
@@ -367,7 +362,7 @@ body.light .dropdown {
       margin-top: 8px;
     }
     .dropdown a {
-      padding: 10px 15px;
+      padding: 12px 20px;
     }
   }
 </style>
