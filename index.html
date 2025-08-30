@@ -26,7 +26,7 @@
 
 <!-- ✅ SEO Meta -->
 <meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Specializing in fiber optic management, ISP management software, business process automation, customer support automation, and network optimization tools. Contact us at 7007902103. Coming soon!">
-<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools, telecom automation, CRM solutions, back office management">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools, fiber network automation, ISP operations software, automated customer service, network resource management, business efficiency tools">
 <meta name="author" content="Virtual Back Office" />
 
 <!-- ✅ Social Share -->
@@ -104,18 +104,13 @@
     transition: background 0.3s ease, transform 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    animation: blink 2s ease-in-out infinite;
   }
 
-  .menu-btn .menu-icon {
-    display: inline-block;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 
   body.light .menu-btn {
@@ -129,6 +124,10 @@
     transform: scale(1.05);
   }
 
+  .menu-icon {
+    font-size: 1.2rem;
+  }
+
   .dropdown {
     position: absolute;
     top: 100%;
@@ -137,29 +136,33 @@
     border-radius: 15px;
     overflow: hidden;
     max-height: 0;
-    transition: max-height 0.5s ease-in-out, opacity 0.3s ease;
+    transition: max-height 0.8s ease-in-out, opacity 0.8s ease-in-out;
     width: 220px;
-    backdrop-filter: blur(12px);
-    opacity: 0.9;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    padding: 0;
+    margin-top: 10px;
   }
 
   body.light .dropdown {
     background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   .dropdown.open {
     max-height: 400px;
     opacity: 1;
+    padding: 10px 0;
   }
 
   .dropdown a {
     display: flex;
     align-items: center;
-    gap: 10px;
     text-decoration: none;
     font-weight: 600;
-    padding: 12px 15px;
+    padding: 12px 20px;
     color: #fff;
     transition: background 0.3s ease, transform 0.3s ease;
   }
@@ -169,9 +172,13 @@
   }
 
   .dropdown a:hover {
-    background: #00d4ff;
-    color: #000;
+    background: rgba(0, 212, 255, 0.2);
     transform: translateX(5px);
+  }
+
+  .menu-item-icon {
+    margin-right: 10px;
+    font-size: 1.1rem;
   }
 
   h1 {
@@ -295,313 +302,6 @@
     visibility: hidden;
     min-width: 200px;
     margin-left: -100px;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 25px;
-    padding: 12px;
-    position禁止
-
-System: ```html
-<xaiArtifact artifact_id="4e7192bb-a46e-4646-bffa-181d5fc850df" artifact_version_id="28a6936d-0fdb-4b9a-8359-447030a6841c" title="index.html" contentType="text/html">
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-BGW8N9PZMG"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-BGW8N9PZMG');
-</script>
-
-<link rel="icon" href="favicon.ico?v=2">
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
-<link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
-<meta name="theme-color" content="#0a4a7a">
-
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<title>Virtual Back Office | Automate Business, Network Management & Fiber Operations</title>
-
-<!-- ✅ SEO Meta -->
-<meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Specializing in fiber optic management, ISP management software, business process automation, customer support automation, and network optimization tools. Contact us at 7007902103. Coming soon!">
-<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools, telecom automation, CRM solutions, back office management">
-<meta name="author" content="Virtual Back Office" />
-
-<!-- ✅ Social Share -->
-<meta property="og:title" content="Virtual Back Office - Coming Soon" />
-<meta property="og:description" content="Automate your business and network operations with Virtual Back Office. We are coming soon! Contact: 7007902103" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://vbo.co.in" />
-<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
-
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-    color: #fff;
-    text-align: center;
-    transition: background 1.5s ease, color 1.5s ease;
-    overflow: hidden;
-  }
-
-  body.light {
-    background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
-    color: #111;
-  }
-
-  #loader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    transition: opacity 0.5s ease;
-  }
-
-  .spinner {
-    border: 8px solid rgba(255, 255, 255, 0.3);
-    border-top: 8px solid #00d4ff;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  header {
-    display: flex;
-    justify-content: center;
-    padding: 15px;
-    backdrop-filter: blur(10px);
-    position: relative;
-  }
-
-  .menu-container {
-    position: relative;
-  }
-
-  .menu-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .menu-btn .menu-icon {
-    display: inline-block;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
-
-  body.light .menu-btn {
-    background: rgba(0, 0, 0, 0.1);
-    color: #111;
-  }
-
-  .menu-btn:hover {
-    background: #00d4ff;
-    color: #000;
-    transform: scale(1.05);
-  }
-
-  .dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 15px;
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.5s ease-in-out, opacity 0.3s ease;
-    width: 220px;
-    backdrop-filter: blur(12px);
-    opacity: 0.9;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  }
-
-  body.light .dropdown {
-    background: rgba(0, 0, 0, 0.15);
-  }
-
-  .dropdown.open {
-    max-height: 400px;
-    opacity: 1;
-  }
-
-  .dropdown a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    font-weight: 600;
-    padding: 12px 15px;
-    color: #fff;
-    transition: background 0.3s ease, transform 0.3s ease;
-  }
-
-  body.light .dropdown a {
-    color: #111;
-  }
-
-  .dropdown a:hover {
-    background: #00d4ff;
-    color: #000;
-    transform: translateX(5px);
-  }
-
-  h1 {
-    font-size: 2.2rem;
-    margin-top: 20px;
-    padding: 0 15px;
-  }
-
-  h2 {
-    font-size: 1.2rem;
-    font-weight: normal;
-    margin-bottom: 25px;
-    color: #d1d1d1;
-    transition: color 1.5s ease;
-    padding: 0 15px;
-  }
-
-  body.light h2 {
-    color: #444;
-  }
-
-  .highlight {
-    color: #00d4ff;
-    font-weight: bold;
-  }
-
-  p {
-    max-width: 700px;
-    line-height: 1.6;
-    font-size: 1rem;
-    margin: 10px auto;
-    padding: 0 15px;
-  }
-
-  .contact-container {
-    margin-top: 20px;
-    position: relative;
-    display: inline-block;
-  }
-
-  .contact {
-    font-size: 1.2rem;
-    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
-    color: #000;
-    padding: 10px 25px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: bold;
-    display: inline-block;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .contact::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.2);
-    transition: left 0.5s ease;
-  }
-
-  .contact:hover::before {
-    left: 0;
-  }
-
-  .contact:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
-  }
-
-  footer {
-    margin: 20px 0;
-    font-size: 0.85rem;
-    color: #aaa;
-    padding: 0 15px;
-  }
-
-  /* Timer */
-  #countdown {
-    font-size: 1.8rem;
-    margin: 30px 0 20px;
-    font-weight: bold;
-    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-  }
-
-  /* Mode Toggle */
-  .mode-toggle {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    padding: 6px 14px;
-    border: none;
-    border-radius: 20px;
-    background: #00d4ff;
-    color: #000;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease, opacity 0.5s ease;
-  }
-
-  .mode-toggle:hover {
-    background: #00a5c8;
-  }
-
-  .mode-toggle.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* Toast */
-  #toast {
-    visibility: hidden;
-    min-width: 200px;
-    margin-left: -100px;
- to center;
     background-color: #333;
     color: #fff;
     text-align: center;
@@ -633,7 +333,10 @@ System: ```html
       font-size: 0.95rem;
     }
     .dropdown {
-      width: 180px;
+      width: 200px;
+    }
+    .menu-btn {
+      padding: 8px 16px;
     }
   }
 
@@ -650,6 +353,13 @@ System: ```html
     }
     #countdown {
       font-size: 1.4rem;
+    }
+    .dropdown {
+      width: 180px;
+      margin-top: 8px;
+    }
+    .dropdown a {
+      padding: 10px 15px;
     }
   }
 </style>
@@ -668,24 +378,24 @@ System: ```html
         <span class="menu-icon">☰</span>
       </button>
       <div class="dropdown" id="dropdown">
-        <a href="#" onclick="toggleMode()"><span>🌙</span> Theme Mode</a>
-        <a href="#" onclick="showToast()"><span>🔐</span> Login</a>
-        <a href="#" onclick="showToast()"><span>🤝</span> Join our team</a>
-        <a href="#" onclick="showToast()"><span>❓</span> Query</a>
-        <a href="#" onclick="showToast()"><span>📞</span> Contact us</a>
-        <a href="#" onclick="showToast()"><span>ℹ️</span> About us</a>
+        <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
+        <a href="#" onclick="showToast()"><span class="menu-item-icon">🔑</span> Login</a>
+        <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
+        <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
+        <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
+        <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
       </div>
     </div>
   </header>
 
   <h1>🚀 Virtual Back Office</h1>
-  <h2>Automate all your business and network operations</h2>
+  <h2>Automate all your business and network operations with advanced tools for efficiency and growth</h2>
 
   <p>
     At <span class="highlight">Virtual Back Office</span>, we specialise in 
     <strong>business automation</strong>, <strong>fiber line marking</strong>, 
     <strong>fiber splitter marking</strong>, and complete 
-    <strong>network complaint management</strong>.  
+    <strong>network complaint management</strong>. Our platform ensures seamless integration for ISP operations.
   </p>
 
   <p>
@@ -693,19 +403,13 @@ System: ```html
     <em>customer query handling</em>, <em>leads handling</em>, and 
     <em>business accounting</em>. We also provide 
     <strong>ISP partner support</strong> and <strong>network management</strong> 
-    tools to help optimise resources and boost efficiency.  
+    tools to help optimise resources and boost efficiency in fiber optic networks.
   </p>
 
   <p>
     With our expertise in <strong>business flow enhancement</strong> and 
     <strong>resource optimisation</strong>, you can focus on growth while 
-    we handle your back office operations.  
-  </p>
-
-  <p>
-    Our cutting-edge <strong>telecom automation</strong> and <strong>CRM solutions</strong> 
-    empower businesses to scale seamlessly, ensuring a smooth and efficient workflow 
-    for your back office operations.
+    we handle your back office operations, including automated customer service and network resource management.
   </p>
 
   <div class="contact-container">
@@ -769,7 +473,7 @@ System: ```html
     if (hour >= 6 && hour < 18) {
       document.body.classList.add("light"); // Daytime = Light Mode
     } else {
-      document.body.classList
+      document.body.classList.remove("light"); // Nighttime = Dark Mode
     }
   }
 
