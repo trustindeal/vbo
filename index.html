@@ -127,6 +127,8 @@
   .menu-icon {
     font-size: 1.2rem;
   }
+
+  
 .dropdown {
   position: absolute;
   top: 100%;
@@ -135,14 +137,14 @@
   margin-top: 10px;
   border-radius: 15px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.25); /* Light opacity */
-  backdrop-filter: blur(15px);           /* Blur effect */
-  -webkit-backdrop-filter: blur(15px);   /* Safari support */
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1); /* lower opacity for stronger blur effect */
+  backdrop-filter: blur(0px);           /* start with no blur */
+  -webkit-backdrop-filter: blur(0px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   max-height: 0;
   opacity: 0;
-  transition: all 0.4s ease-in-out;
+  transition: all 0.4s ease-in-out, backdrop-filter 0.4s ease-in-out; /* add blur transition */
   padding: 0;
 }
 
@@ -154,9 +156,12 @@ body.light .dropdown {
 }
 
 .dropdown.open {
-  max-height: 500px; /* Show dropdown */
-  opacity: 1;        /* Make visible */
-  padding: 10px 0;   /* Restore padding */
+  max-height: 500px;
+  opacity: 1;
+  padding: 10px 0;
+  background: rgba(255, 255, 255, 0.25); /* slightly more opaque when open */
+  backdrop-filter: blur(15px);           /* animate to full blur */
+  -webkit-backdrop-filter: blur(15px);
 }
 
 
