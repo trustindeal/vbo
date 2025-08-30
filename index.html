@@ -53,6 +53,25 @@
     color: #111;
   }
 
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  #page-container {
+    position: relative;
+    transition: transform 0.8s ease-in-out;
+  }
+
+  body.menu-open #page-container {
+    transform: translateX(250px);
+  }
+
+  @media (max-width: 768px) {
+    body.menu-open #page-container {
+      transform: translateX(80vw);
+    }
+  }
+
   #loader {
     position: fixed;
     top: 0;
@@ -83,7 +102,7 @@
 
   header {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 15px;
     backdrop-filter: blur(10px);
     position: relative;
@@ -129,22 +148,28 @@
   }
 
   .dropdown {
-    position: absolute;
-    top: 100%;
+    position: fixed;
+    top: 0;
     left: 0;
-    width: 220px;
-    margin-top: 10px;
-    border-radius: 15px;
-    overflow: hidden;
+    width: 250px;
+    height: 100%;
+    margin-top: 0;
+    border-radius: 0;
+    overflow-y: auto;
     background: rgba(255, 255, 255, 0.3); /* Increased opacity for better readability */
     backdrop-filter: blur(20px); /* Stronger blur for premium glass effect without mixup */
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    max-height: 0;
-    opacity: 0;
-    transition: max-height 0.8s ease-in-out, opacity 0.8s ease-in-out, backdrop-filter 0.8s ease-in-out; /* Slower animation */
+    transform: translateX(-100%);
+    transition: transform 0.8s ease-in-out;
     padding: 0;
+  }
+
+  @media (max-width: 768px) {
+    .dropdown {
+      width: 80vw;
+    }
   }
 
   body.light .dropdown {
@@ -155,8 +180,7 @@
   }
 
   .dropdown.open {
-    max-height: 500px;
-    opacity: 1;
+    transform: translateX(0);
     padding: 15px 0; /* Increased padding for better spacing */
   }
 
@@ -335,9 +359,6 @@
     p {
       font-size: 0.95rem;
     }
-    .dropdown {
-      width: 200px;
-    }
     .menu-btn {
       padding: 8px 16px;
     }
@@ -357,10 +378,6 @@
     #countdown {
       font-size: 1.4rem;
     }
-    .dropdown {
-      width: 180px;
-      margin-top: 8px;
-    }
     .dropdown a {
       padding: 12px 20px;
     }
@@ -372,58 +389,60 @@
     <div class="spinner"></div>
   </div>
 
-  <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
+  <div id="page-container">
+    <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
 
-  <!-- ✅ Menu -->
-  <header>
-    <div class="menu-container">
-      <button class="menu-btn" onclick="toggleMenu()">
-        <span class="menu-icon">☰</span>
-      </button>
-      <div class="dropdown" id="dropdown">
-        <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
-        <a href="#" onclick="showToast()"><span class="menu-item-icon">🔑</span> Login</a>
-        <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
-        <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
-        <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
-        <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+    <!-- ✅ Menu -->
+    <header>
+      <div class="menu-container">
+        <button class="menu-btn" onclick="toggleMenu()">
+          <span class="menu-icon">☰</span>
+        </button>
+        <div class="dropdown" id="dropdown">
+          <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
+          <a href="#" onclick="showToast()"><span class="menu-item-icon">🔑</span> Login</a>
+          <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
+          <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
+          <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
+          <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+        </div>
       </div>
+    </header>
+
+    <h1>🚀 Virtual Back Office</h1>
+    <h2>Automate all your business and network operations with advanced tools for efficiency and growth</h2>
+
+    <p>
+      At <span class="highlight">Virtual Back Office</span>, we specialise in 
+      <strong>business automation</strong>, <strong>fiber line marking</strong>, 
+      <strong>fiber splitter marking</strong>, and complete 
+      <strong>network complaint management</strong>. Our platform ensures seamless integration for ISP operations.
+    </p>
+
+    <p>
+      Our solutions streamline <em>customer complaint handling</em>, 
+      <em>customer query handling</em>, <em>leads handling</em>, and 
+      <em>business accounting</em>. We also provide 
+      <strong>ISP partner support</strong> and <strong>network management</strong> 
+      tools to help optimise resources and boost efficiency in fiber optic networks.
+    </p>
+
+    <p>
+      With our expertise in <strong>business flow enhancement</strong> and 
+      <strong>resource optimisation</strong>, you can focus on growth while 
+      we handle your back office operations, including automated customer service and network resource management.
+    </p>
+
+    <div class="contact-container">
+      <a href="tel:+917007902103" class="contact">📞 Slide to Contact: 7007902103</a>
     </div>
-  </header>
 
-  <h1>🚀 Virtual Back Office</h1>
-  <h2>Automate all your business and network operations with advanced tools for efficiency and growth</h2>
+    <div id="countdown"></div>
 
-  <p>
-    At <span class="highlight">Virtual Back Office</span>, we specialise in 
-    <strong>business automation</strong>, <strong>fiber line marking</strong>, 
-    <strong>fiber splitter marking</strong>, and complete 
-    <strong>network complaint management</strong>. Our platform ensures seamless integration for ISP operations.
-  </p>
-
-  <p>
-    Our solutions streamline <em>customer complaint handling</em>, 
-    <em>customer query handling</em>, <em>leads handling</em>, and 
-    <em>business accounting</em>. We also provide 
-    <strong>ISP partner support</strong> and <strong>network management</strong> 
-    tools to help optimise resources and boost efficiency in fiber optic networks.
-  </p>
-
-  <p>
-    With our expertise in <strong>business flow enhancement</strong> and 
-    <strong>resource optimisation</strong>, you can focus on growth while 
-    we handle your back office operations, including automated customer service and network resource management.
-  </p>
-
-  <div class="contact-container">
-    <a href="tel:+917007902103" class="contact">📞 Slide to Contact: 7007902103</a>
+    <footer>
+      Virtual Back Office © 2025 | We are coming soon!
+    </footer>
   </div>
-
-  <div id="countdown"></div>
-
-  <footer>
-    Virtual Back Office © 2025 | We are coming soon!
-  </footer>
 
   <div id="toast">Coming soon!!</div>
 
@@ -492,6 +511,7 @@
   function toggleMenu() {
     const dropdown = document.getElementById('dropdown');
     dropdown.classList.toggle('open');
+    document.body.classList.toggle('menu-open');
   }
 
   // Toast Message
