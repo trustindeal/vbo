@@ -57,19 +57,10 @@
     overflow: hidden;
   }
 
-  #page-container {
+  main {
+    margin-left: 250px;
     position: relative;
     transition: transform 0.8s ease-in-out;
-  }
-
-  body.menu-open #page-container {
-    transform: translateX(250px);
-  }
-
-  @media (max-width: 768px) {
-    body.menu-open #page-container {
-      transform: translateX(80vw);
-    }
   }
 
   #loader {
@@ -108,11 +99,8 @@
     position: relative;
   }
 
-  .menu-container {
-    position: relative;
-  }
-
   .menu-btn {
+    display: none;
     background: rgba(255, 255, 255, 0.1);
     color: #fff;
     border: none;
@@ -121,7 +109,6 @@
     font-weight: 600;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.3s ease;
-    display: flex;
     align-items: center;
     justify-content: center;
     animation: blink 2s ease-in-out infinite;
@@ -147,44 +134,29 @@
     font-size: 1.2rem;
   }
 
-  .dropdown {
+  .sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 250px;
+    width: 220px;
     height: 100%;
-    margin-top: 0;
-    border-radius: 0;
     overflow-y: auto;
     background: rgba(255, 255, 255, 0.3); /* Increased opacity for better readability */
     backdrop-filter: blur(20px); /* Stronger blur for premium glass effect without mixup */
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transform: translateX(-100%);
-    transition: transform 0.8s ease-in-out;
-    padding: 0;
+    padding: 15px 0; /* Increased padding for better spacing */
   }
 
-  @media (max-width: 768px) {
-    .dropdown {
-      width: 80vw;
-    }
-  }
-
-  body.light .dropdown {
+  body.light .sidebar {
     background: rgba(0, 0, 0, 0.3); /* Adjusted for light mode readability */
     border: 1px solid rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
 
-  .dropdown.open {
-    transform: translateX(0);
-    padding: 15px 0; /* Increased padding for better spacing */
-  }
-
-  .dropdown a {
+  .sidebar a {
     display: flex;
     align-items: center;
     text-decoration: none;
@@ -194,11 +166,11 @@
     transition: background 0.3s ease, transform 0.3s ease;
   }
 
-  body.light .dropdown a {
+  body.light .sidebar a {
     color: #111;
   }
 
-  .dropdown a:hover {
+  .sidebar a:hover {
     background: rgba(0, 212, 255, 0.3);
     transform: translateX(5px);
   }
@@ -350,6 +322,28 @@
   }
 
   @media (max-width: 768px) {
+    .menu-btn {
+      display: flex;
+    }
+
+    main {
+      margin-left: 0;
+    }
+
+    body.menu-open main {
+      transform: translateX(220px);
+    }
+
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.8s ease-in-out;
+      width: 220px;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
     h1 {
       font-size: 1.8rem;
     }
@@ -378,7 +372,7 @@
     #countdown {
       font-size: 1.4rem;
     }
-    .dropdown a {
+    .sidebar a {
       padding: 12px 20px;
     }
   }
@@ -389,24 +383,23 @@
     <div class="spinner"></div>
   </div>
 
-  <div id="page-container">
+  <div class="sidebar" id="sidebar">
+    <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">🔑</span> Login</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+  </div>
+
+  <main id="main">
     <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
 
     <!-- ✅ Menu -->
     <header>
-      <div class="menu-container">
-        <button class="menu-btn" onclick="toggleMenu()">
-          <span class="menu-icon">☰</span>
-        </button>
-        <div class="dropdown" id="dropdown">
-          <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
-          <a href="#" onclick="showToast()"><span class="menu-item-icon">🔑</span> Login</a>
-          <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
-          <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
-          <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
-          <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
-        </div>
-      </div>
+      <button class="menu-btn" onclick="toggleMenu()">
+        <span class="menu-icon">☰</span>
+      </button>
     </header>
 
     <h1>🚀 Virtual Back Office</h1>
@@ -442,7 +435,7 @@
     <footer>
       Virtual Back Office © 2025 | We are coming soon!
     </footer>
-  </div>
+  </main>
 
   <div id="toast">Coming soon!!</div>
 
@@ -509,8 +502,8 @@
 
   // Menu Toggle with Animation
   function toggleMenu() {
-    const dropdown = document.getElementById('dropdown');
-    dropdown.classList.toggle('open');
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('open');
     document.body.classList.toggle('menu-open');
   }
 
