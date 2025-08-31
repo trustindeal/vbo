@@ -411,8 +411,9 @@
 
 <div class="sidebar" id="sidebar">
   <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
-  <a href="https://trustindeal.github.io/load/" target="_blank">
-    <span class="menu-item-icon">🔑</span> Login </a>
+<a href="https://trustindeal.github.io/load/" target="_blank" onclick="event.stopPropagation(); toggleMenu();">
+  <span class="menu-item-icon">🔑</span> Login
+</a>
   <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
   <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
   <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
