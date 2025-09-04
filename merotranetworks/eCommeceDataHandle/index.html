@@ -1,4 +1,4 @@
-<xaiArtifact artifact_id="05644aed-a7bc-4c00-8db2-b0560b1cf8df" artifact_version_id="034e8fb1-a309-450f-84b5-e7cc513bd7eb" title="index.html" contentType="text/html">
+<xaiArtifact artifact_id="05644aed-a7bc-4c00-8db2-b0560b1cf8df" artifact_version_id="8fd673e7-8c8b-4601-9384-be16916ecb7a" title="index.html" contentType="text/html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,10 +36,6 @@
 <meta property="og:url" content="https://vbo.co.in" />
 <meta property="og:image" content="https://vbo.co.in/preview.jpg" />
 
-<!-- Libraries for download -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
   body {
     margin: 0;
@@ -56,61 +52,116 @@
     color: #111;
   }
 
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  main {
+    margin-left: 250px;
+    position: relative;
+    transition: transform 0.8s ease-in-out;
+  }
+
+  header {
+    display: flex;
+    justify-content: flex-start;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .menu-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  body.light .menu-btn {
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  .menu-btn:hover {
+    background: #00d4ff;
+    color: #000;
+    transform: scale(1.05);
+  }
+
+  .menu-icon {
+    font-size: 1.2rem;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 15px 0;
+    z-index: 10;
+  }
+
+  body.light .sidebar {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 15px 25px;
+    color: #fff;
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+
+  body.light .sidebar a {
+    color: #111;
+  }
+
+  .sidebar a:hover {
+    background: rgba(0, 212, 255, 0.3);
+    transform: translateX(5px);
+  }
+
+  .menu-item-icon {
+    margin-right: 12px;
+    font-size: 1.1rem;
+  }
+
   h2 {
     font-size: 2.2rem;
     margin-top: 20px;
     padding: 0 15px;
   }
 
-  #tableContainer {
-    position: relative;
-    max-width: 1200px;
-    margin: 20px auto;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  }
-
-  th, td {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    text-align: left;
-  }
-
-  body.light th, body.light td {
-    border: 1px solid rgba(0, 0, 0, 0.3);
-  }
-
-  th {
-    background: rgba(0, 212, 255, 0.3);
-  }
-
-  .action-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2rem;
-    margin: 0 5px;
-  }
-
-  .edit-btn {
-    color: #00d4ff;
-  }
-
-  .delete-btn {
-    color: #ff6ec7;
-  }
-
-  #editForm {
-    display: none;
+  form {
     max-width: 700px;
-    margin: 20px auto;
+    margin: 0 auto;
     padding: 20px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
@@ -149,6 +200,10 @@
     color: #111;
   }
 
+  input[type="file"] {
+    margin-bottom: 10px;
+  }
+
   button {
     background: linear-gradient(90deg, #00d4ff, #ff6ec7);
     color: #000;
@@ -180,7 +235,7 @@
     flex: 1;
   }
 
-  .delete-img-btn {
+  .delete-btn {
     background: #ff6ec7;
     color: #fff;
     border: none;
@@ -196,7 +251,7 @@
     transition: background 0.3s ease;
   }
 
-  .delete-img-btn:hover {
+  .delete-btn:hover {
     background: #ff0000;
   }
 
@@ -205,10 +260,11 @@
     margin-top: 20px;
   }
 
-  .top-buttons {
+  .top-button {
     position: absolute;
     top: 15px;
     right: 15px;
+    padding: 10px 20px;
   }
 
   .mode-toggle {
@@ -229,83 +285,26 @@
     background: #00a5c8;
   }
 
-  .download-section {
-    max-width: 700px;
-    margin: 20px auto;
-    text-align: center;
-  }
-
-  .download-section label {
-    display: inline-block;
-    margin-right: 10px;
-  }
-
-  .download-section select {
-    margin-bottom: 0;
-  }
-
-  #totalRecords {
-    font-size: 1rem;
-    margin-left: 20px;
-  }
-
-  .image-preview {
-    width: 30px;
-    height: 30px;
-    margin: 0 5px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-
-  #imageModal {
-    display: none;
+  #overlay {
     position: fixed;
-    z-index: 1000;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.8);
-    justify-content: center;
-    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease-in-out;
   }
 
-  #imageModalContent {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 800px;
-    border-radius: 10px;
-    text-align: center;
+  body.menu-open #overlay {
+    opacity: 1;
+    pointer-events: auto;
   }
 
-  body.light #imageModalContent {
-    background-color: #333;
-    color: #fff;
-  }
-
-  .modal-image {
-    width: 200px;
-    margin: 10px;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-
-  .close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-  }
-
-  .close:hover,
-  .close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
+  body.light #overlay {
+    background: rgba(0, 0, 0, 0.3);
   }
 
   #formLoader {
@@ -316,20 +315,6 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-    transition: opacity 0.5s ease;
-  }
-
-  #loader, #formLoader {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 999;
@@ -351,117 +336,122 @@
   }
 
   @media (max-width: 768px) {
-    table {
-      font-size: 0.9rem;
+    .menu-btn {
+      display: flex;
     }
-    th, td {
-      padding: 8px;
+
+    main {
+      margin-left: 0;
     }
+
+    body.menu-open main {
+      transform: translateX(80vw);
+    }
+
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.8s ease-in-out;
+      width: 80vw;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
     h2 {
       font-size: 1.8rem;
+    }
+
+    form {
+      padding: 15px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    header {
+      padding: 10px;
+    }
+    .menu-btn {
+      padding: 8px 15px;
+    }
+    .mode-toggle {
+      right: 80px;
+    }
+    .top-button {
+      right: 10px;
+      padding: 8px 15px;
     }
   }
 </style>
 </head>
 <body>
-  <div class="top-buttons">
+<div class="sidebar" id="sidebar">
+  <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
+  <a href="https://trustindeal.github.io/load/" target="_blank" onclick="event.stopPropagation(); toggleMenu();">
+    <span class="menu-item-icon">🔑</span> Login
+  </a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+</div>
+
+<div id="overlay" onclick="toggleMenu()"></div>
+
+<main id="main">
+  <header>
+    <button class="menu-btn" onclick="toggleMenu()">
+      <span class="menu-icon">☰</span>
+    </button>
+  </header>
+
+  <div class="top-button">
     <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
-    <a href="https://vbo.co.in/merotranetworks/eCommeceDataHandle/">
-      <button>Back</button>
+    <a href="https://vbo.co.in/merotranetworks/eCommeceDataHandle/report/">
+      <button>Data Base</button>
     </a>
   </div>
 
   <h2>eCommerce Purchase Advice Data Handle</h2>
-
-  <div class="download-section">
-    <label>Download data:</label>
-    <select id="downloadFormat">
-      <option value="csv">CSV</option>
-      <option value="xlsx">XLSX</option>
-      <option value="pdf">PDF</option>
-    </select>
-    <button onclick="downloadData()">Download</button>
-    <span id="totalRecords"></span>
-  </div>
-
-  <div id="tableContainer">
-    <div id="loader">
-      <div class="spinner"></div>
-    </div>
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Product Name</th>
-          <th>Description</th>
-          <th>Supplier</th>
-          <th>Price</th>
-          <th>Advice</th>
-          <th>Remarks</th>
-          <th>Images</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <form id="editForm">
+  <form id="productForm">
     <div id="formLoader">
       <div class="spinner"></div>
     </div>
-    <input type="hidden" id="editRow">
     <label>Product Name:</label>
-    <input type="text" id="editProductName" required>
+    <input type="text" name="productName" required>
 
     <label>Description:</label>
-    <textarea id="editDescription"></textarea>
+    <textarea name="description"></textarea>
 
     <label>Supplier Name:</label>
-    <input type="text" id="editSupplier">
+    <input type="text" name="supplier">
 
     <label>Purchase Price:</label>
-    <input type="number" id="editPrice">
+    <input type="number" name="price">
 
     <label>Purchase Advice:</label>
-    <select id="editAdvice">
+    <select name="advice">
       <option value="Final">Final</option>
       <option value="Pending">Pending</option>
     </select>
 
     <label>Remarks:</label>
-    <input type="text" id="editRemarks">
+    <input type="text" name="remarks">
 
-    <label>Attach Photos (existing will be replaced if new uploaded):</label>
-    <div id="editImageInputs"></div>
-    <button type="button" id="editAddImage">Add Image</button>
+    <label>Attach Photos:</label>
+    <div id="imageInputs"></div>
+    <button type="button" id="addImage">Add Image</button>
 
-    <button type="submit" id="updateButton">Update</button>
-    <button type="button" onclick="cancelEdit()">Cancel</button>
+    <button type="submit" id="submitButton">Submit</button>
   </form>
 
   <p id="status"></p>
-
-  <div id="imageModal">
-    <div id="imageModalContent">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <div id="modalImages"></div>
-    </div>
-  </div>
+</main>
 
 <script>
   const scriptURL = "https://script.google.com/macros/s/AKfycbxHUN2rmMMy7kpn8fpcqOX9V0Xy-xZJe82NrTHtr1pYJAcYODYSu2F2_nVthnFGc1zcAQ/exec";
-  let data = [];
-  let editImageCount = 0;
+  let imageCount = 0;
   const maxImages = 8;
-
-  function showLoader() {
-    document.getElementById('loader').style.display = 'flex';
-  }
-
-  function hideLoader() {
-    document.getElementById('loader').style.display = 'none';
-  }
 
   function showFormLoader() {
     document.getElementById('formLoader').style.display = 'flex';
@@ -471,134 +461,8 @@
     document.getElementById('formLoader').style.display = 'none';
   }
 
-  function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const year = date.getFullYear();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
-    return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
-  }
-
-  function loadData() {
-    showLoader();
-    fetch(scriptURL)
-      .then(res => res.json())
-      .then(res => {
-        data = res;
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = '';
-        const rows = data.slice(1);
-        rows.forEach((row, index) => {
-          const tr = document.createElement('tr');
-          row.forEach((cell, cellIndex) => {
-            if (cellIndex < 8) {
-              const td = document.createElement('td');
-              if (cellIndex === 0) { // Date
-                td.textContent = formatDate(cell);
-              } else if (cellIndex === 7) { // Images
-                const links = cell.split(', ');
-                links.forEach(link => {
-                  if (link) {
-                    const fileId = link.split('/d/')[1].split('/')[0];
-                    const img = document.createElement('img');
-                    img.src = `https://drive.google.com/thumbnail?id=${fileId}`;
-                    img.className = 'image-preview';
-                    img.onclick = () => window.open(link, "_blank");
-                    td.appendChild(img);
-                  }
-                });
-              } else {
-                td.textContent = cell;
-              }
-              tr.appendChild(td);
-            }
-          });
-          const actionTd = document.createElement('td');
-          const editBtn = document.createElement('button');
-          editBtn.className = 'action-btn edit-btn';
-          editBtn.innerText = '✏️';
-          editBtn.onclick = () => editRow(index + 2);
-          actionTd.appendChild(editBtn);
-          const deleteBtn = document.createElement('button');
-          deleteBtn.className = 'action-btn delete-btn';
-          deleteBtn.innerText = '🗑️';
-          deleteBtn.onclick = () => deleteRow(index + 2);
-          actionTd.appendChild(deleteBtn);
-          tr.appendChild(actionTd);
-          tbody.appendChild(tr);
-        });
-        document.getElementById('totalRecords').textContent = `Total records: ${rows.length}`;
-        hideLoader();
-      })
-      .catch(err => {
-        console.error(err);
-        hideLoader();
-      });
-  }
-
-  function showImages(links) {
-    const modal = document.getElementById('imageModal');
-    const modalImages = document.getElementById('modalImages');
-    modalImages.innerHTML = '';
-    links.forEach(link => {
-      if (link) {
-        const fileId = link.split('/d/')[1].split('/')[0];
-        const img = document.createElement('img');
-        img.src = `https://drive.google.com/uc?id=${fileId}`;
-        img.className = 'modal-image';
-        img.onclick = () => window.open(link, '_blank');
-        modalImages.appendChild(img);
-      }
-    });
-    modal.style.display = 'flex';
-  }
-
-  function closeModal() {
-    document.getElementById('imageModal').style.display = 'none';
-  }
-
-  function deleteRow(row) {
-    if (confirm('Are you sure to delete this row?')) {
-      const postData = {
-        action: 'delete',
-        row: row
-      };
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(postData),
-        headers: {"Content-Type": "text/plain"}
-      })
-      .then(() => {
-        document.getElementById('status').innerText = '✅ Deleted successfully!';
-        loadData();
-      })
-      .catch(err => {
-        document.getElementById('status').innerText = '❌ Error: ' + err;
-      });
-    }
-  }
-
-  function editRow(row) {
-    const rowData = data[row - 1];
-    document.getElementById('editRow').value = row;
-    document.getElementById('editProductName').value = rowData[1];
-    document.getElementById('editDescription').value = rowData[2];
-    document.getElementById('editSupplier').value = rowData[3];
-    document.getElementById('editPrice').value = rowData[4];
-    document.getElementById('editAdvice').value = rowData[5];
-    document.getElementById('editRemarks').value = rowData[6];
-    document.getElementById('editImageInputs').innerHTML = '';
-    editImageCount = 0;
-    addEditImageInput();
-    document.getElementById('editForm').style.display = 'block';
-  }
-
-  function addEditImageInput() {
-    if (editImageCount >= maxImages) {
+  function addImageInput() {
+    if (imageCount >= maxImages) {
       alert("Maximum 8 images allowed.");
       return;
     }
@@ -611,30 +475,31 @@
 
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
-    deleteBtn.className = "delete-img-btn";
+    deleteBtn.className = "delete-btn";
     deleteBtn.innerText = "×";
     deleteBtn.onclick = () => {
       container.remove();
-      editImageCount--;
+      imageCount--;
     };
 
     container.appendChild(input);
     container.appendChild(deleteBtn);
-    document.getElementById("editImageInputs").appendChild(container);
-    editImageCount++;
+    document.getElementById("imageInputs").appendChild(container);
+    imageCount++;
   }
 
-  document.getElementById("editAddImage").addEventListener("click", addEditImageInput);
+  document.getElementById("addImage").addEventListener("click", addImageInput);
 
-  document.getElementById("editForm").addEventListener("submit", async (e) => {
+  addImageInput();
+
+  document.getElementById("productForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const updateBtn = document.getElementById('updateButton');
-    updateBtn.disabled = true;
+    const form = e.target;
+    const submitBtn = document.getElementById('submitButton');
+    submitBtn.disabled = true;
     showFormLoader();
 
-    const row = document.getElementById('editRow').value;
-
-    const imageContainers = document.querySelectorAll("#editImageInputs .image-container");
+    const imageContainers = document.querySelectorAll(".image-container");
     let base64Images = [];
     for (let container of imageContainers) {
       const input = container.querySelector('input[type="file"]');
@@ -648,87 +513,39 @@
       }
     }
 
-    const updateData = {
-      action: 'update',
-      row: parseInt(row),
-      productName: document.getElementById('editProductName').value,
-      description: document.getElementById('editDescription').value,
-      supplier: document.getElementById('editSupplier').value,
-      price: document.getElementById('editPrice').value,
-      advice: document.getElementById('editAdvice').value,
-      remarks: document.getElementById('editRemarks').value,
+    const data = {
+      productName: form.productName.value,
+      description: form.description.value,
+      supplier: form.supplier.value,
+      price: form.price.value,
+      advice: form.advice.value,
+      remarks: form.remarks.value,
       images: base64Images
     };
 
-    document.getElementById('status').innerText = "Updating...";
+    document.getElementById("status").innerText = "Submitting...";
 
     fetch(scriptURL, {
       method: "POST",
       mode: "no-cors",
-      body: JSON.stringify(updateData),
+      body: JSON.stringify(data),
       headers: {"Content-Type": "text/plain"}
     })
     .then(() => {
-      document.getElementById('status').innerText = "✅ Updated successfully!";
-      document.getElementById('editForm').reset();
-      document.getElementById('editForm').style.display = 'none';
-      document.getElementById('editImageInputs').innerHTML = '';
-      editImageCount = 0;
-      updateBtn.disabled = false;
+      document.getElementById("status").innerText = "✅ Submitted successfully!";
+      form.reset();
+      document.getElementById("imageInputs").innerHTML = "";
+      imageCount = 0;
+      addImageInput();
+      submitBtn.disabled = false;
       hideFormLoader();
-      loadData();
     })
     .catch(err => {
-      document.getElementById('status').innerText = "❌ Error: " + err;
-      updateBtn.disabled = false;
+      document.getElementById("status").innerText = "❌ Error: " + err;
+      submitBtn.disabled = false;
       hideFormLoader();
     });
   });
-
-  function cancelEdit() {
-    document.getElementById('editForm').style.display = 'none';
-    document.getElementById('editForm').reset();
-    document.getElementById('editImageInputs').innerHTML = '';
-    editImageCount = 0;
-    document.getElementById('updateButton').disabled = false;
-  }
-
-  function downloadData() {
-    const format = document.getElementById('downloadFormat').value;
-    const headers = data[0];
-    const rows = data.slice(1);
-    if (format === 'csv') {
-      let csv = headers.join(',') + '\n';
-      rows.forEach(row => {
-        csv += row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',') + '\n';
-      });
-      const blob = new Blob([csv], {type: 'text/csv'});
-      downloadBlob(blob, 'data.csv');
-    } else if (format === 'xlsx') {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb, ws, 'Data');
-      XLSX.writeFile(wb, 'data.xlsx');
-    } else if (format === 'pdf') {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({orientation: 'landscape'});
-      doc.autoTable({
-        head: [headers],
-        body: rows.map(row => row.map(cell => cell.toString()))
-      });
-      doc.save('data.pdf');
-    }
-  }
-
-  function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
 
   function toggleMode() {
     document.body.classList.toggle("light");
@@ -744,9 +561,14 @@
     }
   }
 
+  function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('menu-open');
+  }
+
   window.addEventListener('load', () => {
     setDefaultMode();
-    loadData();
   });
 </script>
 </body>
