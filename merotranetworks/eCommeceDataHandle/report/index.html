@@ -482,7 +482,7 @@
                     const img = document.createElement('img');
                     img.src = `https://drive.google.com/thumbnail?id=${fileId}`;
                     img.className = 'image-preview';
-                    img.onclick = () => showImages(links);
+                    img.onclick = () => window.open(link, "_blank");
                     td.appendChild(img);
                   }
                 });
