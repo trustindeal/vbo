@@ -329,55 +329,6 @@
     cursor: not-allowed;
   }
 
-  /* Mode Toggle */
-  .mode-toggle {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    padding: 6px 14px;
-    border: none;
-    border-radius: 20px;
-    background: #00d4ff;
-    color: #000;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease, opacity 0.5s ease;
-  }
-
-  .mode-toggle:hover {
-    background: #00a5c8;
-  }
-
-  .mode-toggle.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* Toast */
-  #toast {
-    visibility: hidden;
-    min-width: 200px;
-    margin-left: -100px;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 25px;
-    padding: 12px;
-    position: fixed;
-    z-index: 1;
-    left: 50%;
-    bottom: 30px;
-    font-size: 14px;
-    opacity: 0;
-    transition: opacity 0.5s, bottom 0.5s;
-  }
-
-  #toast.show {
-    visibility: visible;
-    opacity: 1;
-    bottom: 50px;
-  }
-
   /* Confirmation Dialog */
   #confirmationDialog {
     display: none;
@@ -600,3 +551,93 @@
     <button onclick="confirmAndRedirect()">OK</button>
   </div>
 
+<script>
+  // Loader
+  function hideLoader() {
+    const loader = document.getElementById('loader');
+    loader.style.opacity = '0';
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }, 500);
+  }
+
+  // Dark/Light Mode Toggle
+  function toggleMode() {
+    document.body.classList.toggle("light");
+  }
+
+  // Default Mode by Indian Time (Day = Light, Night = Dark)
+  function setDefaultMode() {
+    const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
+    const hour = parseInt(hourStr);
+    if (hour >= 6 && hour < 18) {
+      document.body.classList.add("light");
+    } else {
+      document.body.classList.remove("light");
+    }
+  }
+
+  // Hide Mode Toggle after 10 seconds
+  function hideModeToggle() {
+    const toggleBtn = document.querySelector('.mode-toggle');
+    setTimeout(() => {
+      toggleBtn.classList.add('hidden');
+    }, 10000);
+  }
+
+  // Menu Toggle with Animation
+  function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('menu-open');
+  }
+
+  // Toast Message
+  function showToast(message = "Coming soon!!") {
+    let toast = document.getElementById("toast");
+    toast.innerHTML = message;
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
+  }
+
+  // Confirmation Dialog and Redirect
+  function showConfirmationDialog() {
+    const dialog = document.getElementById("confirmationDialog");
+    dialog.style.display = "block";
+    document.body.classList.add("dialog-open");
+  }
+
+  function confirmAndRedirect() {
+    window.location.href = "https://vbo.co.in";
+  }
+
+  // Form Submission to Google Sheets
+  const form = document.getElementById('registrationForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const scriptURL = 'https://script.google.com/macros/s/YOUR_APPS_SCRIPT_ID/exec'; // Replace with your deployed Google Apps Script Web App URL
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+      .then(response => {
+        showConfirmationDialog();
+        form.reset();
+      })
+      .catch(error => {
+        showToast('Error! Please try again.');
+        console.error('Error!', error.message);
+        submitBtn.disabled = false;
+      });
+  });
+
+  // On Load
+  window.addEventListener('load', () => {
+    setDefaultMode();
+    hideModeToggle();
+    setTimeout(hideLoader, 2500);
+  });
+</script>
+</body>
+</html>
