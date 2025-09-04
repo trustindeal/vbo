@@ -1,289 +1,539 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>eCommerce Purchase Advice Data Handle</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      text-align: center;
-      transition: background 1.5s ease, color 1.5s ease;
-      overflow: hidden;
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1LL0RCB2B3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1LL0RCB2B3');
+</script>
+
+<link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
+<meta name="theme-color" content="#0a4a7a">
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>eCommerce Purchase Advice Data Handle | Virtual Back Office</title>
+
+<!-- ✅ SEO Meta -->
+<meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Specializing in fiber optic management, ISP management software, business process automation, customer support automation, and network optimization tools. Contact us at 7007902103.">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools, fiber network automation, ISP operations software, automated customer service, network resource management, business efficiency tools, fiber optic software, automated ISP tools, telecom automation solutions, back office automation, fiber infrastructure management">
+<meta name="author" content="Virtual Back Office" />
+
+<!-- ✅ Social Share -->
+<meta property="og:title" content="eCommerce Purchase Advice Data Handle - Virtual Back Office" />
+<meta property="og:description" content="Automate your business and network operations with Virtual Back Office. Contact: 7007902103" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vbo.co.in" />
+<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    text-align: center;
+    transition: background 1.5s ease, color 1.5s ease;
+  }
+
+  body.light {
+    background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
+    color: #111;
+  }
+
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  main {
+    margin-left: 250px;
+    position: relative;
+    transition: transform 0.8s ease-in-out;
+  }
+
+  header {
+    display: flex;
+    justify-content: flex-start;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .menu-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  body.light .menu-btn {
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  .menu-btn:hover {
+    background: #00d4ff;
+    color: #000;
+    transform: scale(1.05);
+  }
+
+  .menu-icon {
+    font-size: 1.2rem;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 15px 0;
+    z-index: 10;
+  }
+
+  body.light .sidebar {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 15px 25px;
+    color: #fff;
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+
+  body.light .sidebar a {
+    color: #111;
+  }
+
+  .sidebar a:hover {
+    background: rgba(0, 212, 255, 0.3);
+    transform: translateX(5px);
+  }
+
+  .menu-item-icon {
+    margin-right: 12px;
+    font-size: 1.1rem;
+  }
+
+  h2 {
+    font-size: 2.2rem;
+    margin-top: 20px;
+    padding: 0 15px;
+  }
+
+  form {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1rem;
+  }
+
+  body.light input[type="text"],
+  body.light input[type="number"],
+  body.light textarea,
+  body.light select {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  input[type="file"] {
+    margin-bottom: 10px;
+  }
+
+  button {
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  }
+
+  .image-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .image-container input {
+    flex: 1;
+  }
+
+  .delete-btn {
+    background: #ff6ec7;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+  }
+
+  .delete-btn:hover {
+    background: #ff0000;
+  }
+
+  #status {
+    font-size: 1rem;
+    margin-top: 20px;
+  }
+
+  .top-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 10px 20px;
+  }
+
+  .mode-toggle {
+    position: absolute;
+    top: 15px;
+    left: 60px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 20px;
+    background: #00d4ff;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .mode-toggle:hover {
+    background: #00a5c8;
+  }
+
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease-in-out;
+  }
+
+  body.menu-open #overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  body.light #overlay {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .menu-btn {
+      display: flex;
     }
 
-    body.light {
-      background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
-      color: #111;
+    main {
+      margin-left: 0;
+    }
+
+    body.menu-open main {
+      transform: translateX(80vw);
+    }
+
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.8s ease-in-out;
+      width: 80vw;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
     }
 
     h2 {
-      font-size: 2.2rem;
-      margin-top: 20px;
-      padding: 0 15px;
+      font-size: 1.8rem;
     }
 
     form {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      padding: 15px;
     }
+  }
 
-    label {
-      display: block;
-      text-align: left;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    textarea,
-    select {
-      width: 100%;
+  @media (max-width: 480px) {
+    header {
       padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      font-size: 1rem;
     }
-
-    body.light input[type="text"],
-    body.light input[type="number"],
-    body.light textarea,
-    body.light select {
-      border: 1px solid rgba(0, 0, 0, 0.3);
-      background: rgba(0, 0, 0, 0.1);
-      color: #111;
+    .menu-btn {
+      padding: 8px 15px;
     }
-
-    input[type="file"] {
-      margin-bottom: 10px;
-    }
-
-    button {
-      background: linear-gradient(90deg, #00d4ff, #ff6ec7);
-      color: #000;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 25px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
-    }
-
-    .image-container {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .image-container input {
-      flex: 1;
-    }
-
-    .delete-btn {
-      background: #ff6ec7;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      margin-left: 10px;
-      cursor: pointer;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s ease;
-    }
-
-    .delete-btn:hover {
-      background: #ff0000;
-    }
-
-    #status {
-      font-size: 1rem;
-      margin-top: 20px;
-    }
-
-    .top-button {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      padding: 10px 20px;
-    }
-
     .mode-toggle {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      padding: 6px 14px;
-      border: none;
-      border-radius: 20px;
-      background: #00d4ff;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s ease;
+      left: 10px;
     }
-
-    .mode-toggle:hover {
-      background: #00a5c8;
+    .top-button {
+      right: 10px;
+      padding: 8px 15px;
     }
-
-    @media (max-width: 768px) {
-      form {
-        padding: 15px;
-      }
-      h2 {
-        font-size: 1.8rem;
-      }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
-  <a href="https://docs.google.com/spreadsheets/d/1bTYTfDq-ybGwC5uSmuPl9316vvUerKafxKKMwQLTAyM/edit" target="_blank">
-    <button class="top-button">Data Base</button>
+
+<div class="sidebar" id="sidebar">
+  <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
+  <a href="https://trustindeal.github.io/load/" target="_blank" onclick="event.stopPropagation(); toggleMenu();">
+    <span class="menu-item-icon">🔑</span> Login
   </a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
+  <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+</div>
 
-  <h2>eCommerce Purchase Advice Data Handle</h2>
-  <form id="productForm">
-    <label>Product Name:</label>
-    <input type="text" name="productName" required><br><br>
+  <div id="overlay" onclick="toggleMenu()"></div>
 
-    <label>Description:</label>
-    <textarea name="description"></textarea><br><br>
+  <main id="main">
+    <!-- ✅ Menu -->
+    <header>
+      <button class="menu-btn" onclick="toggleMenu()">
+        <span class="menu-icon">☰</span>
+      </button>
+    </header>
 
-    <label>Supplier Name:</label>
-    <input type="text" name="supplier"><br><br>
+    <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
+    <a href="https://docs.google.com/spreadsheets/d/1bTYTfDq-ybGwC5uSmuPl9316vvUerKafxKKMwQLTAyM/edit" target="_blank">
+      <button class="top-button">Data Base</button>
+    </a>
 
-    <label>Purchase Price:</label>
-    <input type="number" name="price"><br><br>
+    <h2>eCommerce Purchase Advice Data Handle</h2>
+    <form id="productForm">
+      <label>Product Name:</label>
+      <input type="text" name="productName" required>
 
-    <label>Purchase Advice:</label>
-    <select name="advice">
-      <option value="Final">Final</option>
-      <option value="Pending">Pending</option>
-    </select><br><br>
+      <label>Description:</label>
+      <textarea name="description"></textarea>
 
-    <label>Remarks:</label>
-    <input type="text" name="remarks"><br><br>
+      <label>Supplier Name:</label>
+      <input type="text" name="supplier">
 
-    <label>Attach Photos:</label>
-    <div id="imageInputs"></div>
-    <button type="button" id="addImage">Add Image</button><br><br>
+      <label>Purchase Price:</label>
+      <input type="number" name="price">
 
-    <button type="submit">Submit</button>
-  </form>
+      <label>Purchase Advice:</label>
+      <select name="advice">
+        <option value="Final">Final</option>
+        <option value="Pending">Pending</option>
+      </select>
 
-  <p id="status"></p>
+      <label>Remarks:</label>
+      <input type="text" name="remarks">
 
-  <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxHUN2rmMMy7kpn8fpcqOX9V0Xy-xZJe82NrTHtr1pYJAcYODYSu2F2_nVthnFGc1zcAQ/exec";
+      <label>Attach Photos:</label>
+      <div id="imageInputs"></div>
+      <button type="button" id="addImage">Add Image</button>
 
-    let imageCount = 0;
-    const maxImages = 8;
+      <button type="submit">Submit</button>
+    </form>
 
-    function addImageInput() {
-      if (imageCount >= maxImages) {
-        alert("Maximum 8 images allowed.");
-        return;
+    <p id="status"></p>
+  </main>
+
+  <div id="toast">Coming soon!!</div>
+
+<script>
+  const scriptURL = "https://script.google.com/macros/s/AKfycbxHUN2rmMMy7kpn8fpcqOX9V0Xy-xZJe82NrTHtr1pYJAcYODYSu2F2_nVthnFGc1zcAQ/exec";
+
+  let imageCount = 0;
+  const maxImages = 8;
+
+  function addImageInput() {
+    if (imageCount >= maxImages) {
+      alert("Maximum 8 images allowed.");
+      return;
+    }
+    const container = document.createElement("div");
+    container.className = "image-container";
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.name = "images[]";
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "delete-btn";
+    deleteBtn.innerText = "×";
+    deleteBtn.onclick = () => {
+      container.remove();
+      imageCount--;
+    };
+
+    container.appendChild(input);
+    container.appendChild(deleteBtn);
+    document.getElementById("imageInputs").appendChild(container);
+    imageCount++;
+  }
+
+  document.getElementById("addImage").addEventListener("click", addImageInput);
+
+  // Add initial input
+  addImageInput();
+
+  document.getElementById("productForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = e.target;
+
+    const imageContainers = document.querySelectorAll(".image-container");
+    let base64Images = [];
+    for (let container of imageContainers) {
+      const input = container.querySelector('input[type="file"]');
+      if (input.files.length > 0) {
+        let file = input.files[0];
+        let reader = new FileReader();
+        base64Images.push(await new Promise(resolve => {
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        }));
       }
-      const container = document.createElement("div");
-      container.className = "image-container";
-
-      const input = document.createElement("input");
-      input.type = "file";
-      input.name = "images[]";
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "delete-btn";
-      deleteBtn.innerText = "×";
-      deleteBtn.onclick = () => {
-        container.remove();
-        imageCount--;
-      };
-
-      container.appendChild(input);
-      container.appendChild(deleteBtn);
-      document.getElementById("imageInputs").appendChild(container);
-      imageCount++;
     }
 
-    document.getElementById("addImage").addEventListener("click", addImageInput);
+    const data = {
+      productName: form.productName.value,
+      description: form.description.value,
+      supplier: form.supplier.value,
+      price: form.price.value,
+      advice: form.advice.value,
+      remarks: form.remarks.value,
+      images: base64Images
+    };
 
-    // Add initial input
-    addImageInput();
+    document.getElementById("status").innerText = "Submitting...";
 
-    document.getElementById("productForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = e.target;
-
-      const imageContainers = document.querySelectorAll(".image-container");
-      let base64Images = [];
-      for (let container of imageContainers) {
-        const input = container.querySelector('input[type="file"]');
-        if (input.files.length > 0) {
-          let file = input.files[0];
-          let reader = new FileReader();
-          base64Images.push(await new Promise(resolve => {
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          }));
-        }
-      }
-
-      const data = {
-        productName: form.productName.value,
-        description: form.description.value,
-        supplier: form.supplier.value,
-        price: form.price.value,
-        advice: form.advice.value,
-        remarks: form.remarks.value,
-        images: base64Images
-      };
-
-      document.getElementById("status").innerText = "Submitting...";
-
-      fetch(scriptURL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify(data),
-        headers: {"Content-Type": "text/plain"}
-      })
-      .then(() => {
-        document.getElementById("status").innerText = "✅ Submitted successfully!";
-        form.reset();
-        document.getElementById("imageInputs").innerHTML = "";
-        imageCount = 0;
-        addImageInput();
-      })
-      .catch(err => {
-        document.getElementById("status").innerText = "❌ Error: " + err;
-      });
+    fetch(scriptURL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify(data),
+      headers: {"Content-Type": "text/plain"}
+    })
+    .then(() => {
+      document.getElementById("status").innerText = "✅ Submitted successfully!";
+      form.reset();
+      document.getElementById("imageInputs").innerHTML = "";
+      imageCount = 0;
+      addImageInput();
+    })
+    .catch(err => {
+      document.getElementById("status").innerText = "❌ Error: " + err;
     });
+  });
 
-    function toggleMode() {
-      document.body.classList.toggle("light");
+  // Dark/Light Mode Toggle
+  function toggleMode() {
+    document.body.classList.toggle("light");
+  }
+
+  // Default Mode by Indian Time (Day = Light, Night = Dark)
+  function setDefaultMode() {
+    const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
+    const hour = parseInt(hourStr);
+    if (hour >= 6 && hour < 18) {
+      document.body.classList.add("light"); // Daytime = Light Mode
+    } else {
+      document.body.classList.remove("light"); // Nighttime = Dark Mode
     }
-  </script>
+  }
+
+  // Menu Toggle with Animation
+  function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('menu-open');
+  }
+
+  // Toast Message
+  function showToast() {
+    let toast = document.getElementById("toast");
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
+  }
+
+  // On Load
+  window.addEventListener('load', () => {
+    setDefaultMode();
+  });
+</script>
 </body>
 </html>
