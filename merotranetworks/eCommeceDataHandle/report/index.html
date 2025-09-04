@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1LL0RCB2B3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1LL0RCB2B3');
+</script>
+
+<link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
+<meta name="theme-color" content="#0a4a7a">
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>eCommerce Purchase Advice Data Handle | Virtual Back Office</title>
+
+<!-- ✅ SEO Meta -->
+<meta name="description" content="Virtual Back Office helps automate business activities, manage fiber networks, handle customer complaints, and enhance business flow. Specializing in fiber optic management, ISP management software, business process automation, customer support automation, and network optimization tools. Contact us at 7007902103.">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Resource Optimisation, Fiber line marking, Fiber splitter marking, Network complaint management, Network management, ISP partner support, Customer complaint handling, Customer query handling, Leads handling, Business accounting, Business flow enhancement, fiber optic management, ISP management software, business process automation, customer support automation, network optimization tools, fiber network automation, ISP operations software, automated customer service, network resource management, business efficiency tools, fiber optic software, automated ISP tools, telecom automation solutions, back office automation, fiber infrastructure management">
+<meta name="author" content="Virtual Back Office" />
+
+<!-- ✅ Social Share -->
+<meta property="og:title" content="eCommerce Purchase Advice Data Handle - Virtual Back Office" />
+<meta property="og:description" content="Automate your business and network operations with Virtual Back Office. Contact: 7007902103" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vbo.co.in" />
+<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
+
+<!-- Libraries for download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    text-align: center;
+    transition: background 1.5s ease, color 1.5s ease;
+  }
+
+  body.light {
+    background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
+    color: #111;
+  }
+
+  h2 {
+    font-size: 2.2rem;
+    margin-top: 20px;
+    padding: 0 15px;
+  }
+
+  table {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  th, td {
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: left;
+  }
+
+  body.light th, body.light td {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+  }
+
+  th {
+    background: rgba(0, 212, 255, 0.3);
+  }
+
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin: 0 5px;
+  }
+
+  .edit-btn {
+    color: #00d4ff;
+  }
+
+  .delete-btn {
+    color: #ff6ec7;
+  }
+
+  #editForm {
+    display: none;
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1rem;
+  }
+
+  body.light input[type="text"],
+  body.light input[type="number"],
+  body.light textarea,
+  body.light select {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  button {
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  }
+
+  .image-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .image-container input {
+    flex: 1;
+  }
+
+  .delete-img-btn {
+    background: #ff6ec7;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+  }
+
+  .delete-img-btn:hover {
+    background: #ff0000;
+  }
+
+  #status {
+    font-size: 1rem;
+    margin-top: 20px;
+  }
+
+  .top-buttons {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+  }
+
+  .mode-toggle {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 20px;
+    background: #00d4ff;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .mode-toggle:hover {
+    background: #00a5c8;
+  }
+
+  .download-section {
+    max-width: 700px;
+    margin: 20px auto;
+    text-align: left;
+  }
+
+  @media (max-width: 768px) {
+    table {
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 8px;
+    }
+    h2 {
+      font-size: 1.8rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
+  <div class="top-buttons">
+    <a href="https://vbo.co.in/merotranetworks/eCommeceDataHandle/">
+      <button>Back</button>
+    </a>
+  </div>
+
+  <h2>eCommerce Purchase Advice Data Handle</h2>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Product Name</th>
+        <th>Description</th>
+        <th>Supplier</th>
+        <th>Price</th>
+        <th>Advice</th>
+        <th>Remarks</th>
+        <th>Images</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="download-section">
+    <label>Download as:</label>
+    <select id="downloadFormat">
+      <option value="csv">CSV</option>
+      <option value="xlsx">XLSX</option>
+      <option value="pdf">PDF</option>
+    </select>
+    <button onclick="downloadData()">Download</button>
+  </div>
+
+  <form id="editForm">
+    <input type="hidden" id="editRow">
+    <label>Product Name:</label>
+    <input type="text" id="editProductName" required>
+
+    <label>Description:</label>
+    <textarea id="editDescription"></textarea>
+
+    <label>Supplier Name:</label>
+    <input type="text" id="editSupplier">
+
+    <label>Purchase Price:</label>
+    <input type="number" id="editPrice">
+
+    <label>Purchase Advice:</label>
+    <select id="editAdvice">
+      <option value="Final">Final</option>
+      <option value="Pending">Pending</option>
+    </select>
+
+    <label>Remarks:</label>
+    <input type="text" id="editRemarks">
+
+    <label>Attach Photos (existing will be replaced if new uploaded):</label>
+    <div id="editImageInputs"></div>
+    <button type="button" id="editAddImage">Add Image</button>
+
+    <button type="submit">Update</button>
+    <button type="button" onclick="cancelEdit()">Cancel</button>
+  </form>
+
+  <p id="status"></p>
+
+<script>
+  const scriptURL = "https://script.google.com/macros/s/AKfycbxHUN2rmMMy7kpn8fpcqOX9V0Xy-xZJe82NrTHtr1pYJAcYODYSu2F2_nVthnFGc1zcAQ/exec";
+  let data = [];
+  let editImageCount = 0;
+  const maxImages = 8;
+
+  function loadData() {
+    fetch(scriptURL)
+      .then(res => res.json())
+      .then(res => {
+        data = res;
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        data.slice(1).forEach((row, index) => { // slice(1) to skip header
+          const tr = document.createElement('tr');
+          row.forEach((cell, cellIndex) => {
+            if (cellIndex < 8) { // First 8 columns
+              const td = document.createElement('td');
+              if (cellIndex === 7) { // Images
+                const links = cell.split(', ');
+                links.forEach(link => {
+                  if (link) {
+                    const a = document.createElement('a');
+                    a.href = link;
+                    a.textContent = 'Image ';
+                    a.target = '_blank';
+                    td.appendChild(a);
+                  }
+                });
+              } else {
+                td.textContent = cell;
+              }
+              tr.appendChild(td);
+            }
+          });
+          const actionTd = document.createElement('td');
+          const editBtn = document.createElement('button');
+          editBtn.className = 'action-btn edit-btn';
+          editBtn.innerText = '✏️';
+          editBtn.onclick = () => editRow(index + 2); // row index 2-based (header +1)
+          actionTd.appendChild(editBtn);
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'action-btn delete-btn';
+          deleteBtn.innerText = '🗑️';
+          deleteBtn.onclick = () => deleteRow(index + 2);
+          actionTd.appendChild(deleteBtn);
+          tr.appendChild(actionTd);
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => console.error(err));
+  }
+
+  function deleteRow(row) {
+    if (confirm('Are you sure to delete this row?')) {
+      const postData = {
+        action: 'delete',
+        row: row
+      };
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(postData),
+        headers: {"Content-Type": "text/plain"}
+      })
+      .then(() => {
+        document.getElementById('status').innerText = '✅ Deleted successfully!';
+        loadData();
+      })
+      .catch(err => {
+        document.getElementById('status').innerText = '❌ Error: ' + err;
+      });
+    }
+  }
+
+  function editRow(row) {
+    const rowData = data[row - 1]; // 1-based to 0-index
+    document.getElementById('editRow').value = row;
+    document.getElementById('editProductName').value = rowData[1];
+    document.getElementById('editDescription').value = rowData[2];
+    document.getElementById('editSupplier').value = rowData[3];
+    document.getElementById('editPrice').value = rowData[4];
+    document.getElementById('editAdvice').value = rowData[5];
+    document.getElementById('editRemarks').value = rowData[6];
+    // For images, allow new uploads, will replace
+    document.getElementById('editImageInputs').innerHTML = '';
+    editImageCount = 0;
+    addEditImageInput();
+    document.getElementById('editForm').style.display = 'block';
+  }
+
+  function addEditImageInput() {
+    if (editImageCount >= maxImages) {
+      alert("Maximum 8 images allowed.");
+      return;
+    }
+    const container = document.createElement("div");
+    container.className = "image-container";
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.name = "images[]";
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "delete-img-btn";
+    deleteBtn.innerText = "×";
+    deleteBtn.onclick = () => {
+      container.remove();
+      editImageCount--;
+    };
+
+    container.appendChild(input);
+    container.appendChild(deleteBtn);
+    document.getElementById("editImageInputs").appendChild(container);
+    editImageCount++;
+  }
+
+  document.getElementById("editAddImage").addEventListener("click", addEditImageInput);
+
+  document.getElementById("editForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const row = document.getElementById('editRow').value;
+
+    const imageContainers = document.querySelectorAll("#editImageInputs .image-container");
+    let base64Images = [];
+    for (let container of imageContainers) {
+      const input = container.querySelector('input[type="file"]');
+      if (input.files.length > 0) {
+        let file = input.files[0];
+        let reader = new FileReader();
+        base64Images.push(await new Promise(resolve => {
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        }));
+      }
+    }
+
+    const updateData = {
+      action: 'update',
+      row: parseInt(row),
+      productName: document.getElementById('editProductName').value,
+      description: document.getElementById('editDescription').value,
+      supplier: document.getElementById('editSupplier').value,
+      price: document.getElementById('editPrice').value,
+      advice: document.getElementById('editAdvice').value,
+      remarks: document.getElementById('editRemarks').value,
+      images: base64Images // if empty, keep old
+    };
+
+    document.getElementById('status').innerText = "Updating...";
+
+    fetch(scriptURL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify(updateData),
+      headers: {"Content-Type": "text/plain"}
+    })
+    .then(() => {
+      document.getElementById('status').innerText = "✅ Updated successfully!";
+      document.getElementById('editForm').reset();
+      document.getElementById('editForm').style.display = 'none';
+      document.getElementById('editImageInputs').innerHTML = '';
+      editImageCount = 0;
+      loadData();
+    })
+    .catch(err => {
+      document.getElementById('status').innerText = "❌ Error: " + err;
+    });
+  });
+
+  function cancelEdit() {
+    document.getElementById('editForm').style.display = 'none';
+    document.getElementById('editForm').reset();
+    document.getElementById('editImageInputs').innerHTML = '';
+    editImageCount = 0;
+  }
+
+  function downloadData() {
+    const format = document.getElementById('downloadFormat').value;
+    const headers = data[0];
+    const rows = data.slice(1);
+    if (format === 'csv') {
+      let csv = headers.join(',') + '\n';
+      rows.forEach(row => {
+        csv += row.map(cell => `"${cell.toString().replace(/"/g, '""')}"`).join(',') + '\n';
+      });
+      const blob = new Blob([csv], {type: 'text/csv'});
+      downloadBlob(blob, 'data.csv');
+    } else if (format === 'xlsx') {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, 'Data');
+      XLSX.writeFile(wb, 'data.xlsx');
+    } else if (format === 'pdf') {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({orientation: 'landscape'});
+      doc.autoTable({
+        head: [headers],
+        body: rows.map(row => row.map(cell => cell.toString()))
+      });
+      doc.save('data.pdf');
+    }
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // Dark/Light Mode Toggle
+  function toggleMode() {
+    document.body.classList.toggle("light");
+  }
+
+  // Default Mode by Indian Time (Day = Light, Night = Dark)
+  function setDefaultMode() {
+    const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
+    const hour = parseInt(hourStr);
+    if (hour >= 6 && hour < 18) {
+      document.body.classList.add("light"); // Daytime = Light Mode
+    } else {
+      document.body.classList.remove("light"); // Nighttime = Dark Mode
+    }
+  }
+
+  // On Load
+  window.addEventListener('load', () => {
+    setDefaultMode();
+    loadData();
+  });
+</script>
+</body>
+</html>
