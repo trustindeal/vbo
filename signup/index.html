@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1LL0RCB2B3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1LL0RCB2B3');
+</script>
+
+<link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
+<meta name="theme-color" content="#0a4a7a">
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Virtual Back Office | Register for Services</title>
+
+<!-- ✅ SEO Meta -->
+<meta name="description" content="Register with Virtual Back Office to automate your business activities, manage fiber networks, and optimize operations. Provide your details to get started with our professional services.">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Fiber Network Management, ISP Management, Registration, Business Process Automation, Customer Support Automation, Network Optimization">
+<meta name="author" content="Virtual Back Office" />
+
+<!-- ✅ Social Share -->
+<meta property="og:title" content="Register for Virtual Back Office Services" />
+<meta property="og:description" content="Sign up to automate your business and network operations. Get access to advanced tools for efficiency and growth." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vbo.co.in/register" />
+<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    text-align: center;
+    transition: background 1.5s ease, color 1.5s ease;
+    overflow: hidden;
+  }
+
+  body.light {
+    background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
+    color: #111;
+  }
+
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  main {
+    margin-left: 250px;
+    position: relative;
+    transition: transform 0.8s ease-in-out;
+  }
+
+  #loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .spinner {
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid #00d4ff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  header {
+    display: flex;
+    justify-content: flex-start;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .menu-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  body.light .menu-btn {
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  .menu-btn:hover {
+    background: #00d4ff;
+    color: #000;
+    transform: scale(1.05);
+  }
+
+  .menu-icon {
+    font-size: 1.2rem;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 15px 0;
+    z-index: 10;
+  }
+
+  body.light .sidebar {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 15px 25px;
+    color: #fff;
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+
+  body.light .sidebar a {
+    color: #111;
+  }
+
+  .sidebar a:hover {
+    background: rgba(0, 212, 255, 0.3);
+    transform: translateX(5px);
+  }
+
+  .menu-item-icon {
+    margin-right: 12px;
+    font-size: 1.1rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    margin-top: 20px;
+    padding: 0 15px;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    font-weight: normal;
+    margin-bottom: 25px;
+    color: #d1d1d1;
+    transition: color 1.5s ease;
+    padding: 0 15px;
+  }
+
+  body.light h2 {
+    color: #444;
+  }
+
+  .highlight {
+    color: #00d4ff;
+    font-weight: bold;
+  }
+
+  p {
+    max-width: 700px;
+    line-height: 1.6;
+    font-size: 1rem;
+    margin: 10px auto;
+    padding: 0 15px;
+  }
+
+  .contact-container {
+    margin-top: 20px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .contact {
+    font-size: 1.2rem;
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    padding: 10px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: left 0.5s ease;
+  }
+
+  .contact:hover::before {
+    left: 0;
+  }
+
+  .contact:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  }
+
+  footer {
+    margin: 20px 0;
+    font-size: 0.85rem;
+    color: #aaa;
+    padding: 0 15px;
+  }
+
+  /* Form Styles */
+  form {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  body.light form {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    font-size: 1rem;
+  }
+
+  body.light input, body.light select, body.light textarea {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+  }
+
+  button[type="submit"] {
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  button[type="submit"]:hover {
+    transform: scale(1.05);
+  }
+
+  /* Mode Toggle */
+  .mode-toggle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 20px;
+    background: #00d4ff;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease, opacity 0.5s ease;
+  }
+
+  .mode-toggle:hover {
+    background: #00a5c8;
+  }
+
+  .mode-toggle.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Toast */
+  #toast {
+    visibility: hidden;
+    min-width: 200px;
+    margin-left: -100px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 25px;
+    padding: 12px;
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 30px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+  }
+
+  #toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px;
+  }
+
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease-in-out;
+  }
+
+  body.menu-open #overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  body.light #overlay {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .menu-btn {
+      display: flex;
+    }
+
+    main {
+      margin-left: 0;
+    }
+
+    body.menu-open main {
+      transform: translateX(80vw);
+    }
+
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.8s ease-in-out;
+      width: 80vw;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    h1 {
+      font-size: 1.8rem;
+    }
+    h2 {
+      font-size: 1rem;
+    }
+    p {
+      font-size: 0.95rem;
+    }
+    .menu-btn {
+      padding: 8px 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    header {
+      padding: 10px;
+    }
+    .menu-btn {
+      padding: 8px 15px;
+    }
+    .contact {
+      padding: 8px 20px;
+      font-size: 1rem;
+    }
+    .sidebar a {
+      padding: 12px 20px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="loader">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
+    <a href="https://trustindeal.github.io/load/" target="_blank" onclick="event.stopPropagation(); toggleMenu();">
+      <span class="menu-item-icon">🔑</span> Login
+    </a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
+    <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+  </div>
+
+  <div id="overlay" onclick="toggleMenu()"></div>
+
+  <main id="main">
+    <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
+
+    <!-- ✅ Menu -->
+    <header>
+      <button class="menu-btn" onclick="toggleMenu()">
+        <span class="menu-icon">☰</span>
+      </button>
+    </header>
+
+    <h1>🚀 Register for Virtual Back Office Services</h1>
+    <h2>Join our platform to automate your business operations, manage networks efficiently, and drive growth with professional tools.</h2>
+
+    <p>
+      At <span class="highlight">Virtual Back Office</span>, we provide cutting-edge solutions for <strong>business automation</strong>, <strong>fiber network management</strong>, and <strong>customer support optimization</strong>. Register today to unlock access to our suite of services tailored for ISPs, e-commerce vendors, and more.
+    </p>
+
+    <p>
+      Our platform handles everything from <em>complaint management</em> and <em>lead handling</em> to <em>accounting</em> and <em>resource optimization</em>, ensuring seamless operations and enhanced efficiency.
+    </p>
+
+    <p>
+      Fill out the form below with your details. Once registered, you'll gain access to personalized tools that streamline your back office tasks and boost productivity.
+    </p>
+
+    <form id="registrationForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="contact">Contact Number (10 digits):</label>
+      <input type="tel" id="contact" name="contact" pattern="[0-9]{10}" required>
+
+      <label for="businessType">Business Type:</label>
+      <select id="businessType" name="businessType" required>
+        <option value="">Select Business Type</option>
+        <option value="Internet & cable service provider">Internet & cable service provider</option>
+        <option value="Book keeping">Book keeping</option>
+        <option value="Door to step service provider">Door to step service provider</option>
+        <option value="E commerce vendor">E commerce vendor</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="city">City:</label>
+      <input type="text" id="city" name="city" required>
+
+      <label for="emails">Mail ID(s) (separate with comma):</label>
+      <textarea id="emails" name="emails" required></textarea>
+
+      <button type="submit">Register Now</button>
+    </form>
+
+    <div class="contact-container">
+      <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
+    </div>
+
+    <footer>
+      Virtual Back Office © 2025 | Register to Get Started!
+    </footer>
+  </main>
+
+  <div id="toast">Registration Successful!</div>
+
+<script>
+  // Loader
+  function hideLoader() {
+    const loader = document.getElementById('loader');
+    loader.style.opacity = '0';
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }, 500);
+  }
+
+  // Dark/Light Mode Toggle
+  function toggleMode() {
+    document.body.classList.toggle("light");
+  }
+
+  // Default Mode by Indian Time (Day = Light, Night = Dark)
+  function setDefaultMode() {
+    const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
+    const hour = parseInt(hourStr);
+    if (hour >= 6 && hour < 18) {
+      document.body.classList.add("light"); // Daytime = Light Mode
+    } else {
+      document.body.classList.remove("light"); // Nighttime = Dark Mode
+    }
+  }
+
+  // Hide Mode Toggle after 10 seconds
+  function hideModeToggle() {
+    const toggleBtn = document.querySelector('.mode-toggle');
+    setTimeout(() => {
+      toggleBtn.classList.add('hidden');
+    }, 10000);
+  }
+
+  // Menu Toggle with Animation
+  function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('menu-open');
+  }
+
+  // Toast Message
+  function showToast(message = "Coming soon!!") {
+    let toast = document.getElementById("toast");
+    toast.innerHTML = message;
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
+  }
+
+  // Form Submission to Google Sheets
+  const form = document.getElementById('registrationForm');
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbz3pcNuOW2nRpWyF7PbuM6z1BTTS2hp12okiUiVrOq1o_25LGJooZd9rvVVI49HKSVV3Q/exec'; // Replace with your deployed Google Apps Script Web App URL
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+      .then(response => {
+        showToast('Registration Successful!');
+        form.reset();
+      })
+      .catch(error => {
+        showToast('Error! Please try again.');
+        console.error('Error!', error.message);
+      });
+  });
+
+  // On Load
+  window.addEventListener('load', () => {
+    setDefaultMode();
+    hideModeToggle();
+    setTimeout(hideLoader, 2500);
+  });
+</script>
+</body>
+</html>
