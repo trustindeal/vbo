@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1LL0RCB2B3"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-1LL0RCB2B3');
 </script>
 
@@ -211,7 +209,7 @@
     max-width: 700px;
     line-height: 1.6;
     font-size: 1rem;
-    margin: 10px auto;
+    margin: 15px auto;
     padding: 0 15px;
   }
 
@@ -265,8 +263,8 @@
   /* Form Styles */
   form {
     max-width: 600px;
-    margin: 20px auto;
-    padding: 20px;
+    margin: 30px auto;
+    padding: 30px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     backdrop-filter: blur(10px);
@@ -279,39 +277,56 @@
 
   label {
     display: block;
-    margin: 10px 0 5px;
+    margin: 15px 0 8px;
     font-weight: bold;
     text-align: left;
   }
 
   input, select, textarea {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
+    padding: 12px;
+    margin-bottom: 20px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 10px;
-    background: transparent;
-    color: inherit;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
     font-size: 1rem;
   }
 
   body.light input, body.light select, body.light textarea {
     border: 1px solid rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.05);
+    color: #111;
+  }
+
+  select option {
+    background: #0f2027;
+    color: #fff;
+  }
+
+  body.light select option {
+    background: #f0f0f0;
+    color: #111;
   }
 
   button[type="submit"] {
     background: linear-gradient(90deg, #00d4ff, #ff6ec7);
     color: #000;
     border: none;
-    padding: 12px 25px;
+    padding: 12px 30px;
     border-radius: 25px;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease;
   }
 
   button[type="submit"]:hover {
     transform: scale(1.05);
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   /* Mode Toggle */
@@ -363,6 +378,47 @@
     bottom: 50px;
   }
 
+  /* Confirmation Dialog */
+  #confirmationDialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  body.light #confirmationDialog {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  #confirmationDialog p {
+    margin: 0 0 20px;
+    line-height: 1.6;
+  }
+
+  #confirmationDialog button {
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  #confirmationDialog button:hover {
+    transform: scale(1.05);
+  }
+
   #overlay {
     position: fixed;
     top: 0;
@@ -376,7 +432,7 @@
     transition: opacity 0.8s ease-in-out;
   }
 
-  body.menu-open #overlay {
+  body.menu-open #overlay, body.dialog-open #overlay {
     opacity: 1;
     pointer-events: auto;
   }
@@ -420,6 +476,16 @@
     .menu-btn {
       padding: 8px 16px;
     }
+    form {
+      padding: 20px;
+    }
+    label {
+      margin: 10px 0 6px;
+    }
+    input, select, textarea {
+      padding: 10px;
+      margin-bottom: 15px;
+    }
   }
 
   @media (max-width: 480px) {
@@ -436,6 +502,12 @@
     .sidebar a {
       padding: 12px 20px;
     }
+    form {
+      padding: 15px;
+    }
+    #confirmationDialog {
+      padding: 20px;
+    }
   }
 </style>
 </head>
@@ -449,10 +521,10 @@
     <a href="https://trustindeal.github.io/load/" target="_blank" onclick="event.stopPropagation(); toggleMenu();">
       <span class="menu-item-icon">🔑</span> Login
     </a>
-    <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
-    <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
-    <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
-    <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+    <a href="#" onclick="showToast('Coming soon!!')"><span class="menu-item-icon">👥</span> Join our team</a>
+    <a href="#" onclick="showToast('Coming soon!!')"><span class="menu-item-icon">❓</span> Query</a>
+    <a href="#" onclick="showToast('Coming soon!!')"><span class="menu-item-icon">📞</span> Contact us</a>
+    <a href="#" onclick="showToast('Coming soon!!')"><span class="menu-item-icon">ℹ️</span> About us</a>
   </div>
 
   <div id="overlay" onclick="toggleMenu()"></div>
@@ -460,7 +532,6 @@
   <main id="main">
     <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button>
 
-    <!-- ✅ Menu -->
     <header>
       <button class="menu-btn" onclick="toggleMenu()">
         <span class="menu-icon">☰</span>
@@ -505,7 +576,7 @@
       <label for="emails">Mail ID(s) (separate with comma):</label>
       <textarea id="emails" name="emails" required></textarea>
 
-      <button type="submit">Register Now</button>
+      <button type="submit" id="submitBtn">Step In</button>
     </form>
 
     <div class="contact-container">
@@ -519,79 +590,13 @@
 
   <div id="toast">Registration Successful!</div>
 
-<script>
-  // Loader
-  function hideLoader() {
-    const loader = document.getElementById('loader');
-    loader.style.opacity = '0';
-    setTimeout(() => {
-      loader.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }, 500);
-  }
+  <div id="confirmationDialog">
+    <p>
+      Thank you for seeking us for your back office needs and automation. Very soon, our team will connect with you regarding the onboarding process and customize things your way!<br><br>
+      Wishes,<br>
+      Team Virtual Back Office<br>
+      +91 7007902103
+    </p>
+    <button onclick="confirmAndRedirect()">OK</button>
+  </div>
 
-  // Dark/Light Mode Toggle
-  function toggleMode() {
-    document.body.classList.toggle("light");
-  }
-
-  // Default Mode by Indian Time (Day = Light, Night = Dark)
-  function setDefaultMode() {
-    const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
-    const hour = parseInt(hourStr);
-    if (hour >= 6 && hour < 18) {
-      document.body.classList.add("light"); // Daytime = Light Mode
-    } else {
-      document.body.classList.remove("light"); // Nighttime = Dark Mode
-    }
-  }
-
-  // Hide Mode Toggle after 10 seconds
-  function hideModeToggle() {
-    const toggleBtn = document.querySelector('.mode-toggle');
-    setTimeout(() => {
-      toggleBtn.classList.add('hidden');
-    }, 10000);
-  }
-
-  // Menu Toggle with Animation
-  function toggleMenu() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('open');
-    document.body.classList.toggle('menu-open');
-  }
-
-  // Toast Message
-  function showToast(message = "Coming soon!!") {
-    let toast = document.getElementById("toast");
-    toast.innerHTML = message;
-    toast.className = "show";
-    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
-  }
-
-  // Form Submission to Google Sheets
-  const form = document.getElementById('registrationForm');
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbz3pcNuOW2nRpWyF7PbuM6z1BTTS2hp12okiUiVrOq1o_25LGJooZd9rvVVI49HKSVV3Q/exec'; // Replace with your deployed Google Apps Script Web App URL
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    fetch(scriptURL, { method: 'POST', body: new FormData(form) })
-      .then(response => {
-        showToast('Registration Successful!');
-        form.reset();
-      })
-      .catch(error => {
-        showToast('Error! Please try again.');
-        console.error('Error!', error.message);
-      });
-  });
-
-  // On Load
-  window.addEventListener('load', () => {
-    setDefaultMode();
-    hideModeToggle();
-    setTimeout(hideLoader, 2500);
-  });
-</script>
-</body>
-</html>
