@@ -414,6 +414,12 @@
 <a href="https://trustindeal.github.io/load/" target="_blank" onclick="event.stopPropagation(); toggleMenu();">
   <span class="menu-item-icon">🔑</span> Login
 </a>
+
+  <button id="installBtn" style="padding:10px 20px; background:#2196f3; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer;">
+  📲 Download App
+</button>
+
+  
   <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
   <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
   <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
@@ -552,5 +558,34 @@
     setTimeout(hideLoader, 1200);
   });
 </script>
+
+  <script>
+let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
+
+// Button ko pehle hide kar do
+installBtn.style.display = "none";
+
+// Jab install prompt available hoga
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = "inline-block"; // Button show karo
+});
+
+// Jab user button click kare
+installBtn.addEventListener("click", async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response: ${outcome}`);
+    deferredPrompt = null;
+    installBtn.style.display = "none"; // ek bar install hone ke baad hide kar do
+  }
+});
+</script>
+
+
+  
 </body>
 </html>
