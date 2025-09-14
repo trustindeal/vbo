@@ -414,6 +414,48 @@ if ("serviceWorker" in navigator) {
       padding: 12px 20px;
     }
   }
+
+  /* New Buttons Styles */
+  .buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 30px 0;
+  }
+
+  #installBtn,
+  .login-btn {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+  }
+
+  #installBtn {
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  .login-btn {
+    background: linear-gradient(90deg, #ff6ec7, #00d4ff);
+    color: #000;
+  }
+
+  #installBtn:hover,
+  .login-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  }
 </style>
 </head>
 <body>
@@ -433,7 +475,10 @@ if ("serviceWorker" in navigator) {
   <a href="#" onclick="showToast()"><span class="menu-item-icon">👥</span> Join our team</a>
   <a href="#" onclick="showToast()"><span class="menu-item-icon">❓</span> Query</a>
   <a href="#" onclick="showToast()"><span class="menu-item-icon">📞</span> Contact us</a>
-  <a href="#" onclick="showToast()"><span class="menu-item-icon">ℹ️</span> About us</a>
+  <a href="https://vbo.co.in/about/#about" onclick="event.stopPropagation(); toggleMenu();">
+  <span class="menu-item-icon">ℹ️</span> About us
+</a>
+
 </div>
 
 
@@ -452,36 +497,14 @@ if ("serviceWorker" in navigator) {
     <h1>🚀 Virtual Back Office</h1>
     <h2>Automate all your business and network operations with advanced tools for efficiency and growth</h2>
 
-    <p>
-      At <span class="highlight">Virtual Back Office</span>, we specialise in 
-      <strong>business automation</strong>, <strong>fiber line marking</strong>, 
-      <strong>fiber splitter marking</strong>, and complete 
-      <strong>network complaint management</strong>. Our platform ensures seamless integration for ISP operations.
-    </p>
-
-    <p>
-      Our solutions streamline <em>customer complaint handling</em>, 
-      <em>customer query handling</em>, <em>leads handling</em>, and 
-      <em>business accounting</em>. We also provide 
-      <strong>ISP partner support</strong> and <strong>network management</strong> 
-      tools to help optimise resources and boost efficiency in fiber optic networks.
-    </p>
-
-    <p>
-      With our expertise in <strong>business flow enhancement</strong> and 
-      <strong>resource optimisation</strong>, you can focus on growth while 
-      we handle your back office operations, including automated customer service and network resource management.
-    </p>
-
-    <div class="contact-container">
-      <a href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
+    <div class="buttons-container">
+      <button id="installBtn" style="display:none;">📲 Download App</button>
+      <a href="https://trustindeal.github.io/load/" target="_blank" class="login-btn">🔑 Login</a>
     </div>
 
-    <div id="countdown"></div>
-
-    <footer>
-      Virtual Back Office © 2025 | We are coming soon!
-    </footer>
+    <!--<footer>
+      Virtual Back Office © 2025
+    </footer> -->
   </main>
 
   <div id="toast">Coming soon!!</div>
@@ -496,32 +519,6 @@ if ("serviceWorker" in navigator) {
       document.body.style.overflow = 'auto';
     }, 500);
   }
-
-  // Countdown Timer (with milliseconds 2 digits)
-  const countdownElement = document.getElementById("countdown");
-  const launchDate = new Date("September 10, 2025 00:00:00 GMT+0530").getTime(); // IST
-
-  function updateCountdown() {
-    const now = new Date().getTime();
-    const distance = launchDate - now;
-
-    if (distance <= 0) {
-      countdownElement.innerHTML = "🎉 We have launched!";
-      clearInterval(timerInterval);
-      return;
-    }
-
-    let days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    let milliseconds = Math.floor((distance % 1000) / 10); // 2 digit
-
-    countdownElement.innerHTML = 
-      `${days}d ${hours}h ${minutes}m ${seconds}s ${milliseconds.toString().padStart(2,"0")}ms`;
-  }
-
-  let timerInterval = setInterval(updateCountdown, 50);
 
   // Dark/Light Mode Toggle
   function toggleMode() {
@@ -569,10 +566,6 @@ if ("serviceWorker" in navigator) {
   });
 </script>
 
-<button id="installBtn" style="display:none; padding:10px 20px; background:#2196f3; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer;">
-  📲 Download App
-</button>
-
 <script>
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
@@ -580,9 +573,12 @@ const installBtn = document.getElementById("installBtn");
 // listen kare beforeinstallprompt
 window.addEventListener("beforeinstallprompt", (e) => {
   console.log("beforeinstallprompt event fired");
+  if (!/Android/i.test(navigator.userAgent)) {
+    return;
+  }
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = "inline-block"; // button show
+  installBtn.style.display = "inline-flex"; // button show
 });
 
 // jab user click kare
