@@ -38,9 +38,6 @@
 <meta property="og:url" content="https://vbo.co.in" />
 <meta property="og:image" content="https://vbo.co.in/preview.jpg" />
 
-  <button id="installBtn" style="padding:10px 20px; background:#2196f3; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer;">
-  📲 Download App
-</button>
   
 <style>
   body {
@@ -561,31 +558,33 @@
   });
 </script>
 
-  <script>
+<button id="installBtn" style="display:none; padding:10px 20px; background:#2196f3; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer;">
+  📲 Download App
+</button>
+
+<script>
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
 
-// Button ko pehle hide kar do
-installBtn.style.display = "none";
-
-// Jab install prompt available hoga
+// listen kare beforeinstallprompt
 window.addEventListener("beforeinstallprompt", (e) => {
+  console.log("beforeinstallprompt event fired");
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = "inline-block"; // Button show karo
+  installBtn.style.display = "inline-block"; // button show
 });
 
-// Jab user button click kare
+// jab user click kare
 installBtn.addEventListener("click", async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response: ${outcome}`);
-    deferredPrompt = null;
-    installBtn.style.display = "none"; // ek bar install hone ke baad hide kar do
-  }
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const choice = await deferredPrompt.userChoice;
+  console.log("User choice:", choice.outcome);
+  deferredPrompt = null;
+  installBtn.style.display = "none"; // ek bar install ke baad hide
 });
 </script>
+
 
 
   
