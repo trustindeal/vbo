@@ -97,12 +97,35 @@ if ("serviceWorker" in navigator) {
     border-radius: 50%;
     width: 60px;
     height: 60px;
-    animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite, pulse 2s ease-in-out infinite alternate;
+    position: relative;
+  }
+
+  .spinner::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: spin 2s linear infinite reverse;
   }
 
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); }
+    100% { box-shadow: 0 0 0 20px rgba(0, 212, 255, 0); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 
   header {
@@ -127,11 +150,6 @@ if ("serviceWorker" in navigator) {
     align-items: center;
     justify-content: center;
     animation: blink 2s ease-in-out infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
   }
 
   body.light .menu-btn {
@@ -438,6 +456,8 @@ if ("serviceWorker" in navigator) {
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-decoration: none;
+    position: relative;
+    overflow: hidden;
   }
 
   #installBtn {
@@ -447,14 +467,28 @@ if ("serviceWorker" in navigator) {
   }
 
   .login-btn {
-    background: linear-gradient(90deg, #ff6ec7, #00d4ff);
+    background: linear-gradient(-45deg, #ff6ec7, #00d4ff, #ff6ec7, #00d4ff);
+    background-size: 400% 400%;
+    animation: gradientFlow 3s ease infinite, subtlePulse 2s ease-in-out infinite alternate;
     color: #000;
+  }
+
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes subtlePulse {
+    0% { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.1); }
+    100% { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3); }
   }
 
   #installBtn:hover,
   .login-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+    animation-play-state: paused;
   }
 
   /* Popup Modal Styles */
@@ -526,6 +560,9 @@ if ("serviceWorker" in navigator) {
   <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
 <a href="https://trustindeal.github.io/load/" onclick="event.stopPropagation(); toggleMenu();">
   <span class="menu-item-icon">🔑</span> Login
+</a>
+<a href="#" onclick="installApp(); event.stopPropagation(); toggleMenu();">
+  <span class="menu-item-icon">📲</span> Download App
 </a>
 
 
@@ -649,7 +686,7 @@ if ("serviceWorker" in navigator) {
   window.addEventListener('load', () => {
     setDefaultMode();
     hideModeToggle();
-    setTimeout(hideLoader, 1200);
+    setTimeout(hideLoader, 2000);
   });
 </script>
 
@@ -657,12 +694,18 @@ if ("serviceWorker" in navigator) {
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
 
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((choice) => {
+    console.log("User choice:", choice.outcome);
+    deferredPrompt = null;
+  });
+}
+
 // listen kare beforeinstallprompt
 window.addEventListener("beforeinstallprompt", (e) => {
   console.log("beforeinstallprompt event fired");
-  if (!/Android/i.test(navigator.userAgent)) {
-    return;
-  }
   e.preventDefault();
   deferredPrompt = e;
   installBtn.style.display = "inline-flex"; // button show
@@ -670,12 +713,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
 
 // jab user click kare
 installBtn.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const choice = await deferredPrompt.userChoice;
-  console.log("User choice:", choice.outcome);
-  deferredPrompt = null;
-  installBtn.style.display = "none"; // ek bar install ke baad hide
+  installApp();
 });
 </script>
 
