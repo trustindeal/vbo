@@ -312,6 +312,16 @@
       background: transparent;
       border: 1px solid transparent;
       position: relative;
+      opacity: 0;
+      transform: translateX(-100%);
+      animation: flyInTab 1s ease forwards;
+    }
+
+    @keyframes flyInTab {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .tab-btn:hover {
@@ -343,7 +353,7 @@
     .tab-contents .tab-content {
       opacity: 0;
       transform: translateX(-100%);
-      transition: opacity 0.7s ease, transform 0.7s ease;
+      transition: opacity 1.2s ease, transform 1.2s ease; /* Slower animation */
       position: absolute;
       top: 0;
       left: 0;
@@ -359,12 +369,11 @@
     }
 
     @media screen and (max-width: 768px) {
-      .container {
-        transform: scale(0.6); /* Mimic 60% zoom-out */
+      .content-scaler {
+        transform: scale(0.6); /* Scale content to 60% */
         transform-origin: top left;
-        width: 166.67%; /* Adjust width to compensate scaling */
-        height: calc(166.67vh - 100px); /* Adjust height to compensate */
-        padding: 6px;
+        width: 166.67%; /* Compensate for scaling */
+        height: calc(166.67vh - 100px);
       }
 
       .right-grid {
@@ -391,6 +400,7 @@
       .container {
         width: 100%;
         height: calc(100vh - 60px);
+        padding: 6px;
       }
 
       .right-button, .right-button-small, .notes-button {
@@ -441,7 +451,7 @@
 
   <div class="container">
     <div class="tab-bar" id="tab-bar"></div>
-    <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
+    <div id="tab-contents" class="tab-contents content-scaler" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
       <div id="home-content" class="tab-content active" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: auto; padding: 0;">
         <div class="right-grid">
           <!-- INTERNET -->
@@ -561,7 +571,6 @@
     }
 
     function openTab(url, title) {
-      // Fallback for restricted sites like denonline
       if (url.includes('partners.denonline.in')) {
         window.open(url, '_blank');
         return;
@@ -636,6 +645,8 @@
       const tab = tabs[index];
       tab.content.style.opacity = '0';
       tab.content.style.transform = 'translateX(20px)';
+      tab.btn.style.opacity = '0';
+      tab.btn.style.transform = 'translateX(20px)';
       setTimeout(() => {
         tab.btn.remove();
         tab.content.remove();
