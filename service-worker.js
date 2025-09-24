@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'vbo-cache-v3'; // Change version to force update
+const CACHE_NAME = 'vbo-cache-v4'; // Change version to force update
 const FILES_TO_CACHE = [
   '/',
   '/index.html',
