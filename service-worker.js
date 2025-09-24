@@ -4,7 +4,7 @@ const CACHE_NAME = 'vbo-cache-v3'; // Change version to force update
 const FILES_TO_CACHE = [
   '/',
   '/index.html',
-  'https://trustindeal.github.io/load/', // PWA start_url
+  '/hook.html', // PWA start_url
   '/styles.css',
   '/script.js', // app.js aapke project me ye file naam hai
   '/vbo-favicon-192.png',
