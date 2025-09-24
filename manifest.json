@@ -1,7 +1,7 @@
 {
   "name": "Virtual Back Office",
   "short_name": "VBO",
-  "start_url": "https://trustindeal.github.io/load/",
+  "start_url": "/hook.html",
   "display": "standalone",
   "background_color": "#0a4a7a",
   "theme_color": "#0a4a7a",
