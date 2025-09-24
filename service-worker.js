@@ -1,29 +1,32 @@
 // service-worker.js
 
-const CACHE_NAME = 'vbo-cache-v2'; // change version to force update
+const CACHE_NAME = 'vbo-cache-v3'; // Change version to force update
 const FILES_TO_CACHE = [
   '/',
   '/index.html',
+  'https://trustindeal.github.io/load/', // PWA start_url
   '/styles.css',
-  '/app.js',
+  '/script.js', // app.js aapke project me ye file naam hai
   '/vbo-favicon-192.png',
   '/icon-512.png'
 ];
 
-// Install - cache files
+// Install event - cache files
 self.addEventListener('install', event => {
+  console.log('[ServiceWorker] Install');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[ServiceWorker] Caching app shell');
+        console.log('[ServiceWorker] Caching app shell and start_url');
         return cache.addAll(FILES_TO_CACHE);
       })
   );
   self.skipWaiting();
 });
 
-// Activate - clear old caches
+// Activate event - clear old caches
 self.addEventListener('activate', event => {
+  console.log('[ServiceWorker] Activate');
   event.waitUntil(
     caches.keys().then(keyList => {
       return Promise.all(
@@ -39,11 +42,26 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch - serve from cache first, fallback to network
+// Fetch event - serve from cache first, fallback to network
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(response => {
-      return response || fetch(event.request);
+      if (response) {
+        return response; // serve from cache
+      }
+      return fetch(event.request) // fallback to network
+        .then(networkResponse => {
+          // Optional: dynamically cache new requests
+          return caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+        }).catch(() => {
+          // Optional: fallback page if offline
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+        });
     })
   );
 });
