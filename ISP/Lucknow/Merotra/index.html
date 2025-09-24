@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: #43a8fa;
+      color: #202124;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 1rem 0.5rem;
+    }
+
+    a {
+      text-decoration: none !important;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-top: 1rem;
+    }
+
+    .brand-title {
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #000000, #4a4a4a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #555;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .message {
+      text-align: center;
+      background: #fff;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      animation: fadeFloat 1s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    @keyframes fadeFloat {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+
+    @media screen and (max-width: 768px) {
+      .message {
+        width: 96.5% !important;
+        max-width: 96.5%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand-title">Merotra Networks</div>
+    <div class="brand-subtitle">TEAM WORK</div>
+  </header>
+
+  <div class="container">
+    <div class="message">
+      <h2>Important Update Notice</h2>
+      <p>We are pleased to announce that this version of the Virtual Back Office has been upgraded. To ensure a seamless experience, please follow the steps below:</p>
+      <ol>
+        <li>Uninstall the application from your phone and clear the cache in your browser.</li>
+        <li>Visit <a href="https://vbo.co.in" target="_blank">vbo.co.in</a> to download the new application for an enhanced experience and additional features.</li>
+      </ol>
+    </div>
+  </div>
+
+  <footer>Powered by: Trustindeal ERP</footer>
+
+  <!-- Removed buttons and related functionality as per request -->
+</body>
+</html>
