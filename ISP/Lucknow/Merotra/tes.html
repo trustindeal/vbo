@@ -9,9 +9,11 @@
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0; /* Removed padding to maximize space */
       background-color: #f4f6f8;
       color: #333;
+      height: 100vh;
+      overflow: hidden; /* Prevent body scroll to keep tab content focused */
     }
 
     a {
@@ -20,36 +22,39 @@
 
     .header {
       text-align: center;
-      margin-bottom: 20px;
+      margin: 10px 0; /* Reduced margin for better space usage */
     }
 
     .brand-title {
-      font-size: 3rem;
+      font-size: 2.5rem; /* Slightly smaller for mobile */
       font-weight: 700;
       color: #2c3e50;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
 
     .container {
-      max-width: 900px;
-      margin: 0 auto;
-      overflow-x: auto;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-      border-radius: 10px;
+      max-width: 100%; /* Full width */
+      margin: 0;
+      box-shadow: none; /* Removed shadow to blend with full page */
+      border-radius: 0; /* No border radius for full-page look */
       background: linear-gradient(145deg, #ffffff, #f0f2f5);
-      padding: 20px;
-      transition: box-shadow 0.3s ease;
+      padding: 10px; /* Minimal padding */
+      height: calc(100vh - 70px); /* Adjust for header and footer */
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
     }
 
     .container:hover {
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      box-shadow: none; /* No hover effect for full-page design */
     }
 
     .right-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-      margin-bottom: 2rem; /* Added margin to separate from notes */
+      gap: 1rem; /* Reduced gap for tighter layout */
+      flex-grow: 1;
+      overflow: auto; /* Allow scrolling within grid if needed */
     }
 
     .right-button, .right-button-small, .notes-button {
@@ -67,14 +72,14 @@
 
     .right-button {
       color: #202124;
-      border-radius: 20px;
-      padding: 3rem 1rem;
+      border-radius: 15px; /* Slightly smaller radius for compactness */
+      padding: 2rem 0.5rem; /* Reduced padding */
       text-align: center;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 1rem;
+      font-size: 0.9rem; /* Slightly smaller font */
       background: #fff;
       position: relative;
       overflow: hidden;
@@ -104,8 +109,8 @@
     }
 
     .right-button i {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.8rem; /* Adjusted for mobile */
+      margin-bottom: 0.3rem;
       transition: color 0.3s ease;
     }
 
@@ -125,12 +130,12 @@
     }
 
     .right-button-small {
-      padding: 1rem;
-      font-size: 0.95rem;
-      border-radius: 15px;
+      padding: 0.8rem; /* Reduced padding */
+      font-size: 0.9rem;
+      border-radius: 12px; /* Smaller radius */
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
       background: #fff;
       border: 1px solid #e0e4e8;
       position: relative;
@@ -161,7 +166,7 @@
     }
 
     .right-button-small i {
-      font-size: 1.1rem;
+      font-size: 1rem;
       transition: color 0.2s;
     }
 
@@ -192,7 +197,7 @@
     }
 
     footer {
-      margin-top: 20px;
+      margin: 10px 0; /* Reduced margin */
       text-align: center;
       font-size: 0.8rem;
       color: #7f8c8d;
@@ -203,22 +208,22 @@
       justify-content: center;
       align-items: center;
       width: 100%;
-      margin-top: 2rem;
+      margin-top: 1rem; /* Reduced margin */
     }
 
     .notes-button {
       background: #DCEDC8;
       color: #202124;
-      border-radius: 20px;
-      padding: 3rem 1rem;
-      font-size: 1.2rem;
+      border-radius: 15px;
+      padding: 2rem 0.5rem; /* Adjusted padding */
+      font-size: 1.1rem;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(52, 152, 219, 0.4);
       transition: transform 0.3s ease, box-shadow 0.5s ease;
       display: flex;
       flex-direction: column;
       align-items: center;
       width: 100%;
-      max-width: 300px; /* Restrict width for better alignment */
+      max-width: 100%; /* Full width for consistency */
       position: relative;
       overflow: hidden;
     }
@@ -275,14 +280,16 @@
       overflow-x: auto;
       background: rgba(255, 255, 255, 0.1);
       margin-bottom: 10px;
+      padding: 5px;
     }
 
     .tab-btn {
-      padding: 10px 20px;
+      padding: 8px 15px;
       color: #333;
       cursor: pointer;
       transition: background 0.3s;
       white-space: nowrap;
+      font-size: 0.9rem;
     }
 
     .tab-btn.active {
@@ -290,7 +297,7 @@
     }
 
     .close-tab {
-      margin-left: 10px;
+      margin-left: 8px;
       font-weight: bold;
       cursor: pointer;
     }
@@ -298,8 +305,8 @@
     @media screen and (max-width: 768px) {
       .right-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
       }
 
       .notes-section {
@@ -307,28 +314,49 @@
         justify-content: center;
         align-items: center;
         width: 100%;
+        margin-top: 0.8rem;
       }
 
       .notes-button {
         width: 100%;
         max-width: 100%;
-        padding: 2rem 1rem;
+        padding: 1.5rem 0.5rem;
+        font-size: 1rem;
       }
 
       .container {
         width: 100%;
-        padding: 15px;
+        padding: 8px;
+        height: calc(100vh - 60px); /* Adjust for smaller header */
       }
 
       .right-button, .right-button-small, .notes-button {
         width: 100%;
         box-sizing: border-box;
       }
+
+      .right-button {
+        padding: 1.5rem 0.5rem;
+        font-size: 0.85rem;
+      }
+
+      .right-button i {
+        font-size: 1.5rem;
+      }
+
+      .right-button-small {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+      }
+
+      .tab-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
     }
 
     @media screen and (min-width: 769px) {
       .notes-section {
-        grid-column: 1 / -1;
         display: flex;
         justify-content: center;
       }
@@ -342,7 +370,7 @@
 
   <div class="container">
     <div class="tab-bar" id="tab-bar"></div>
-    <div id="tab-contents" style="position: relative; width: 100%; height: calc(100vh - 120px); overflow: hidden;">
+    <div id="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
       <div id="home-content" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: auto; padding: 0; display: none;">
         <div class="right-grid">
           <!-- INTERNET -->
@@ -374,7 +402,7 @@
                 <i class="bi bi-exclamation-circle"></i> Mark Complain</a>
               <a class="right-button btn-cable right-button-small clickable" href="#" onclick="openTab('https://docs.google.com/spreadsheets/d/1H0ffjhT51ES7a0jcGUUMsfUa5_fA3y1mvVjKZGVnHDc/edit?gid=216128426#gid=216128426', 'Recharge Sheet'); return false;">
                 <i class="bi bi-wallet2"></i> Recharge Sheet</a>
-              <a class="right-button btn-cable right-button-small clickable" href="#" onclick="openTab('https://partners.denonline.in/login.aspx', 'Den Login'); return false;">
+              <a class="right-button btn-cable right-button-small clickable" href="#" onclick="openTab('https://partners.denonline.in/login.aspx?reload=true', 'Den Login'); return false;">
                 <i class="bi bi-person-square"></i> Den Login</a>
             </div>
           </div>
@@ -415,7 +443,7 @@
         <!-- Notes Button -->
         <div class="notes-section">
           <a class="notes-button clickable" href="#" onclick="openTab('https://script.google.com/macros/s/AKfycby8CaCPbyewf5djwJjwhCPX94lkZrbgRHjJp5QWaF2n/dev?page=notes', 'Notes'); return false;">
-            <i class="bi bi-journal-text" style="font-size:2rem;"></i><br> Notes
+            <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
           </a>
         </div>
       </div>
@@ -489,6 +517,7 @@
       iframe.style.width = '100%';
       iframe.style.height = '100%';
       iframe.style.border = 'none';
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
       contentDiv.appendChild(iframe);
       document.getElementById('tab-contents').appendChild(contentDiv);
       tabs.push({id: tabId, btn: tabBtn, content: contentDiv, isHome: false});
