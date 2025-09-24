@@ -623,7 +623,7 @@
       iframe.style.width = '100%';
       iframe.style.height = '100%';
       iframe.style.border = 'none';
-      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads allow-web-share');
       iframe.onload = function() {
         // Success
       };
@@ -677,12 +677,16 @@
     }
 
     function logout() {
-      // Clear cookies related to vbo.co.in
+      // Clear all cookies related to your website domain (adjust domain as needed)
+      const domain = window.location.hostname; // e.g., "yourwebsite.com"
       document.cookie.split(";").forEach(function(c) {
-        if (c.trim().split("=")[0].includes(".vbo.co.in")) {
-          document.cookie = c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.vbo.co.in";
+        if (c.trim().split("=")[0].includes(domain)) {
+          document.cookie = c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + domain;
         }
       });
+      // Clear localStorage and sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
       // Redirect to vbo.co.in in the same tab
       window.location.href = "https://vbo.co.in";
     }
