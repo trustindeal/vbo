@@ -2,7 +2,7 @@
 <html>
 <head>
   <base target="_top">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -278,28 +278,84 @@
     .tab-bar {
       display: flex;
       overflow-x: auto;
-      background: rgba(255, 255, 255, 0.1);
+      background: linear-gradient(145deg, #ffffff, #f0f2f5);
       margin-bottom: 10px;
       padding: 5px;
+      border-bottom: 1px solid #e0e4e8;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      scrollbar-width: thin;
+      scrollbar-color: #bdc3c7 #f1f2f6;
+    }
+
+    .tab-bar::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .tab-bar::-webkit-scrollbar-track {
+      background: #f1f2f6;
+    }
+
+    .tab-bar::-webkit-scrollbar-thumb {
+      background: #bdc3c7;
+      border-radius: 2px;
     }
 
     .tab-btn {
       padding: 8px 15px;
       color: #333;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: all 0.3s ease;
       white-space: nowrap;
       font-size: 0.9rem;
+      border-radius: 8px 8px 0 0;
+      margin-right: 2px;
+      background: transparent;
+      border: 1px solid transparent;
+      position: relative;
+    }
+
+    .tab-btn:hover {
+      background: rgba(52, 152, 219, 0.1);
+      color: #3498db;
     }
 
     .tab-btn.active {
-      background: rgba(255, 255, 255, 0.3);
+      background: #ffffff;
+      color: #2c3e50;
+      border: 1px solid #e0e4e8;
+      border-bottom: none;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
     }
 
     .close-tab {
       margin-left: 8px;
       font-weight: bold;
       cursor: pointer;
+      transition: color 0.3s ease;
+      opacity: 0.7;
+    }
+
+    .tab-btn:hover .close-tab {
+      opacity: 1;
+      color: #e74c3c;
+    }
+
+    .tab-contents .tab-content {
+      opacity: 0;
+      transform: translateX(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+    }
+
+    .tab-contents .tab-content.active {
+      opacity: 1;
+      transform: translateX(0);
+      position: relative;
     }
 
     @media screen and (max-width: 768px) {
@@ -353,6 +409,10 @@
         padding: 6px 12px;
         font-size: 0.8rem;
       }
+
+      .brand-title {
+        font-size: 2rem;
+      }
     }
 
     @media screen and (min-width: 769px) {
@@ -370,8 +430,8 @@
 
   <div class="container">
     <div class="tab-bar" id="tab-bar"></div>
-    <div id="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
-      <div id="home-content" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: auto; padding: 0; display: none;">
+    <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
+      <div id="home-content" class="tab-content active" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: auto; padding: 0;">
         <div class="right-grid">
           <!-- INTERNET -->
           <div>
@@ -402,7 +462,7 @@
                 <i class="bi bi-exclamation-circle"></i> Mark Complain</a>
               <a class="right-button btn-cable right-button-small clickable" href="#" onclick="openTab('https://docs.google.com/spreadsheets/d/1H0ffjhT51ES7a0jcGUUMsfUa5_fA3y1mvVjKZGVnHDc/edit?gid=216128426#gid=216128426', 'Recharge Sheet'); return false;">
                 <i class="bi bi-wallet2"></i> Recharge Sheet</a>
-              <a class="right-button btn-cable right-button-small clickable" href="#" onclick="openTab('https://partners.denonline.in/login.aspx?reload=true', 'Den Login'); return false;">
+              <a class="right-button btn-cable right-button-small clickable" href="#" onclick="openTab('https://partners.denonline.in/login.aspx', 'Den Login'); return false;">
                 <i class="bi bi-person-square"></i> Den Login</a>
             </div>
           </div>
@@ -485,11 +545,17 @@
       homeBtn.onclick = () => switchTab(homeId);
       document.getElementById('tab-bar').appendChild(homeBtn);
       const homeContent = document.getElementById('home-content');
-      homeContent.style.display = 'block';
+      homeContent.classList.add('tab-content', 'active');
       tabs.push({id: homeId, btn: homeBtn, content: homeContent, isHome: true});
     }
 
     function openTab(url, title) {
+      // First, try to open in new window if it's a restricted site like denonline
+      if (url.includes('partners.denonline.in')) {
+        window.open(url, '_blank');
+        return;
+      }
+
       const tabId = tabIdCounter++;
       const tabBtn = document.createElement('div');
       tabBtn.className = 'tab-btn';
@@ -505,6 +571,7 @@
       tabBtn.onclick = () => switchTab(tabId);
       document.getElementById('tab-bar').appendChild(tabBtn);
       const contentDiv = document.createElement('div');
+      contentDiv.className = 'tab-content';
       contentDiv.style.position = 'absolute';
       contentDiv.style.top = '0';
       contentDiv.style.left = '0';
@@ -517,7 +584,22 @@
       iframe.style.width = '100%';
       iframe.style.height = '100%';
       iframe.style.border = 'none';
-      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation');
+      iframe.onload = function() {
+        // Success, keep iframe
+      };
+      iframe.onerror = function() {
+        // Fallback to new tab
+        contentDiv.innerHTML = '';
+        const fallbackLink = document.createElement('a');
+        fallbackLink.href = url;
+        fallbackLink.target = '_blank';
+        fallbackLink.textContent = 'This site cannot be displayed in frame. Click to open in new tab.';
+        fallbackLink.style.display = 'block';
+        fallbackLink.style.padding = '20px';
+        fallbackLink.style.textAlign = 'center';
+        contentDiv.appendChild(fallbackLink);
+      };
       contentDiv.appendChild(iframe);
       document.getElementById('tab-contents').appendChild(contentDiv);
       tabs.push({id: tabId, btn: tabBtn, content: contentDiv, isHome: false});
@@ -528,11 +610,13 @@
       tabs.forEach(tab => {
         tab.content.style.display = 'none';
         tab.btn.classList.remove('active');
+        tab.content.classList.remove('active');
       });
       const tab = tabs.find(t => t.id === tabId);
       if (tab) {
         tab.content.style.display = 'block';
         tab.btn.classList.add('active');
+        tab.content.classList.add('active');
       }
     }
 
@@ -540,12 +624,17 @@
       const index = tabs.findIndex(t => t.id === tabId);
       if (index === -1 || tabs[index].isHome) return;
       const tab = tabs[index];
-      tab.btn.remove();
-      tab.content.remove();
-      tabs.splice(index, 1);
-      if (tabs.length > 0) {
-        switchTab(tabs[Math.max(0, index - 1)].id);
-      }
+      // Animate close
+      tab.content.style.opacity = '0';
+      tab.content.style.transform = 'translateX(-20px)';
+      setTimeout(() => {
+        tab.btn.remove();
+        tab.content.remove();
+        tabs.splice(index, 1);
+        if (tabs.length > 0) {
+          switchTab(tabs[Math.max(0, index - 1)].id);
+        }
+      }, 500);
     }
 
     // Initialize tabs on load
