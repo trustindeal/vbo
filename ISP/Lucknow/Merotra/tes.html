@@ -23,6 +23,7 @@
     .header {
       text-align: center;
       margin: 10px 0;
+      position: relative;
     }
 
     .brand-title {
@@ -30,6 +31,24 @@
       font-weight: 700;
       color: #2c3e50;
       margin-bottom: 5px;
+    }
+
+    .logout-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      color: #fff;
+      background-color: #e74c3c;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background-color: #c0392b;
     }
 
     .container {
@@ -62,8 +81,8 @@
       animation: fadeIn 0.5s ease forwards;
       opacity: 0;
       transform: translateY(20px);
-      border-radius: 15px; /* Added padding to avoid cut edges */
-      padding: 2rem 1rem; /* Increased padding for better spacing */
+      border-radius: 15px;
+      padding: 2rem 1rem;
     }
 
     @keyframes fadeIn {
@@ -131,7 +150,7 @@
     }
 
     .right-button-small {
-      padding: 0.8rem 1rem; /* Increased padding for better spacing */
+      padding: 0.8rem 1rem;
       font-size: 0.9rem;
       border-radius: 12px;
       display: flex;
@@ -216,7 +235,7 @@
       background: #DCEDC8;
       color: #202124;
       border-radius: 15px;
-      padding: 2rem 1rem; /* Increased padding for better spacing */
+      padding: 2rem 1rem;
       font-size: 1.1rem;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(52, 152, 219, 0.4);
       transition: transform 0.3s ease, box-shadow 0.5s ease;
@@ -392,18 +411,18 @@
       .notes-button {
         width: 100%;
         max-width: 100%;
-        padding: 1.5rem 1rem; /* Increased padding for mobile */
+        padding: 1.5rem 1rem;
         font-size: 1rem;
       }
 
       .right-button, .right-button-small, .notes-button {
         width: 100%;
         box-sizing: border-box;
-        padding: 1.5rem 1rem; /* Increased padding for mobile */
+        padding: 1.5rem 1rem;
       }
 
       .right-button {
-        padding: 1.5rem 1rem; /* Increased padding */
+        padding: 1.5rem 1rem;
         font-size: 0.85rem;
       }
 
@@ -412,7 +431,7 @@
       }
 
       .right-button-small {
-        padding: 0.6rem 1rem; /* Increased padding */
+        padding: 0.6rem 1rem;
         font-size: 0.85rem;
       }
 
@@ -423,6 +442,11 @@
 
       .brand-title {
         font-size: 2rem;
+      }
+
+      .logout-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
       }
 
       footer {
@@ -441,6 +465,7 @@
 <body>
   <header class="header">
     <div class="brand-title">Merotra Networks</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </header>
 
   <div class="container">
@@ -458,7 +483,7 @@
                 <i class="bi bi-card-checklist"></i> Rack & PONs</a>
               <a class="right-button btn-internet right-button-small clickable" href="#" onclick="openTab('https://virtualbackoffice2.github.io/rack/off', 'Mark Complain'); return false;">
                 <i class="bi bi-exclamation-circle"></i> Mark Complain</a>
-              <a class="right-button btn-internet right-button-small clickable" href="#" onclick="openTab('https://del-desk.excitel.in/', 'Procare Login'); return false;">
+              <a class="right-button btn-internet right-button-small clickable" href="https://del-desk.excitel.in/" target="_blank">
                 <i class="bi bi-person-square"></i> Procare Login</a>
               <a class="right-button btn-internet right-button-small clickable" href="#" onclick="openTab('https://script.google.com/macros/s/AKfycbx4y-2MDbT1aNzC1R2PvS041XL84Cqs0cbrZ0vIj2A/dev', 'Splitter Tagging Report'); return false;">
                 <i class="bi bi-slash-circle"></i> Splitter tagging report</a>
@@ -477,7 +502,7 @@
                 <i class="bi bi-exclamation-circle"></i> Mark Complain</a>
               <a class="right-button btn-cable right-button-small clickable" href="https://docs.google.com/spreadsheets/d/1H0ffjhT51ES7a0jcGUUMsfUa5_fA3y1mvVjKZGVnHDc/edit?gid=216128426#gid=216128426" target="_blank">
                 <i class="bi bi-wallet2"></i> Recharge Sheet</a>
-              <a class="right-button btn-cable right-button-small clickable" href="#" onclick="openTab('https://partners.denonline.in/login.aspx', 'Den Login'); return false;">
+              <a class="right-button btn-cable right-button-small clickable" href="https://partners.denonline.in/login.aspx" target="_blank">
                 <i class="bi bi-person-square"></i> Den Login</a>
             </div>
           </div>
@@ -565,7 +590,7 @@
     }
 
     function openTab(url, title) {
-      if (url.includes('docs.google.com/spreadsheets') || url.includes('partners.denonline.in')) {
+      if (url.includes('docs.google.com/spreadsheets') || url.includes('del-desk.excitel.in') || url.includes('partners.denonline.in')) {
         window.open(url, '_blank');
         return;
       }
@@ -649,6 +674,17 @@
           switchTab(tabs[Math.max(0, index - 1)].id);
         }
       }, 800);
+    }
+
+    function logout() {
+      // Clear cookies related to vbo.co.in
+      document.cookie.split(";").forEach(function(c) {
+        if (c.trim().split("=")[0].includes(".vbo.co.in")) {
+          document.cookie = c.trim().split("=")[0] + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.vbo.co.in";
+        }
+      });
+      // Redirect to vbo.co.in in the same tab
+      window.location.href = "https://vbo.co.in";
     }
 
     // Initialize tabs on load
