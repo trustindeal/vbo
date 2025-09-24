@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+
+    a {
+      text-decoration: none !important;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .brand-title {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      overflow-x: auto;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      border-radius: 10px;
+      background: linear-gradient(145deg, #ffffff, #f0f2f5);
+      padding: 20px;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .container:hover {
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .right-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem; /* Added margin to separate from notes */
+    }
+
+    .right-button, .right-button-small, .notes-button {
+      animation: fadeIn 0.5s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .right-button {
+      color: #202124;
+      border-radius: 20px;
+      padding: 3rem 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 1rem;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.5s ease;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(52, 152, 219, 0.4);
+    }
+
+    .right-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .right-button:hover::before {
+      left: 100%;
+    }
+
+    .right-button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25), 0 0 20px rgba(52, 152, 219, 0.6);
+    }
+
+    .right-button i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      transition: color 0.3s ease;
+    }
+
+    .right-button:hover i {
+      color: #3498db;
+    }
+
+    .dropdown-options {
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-options.show {
+      display: flex;
+    }
+
+    .right-button-small {
+      padding: 1rem;
+      font-size: 0.95rem;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #fff;
+      border: 1px solid #e0e4e8;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.5s ease;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15), 0 0 12px rgba(52, 152, 219, 0.3);
+    }
+
+    .right-button-small::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .right-button-small:hover::before {
+      left: 100%;
+    }
+
+    .right-button-small:hover {
+      background: #f8fafc;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 18px rgba(52, 152, 219, 0.5);
+    }
+
+    .right-button-small i {
+      font-size: 1.1rem;
+      transition: color 0.2s;
+    }
+
+    .right-button-small:hover i {
+      color: #1a5276;
+    }
+
+    .btn-internet { background: #C8E6C9; }
+    .btn-cable { background: #FFCDD2; }
+    .btn-admin { background: #BBDEFB; }
+    .btn-stock { background: #FFE0B2; }
+
+    .btn-disabled {
+      background: #eeeeee;
+      color: #999;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-disabled:hover {
+      transform: none;
+      box-shadow: none;
+      background: #eeeeee;
+    }
+
+    .btn-disabled::before {
+      display: none;
+    }
+
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #7f8c8d;
+    }
+
+    .notes-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin-top: 2rem;
+    }
+
+    .notes-button {
+      background: #DCEDC8;
+      color: #202124;
+      border-radius: 20px;
+      padding: 3rem 1rem;
+      font-size: 1.2rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(52, 152, 219, 0.4);
+      transition: transform 0.3s ease, box-shadow 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 300px; /* Restrict width for better alignment */
+      position: relative;
+      overflow: hidden;
+    }
+
+    .notes-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .notes-button:hover::before {
+      left: 100%;
+    }
+
+    .notes-button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25), 0 0 20px rgba(52, 152, 219, 0.6);
+    }
+
+    #popupMessage {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #e74c3c;
+      color: white;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      z-index: 100;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      animation: fadeOut 3s forwards;
+    }
+
+    #popupMessage.show {
+      display: block;
+    }
+
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @media screen and (max-width: 768px) {
+      .right-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .notes-section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+      }
+
+      .notes-button {
+        width: 100%;
+        max-width: 100%;
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        width: 100%;
+        padding: 15px;
+      }
+
+      .right-button, .right-button-small, .notes-button {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+
+    @media screen and (min-width: 769px) {
+      .notes-section {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand-title">Merotra Networks</div>
+  </header>
+
+  <div class="container">
+    <div class="right-grid">
+      <!-- INTERNET -->
+      <div>
+        <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
+          <i class="bi bi-router-fill"></i> Internet
+        </div>
+        <div class="dropdown-options">
+          <a class="right-button btn-internet right-button-small clickable" target="_blank" href="https://script.google.com/macros/s/AKfycbxqIxQXsPQDtl_20bh-G9kuaIWLwXkicTXgEvOSSh4fynLay05M5BJatsmJRy9iXsdUYQ/exec">
+            <i class="bi bi-card-checklist"></i> Rack & PONs</a>
+          <a class="right-button btn-internet right-button-small clickable" target="_blank" href="https://script.google.com/macros/s/AKfycbxqIxQXsPQDtl_20bh-G9kuaIWLwXkicTXgEvOSSh4fynLay05M5BJatsmJRy9iXsdUYQ/exec?page=complain">
+            <i class="bi bi-exclamation-circle"></i> Mark Complain</a>
+          <a class="right-button btn-internet right-button-small clickable" target="_blank" href="https://del-desk.excitel.in/">
+            <i class="bi bi-person-square"></i> Procare Login</a>
+          <a class="right-button btn-internet right-button-small clickable" target="_blank" href="https://script.google.com/macros/s/AKfycbx4y-2MDbT1aNzC1R2PvS041XL84Cqs0cbrZ0vIj2A/dev">
+            <i class="bi bi-slash-circle"></i> Splitter tagging report</a>
+        </div>
+      </div>
+
+      <!-- CABLE -->
+      <div>
+        <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
+          <i class="bi bi-tv"></i> Cable
+        </div>
+        <div class="dropdown-options">
+          <a class="right-button btn-cable right-button-small clickable" target="_blank" href="https://docs.google.com/spreadsheets/d/1DkIP-IHouSQjilvSs43IkMAZLMdXr3sEYeNBsCDjdOc/edit?gid=2052862460#gid=2052862460">
+            <i class="bi bi-table"></i> Due Payment Schedules</a>
+          <a class="right-button btn-cable right-button-small clickable" target="_blank" href="https://docs.google.com/spreadsheets/d/1Hp8zcOmRT0ZkFt__zXG3YSXlDiTKwOTIHdJuIRdX3uI/edit?gid=0#gid=0">
+            <i class="bi bi-exclamation-circle"></i> Mark Complain</a>
+          <a class="right-button btn-cable right-button-small clickable" target="_blank" href="https://docs.google.com/spreadsheets/d/1H0ffjhT51ES7a0jcGUUMsfUa5_fA3y1mvVjKZGVnHDc/edit?gid=216128426#gid=216128426">
+            <i class="bi bi-wallet2"></i> Recharge Sheet</a>
+          <a class="right-button btn-cable right-button-small clickable" target="_blank" href="https://partners.denonline.in/login.aspx">
+            <i class="bi bi-person-square"></i> Den Login</a>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div>
+        <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
+          <i class="bi bi-buildings-fill"></i> Administration
+        </div>
+        <div class="dropdown-options">
+          <a class="right-button btn-admin right-button-small clickable" target="_blank" href="https://script.google.com/macros/s/AKfycbwkmmrx_qedaOlbi-wGe9Fp2-PEvu41ZvEuYHY4d5JQ/dev?page=mehrotranetwork">
+            <i class="bi bi-person-badge"></i> Manager Dashboard</a>
+          <a class="right-button btn-admin right-button-small clickable" target="_blank" href="https://script.google.com/macros/s/AKfycbyU0-_cPkzR8o3NH7g-JiAd1ZgtGUq-kqK2i4LeIt7hEGbvPeP4xt-y41iUhmojtYSKmQ/exec">
+            <i class="bi bi-people"></i> Team Dashboard</a>
+          <a class="right-button btn-admin right-button-small clickable" target="_blank" href="https://docs.google.com/spreadsheets/d/15k3YqOk3WuUB9jPwe86sM3B8hxY-rKJ7ryg4WstH4Z8/edit?gid=1106289681#gid=1106289681">
+            <i class="bi bi-journal-richtext"></i> Payroll</a>
+          <a class="right-button btn-admin right-button-small clickable" target="_blank" href="https://vbo.co.in/merotranetworks/eCommeceDataHandle/">
+            <i class="bi bi-journal-richtext"></i> eCommerce Data Handle</a>
+          <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
+            <i class="bi bi-bar-chart-line"></i> Financial Reports</div>
+        </div>
+      </div>
+
+      <!-- STOCK -->
+      <div>
+        <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
+          <i class="bi bi-box-arrow-in-down"></i> Stock
+        </div>
+        <div class="dropdown-options">
+          <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+            <i class="bi bi-journals"></i> Stock Book</div>
+          <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+            <i class="bi bi-graph-up"></i> Set Stock Levels</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Button -->
+    <div class="notes-section">
+      <a class="notes-button clickable" href="https://script.google.com/macros/s/AKfycby8CaCPbyewf5djwJjwhCPX94lkZrbgRHjJp5QWaF2n/dev?page=notes" target="_blank">
+        <i class="bi bi-journal-text" style="font-size:2rem;"></i><br> Notes
+      </a>
+    </div>
+  </div>
+
+  <footer>Powered by: Trust In Deal Enterprises</footer>
+
+  <div id="popupMessage">Coming soon</div>
+  
+  <audio id="errorSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3" preload="auto"></audio>
+
+  <script>
+    function toggleOptions(clickedBtn) {
+      const allDropdowns = document.querySelectorAll(".dropdown-options");
+      allDropdowns.forEach(drop => {
+        if (drop !== clickedBtn.nextElementSibling) drop.classList.remove("show");
+      });
+      const drop = clickedBtn.nextElementSibling;
+      drop.classList.toggle("show");
+    }
+
+    function playErrorSound() {
+      document.getElementById("errorSound").play();
+      const popup = document.getElementById("popupMessage");
+      popup.classList.add("show");
+      setTimeout(() => popup.classList.remove("show"), 2000);
+    }
+  </script>
+</body>
+</html>
