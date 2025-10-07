@@ -709,7 +709,7 @@ if ("serviceWorker" in navigator) {
       Fill out the form below with your details. Once registered, you'll gain access to personalized tools that streamline your back office tasks and boost productivity.
     </p>
 
-    <form id="registrationForm">
+  <form id="registrationForm" style="display:none;">
    <!-- Google One Tap Sign-In: Auto prompt on page load, no button -->
    <div id="g_id_onload"
      data-client_id="683128617267-bp77fum14te6maqgk76vejt0qrnvq7q6.apps.googleusercontent.com"
@@ -1164,6 +1164,9 @@ Submission of data to us shall be deemed as an explicit acknowledgment and accep
     } else {
       emailsField.value = email;
     }
+
+    // Show the signup form after successful login
+    document.getElementById('registrationForm').style.display = '';
 
     // Show a toast message to confirm sign-in
     showToast('Signed in successfully!');
