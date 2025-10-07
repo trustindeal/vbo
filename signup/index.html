@@ -1,573 +1,655 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
   <link rel="manifest" href="/manifest.json">
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js")
-        .then(() => console.log("Service Worker registered"))
-        .catch((err) => console.log("SW error:", err));
-    }
-  </script>
 
-  <!-- OneSignal Push Notifications -->
+  <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js")
+    .then(() => console.log("Service Worker registered"))
+    .catch((err) => console.log("SW error:", err));
+}
+</script>
+
+<!-- Push Notifications -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-        appId: "6de779e9-f06e-41e7-be3e-fdaad44e6f96",
-      }).then(() => {
-        OneSignal.getUserId(function(userId) {
-          if (userId) {
-            console.log("OneSignal User ID:", userId);
-            document.getElementById('player_id').value = userId;
-          }
-        });
-      });
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "6de779e9-f06e-41e7-be3e-fdaad44e6f96",
     });
-  </script>
+  });
+</script>
 
-  <!-- Google Sign-In for Email Capture (Optional) -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1LL0RCB2B3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1LL0RCB2B3');
+</script>
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1LL0RCB2B3"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-1LL0RCB2B3');
-  </script>
+<link rel="icon" href="favicon.ico?v=2">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
+<meta name="theme-color" content="#0a4a7a">
 
-  <link rel="icon" href="favicon.ico?v=2">
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" type="image/png" href="vbo-favicon-32.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="vbo-favicon-16.png" sizes="16x16">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="icon" type="image/png" href="vbo-favicon-192.png" sizes="192x192">
-  <meta name="theme-color" content="#0a4a7a">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Virtual Back Office | Register for Services</title>
+<title>Virtual Back Office | Register for Services</title>
 
-  <!-- SEO Meta -->
-  <meta name="description" content="Register with Virtual Back Office to automate your business activities, manage fiber networks, and optimize operations. Provide your details to get started with our professional services.">
-  <meta name="keywords" content="Virtual Back Office, Business Automation, Fiber Network Management, ISP Management, Registration, Business Process Automation, Customer Support Automation, Network Optimization">
-  <meta name="author" content="Virtual Back Office" />
+<!-- ✅ SEO Meta -->
+<meta name="description" content="Register with Virtual Back Office to automate your business activities, manage fiber networks, and optimize operations. Provide your details to get started with our professional services.">
+<meta name="keywords" content="Virtual Back Office, Business Automation, Fiber Network Management, ISP Management, Registration, Business Process Automation, Customer Support Automation, Network Optimization">
+<meta name="author" content="Virtual Back Office" />
 
-  <!-- Social Share -->
-  <meta property="og:title" content="Register for Virtual Back Office Services" />
-  <meta property="og:description" content="Sign up to automate your business and network operations. Get access to advanced tools for efficiency and growth." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://vbo.co.in/register" />
-  <meta property="og:image" content="https://vbo.co.in/preview.jpg" />
+<!-- ✅ Social Share -->
+<meta property="og:title" content="Register for Virtual Back Office Services" />
+<meta property="og:description" content="Sign up to automate your business and network operations. Get access to advanced tools for efficiency and growth." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://vbo.co.in/register" />
+<meta property="og:image" content="https://vbo.co.in/preview.jpg" />
 
-  <style>
-    /* Same styles as before, unchanged */
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      text-align: center;
-      transition: background 1.5s ease, color 1.5s ease;
-      overflow: hidden;
-    }
-    body.light {
-      background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
-      color: #111;
-    }
-    body.menu-open {
-      overflow: hidden;
-    }
-    main {
-      margin-left: 250px;
-      position: relative;
-      transition: transform 0.8s ease-in-out;
-    }
-    #loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.5s ease;
-    }
-    .spinner {
-      border: 8px solid rgba(255, 255, 255, 0.3);
-      border-top: 8px solid #00d4ff;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite, pulse 2s ease-in-out infinite alternate;
-      position: relative;
-    }
-    .spinner::before {
-      content: '';
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border: 2px solid rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-      animation: spin 2s linear infinite reverse;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); }
-      100% { box-shadow: 0 0 0 20px rgba(0, 212, 255, 0); }
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-    header {
-      display: flex;
-      justify-content: flex-start;
-      padding: 15px;
-      backdrop-filter: blur(10px);
-      position: relative;
-    }
+<!-- Google Sign-In Library -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    text-align: center;
+    transition: background 1.5s ease, color 1.5s ease;
+    overflow: hidden;
+  }
+
+  body.light {
+    background: linear-gradient(to right, #f0f0f0, #fafafa, #e0e0e0);
+    color: #111;
+  }
+
+  body.menu-open {
+    overflow: hidden;
+  }
+
+  main {
+    margin-left: 250px;
+    position: relative;
+    transition: transform 0.8s ease-in-out;
+  }
+
+  #loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+  }
+
+  .spinner {
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid #00d4ff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite, pulse 2s ease-in-out infinite alternate;
+    position: relative;
+  }
+
+  .spinner::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: spin 2s linear infinite reverse;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7); }
+    100% { box-shadow: 0 0 0 20px rgba(0, 212, 255, 0); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  header {
+    display: flex;
+    justify-content: flex-start;
+    padding: 15px;
+    backdrop-filter: blur(10px);
+    position: relative;
+  }
+
+  .menu-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  body.light .menu-btn {
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  .menu-btn:hover {
+    background: #00d4ff;
+    color: #000;
+    transform: scale(1.05);
+  }
+
+  .menu-icon {
+    font-size: 1.2rem;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 15px 0;
+    z-index: 10;
+  }
+
+  body.light .sidebar {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 15px 25px;
+    color: #fff;
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+
+  body.light .sidebar a {
+    color: #111;
+  }
+
+  .sidebar a:hover {
+    background: rgba(0, 212, 255, 0.3);
+    transform: translateX(5px);
+  }
+
+  .menu-item-icon {
+    margin-right: 12px;
+    font-size: 1.1rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    margin-top: 20px;
+    padding: 0 15px;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    font-weight: normal;
+    margin-bottom: 25px;
+    color: #d1d1d1;
+    transition: color 1.5s ease;
+    padding: 0 15px;
+  }
+
+  body.light h2 {
+    color: #444;
+  }
+
+  .highlight {
+    color: #00d4ff;
+    font-weight: bold;
+  }
+
+  p {
+    max-width: 700px;
+    line-height: 1.6;
+    font-size: 1rem;
+    margin: 15px auto;
+    padding: 0 15px;
+  }
+
+  .contact-container {
+    margin-top: 20px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .contact {
+    font-size: 1.2rem;
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    padding: 10px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contact::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: left 0.5s ease;
+  }
+
+  .contact:hover::before {
+    left: 0;
+  }
+
+  .contact:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+  }
+
+  footer {
+    margin: 20px 0;
+    font-size: 0.85rem;
+    color: #aaa;
+    padding: 0 15px;
+  }
+
+  /* Form Styles */
+  form {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  body.light form {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  label {
+    display: block;
+    margin: 15px 0 8px;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 1rem;
+  }
+
+  body.light input, body.light select, body.light textarea {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.05);
+    color: #111;
+  }
+
+  select option {
+    background: #0f2027;
+    color: #fff;
+  }
+
+  body.light select option {
+    background: #f0f0f0;
+    color: #111;
+  }
+
+  button[type="submit"] {
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  button[type="submit"]:hover {
+    transform: scale(1.05);
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Confirmation Dialog */
+  #confirmationDialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  body.light #confirmationDialog {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  #confirmationDialog p {
+    margin: 0 0 20px;
+    line-height: 1.6;
+  }
+
+  #confirmationDialog button {
+    background: linear-gradient(90deg, #00d4ff, #ff6ec7);
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  #confirmationDialog button:hover {
+    transform: scale(1.05);
+  }
+
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease-in-out;
+  }
+
+  body.menu-open #overlay, body.dialog-open #overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  body.light #overlay {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 768px) {
     .menu-btn {
-      display: none;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.3s ease;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: blink 2s ease-in-out infinite;
     }
-    body.light .menu-btn {
-      background: rgba(0, 0, 0, 0.1);
-      color: #111;
+
+    main {
+      margin-left: 0;
     }
-    .menu-btn:hover {
-      background: #00d4ff;
-      color: #000;
-      transform: scale(1.05);
+
+    body.menu-open main {
+      transform: translateX(80vw);
     }
-    .menu-icon {
-      font-size: 1.2rem;
-    }
+
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      height: 100%;
-      overflow-y: auto;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      padding: 15px 0;
-      z-index: 10;
+      transform: translateX(-100%);
+      transition: transform 0.8s ease-in-out;
+      width: 80vw;
     }
-    body.light .sidebar {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+
+    .sidebar.open {
+      transform: translateX(0);
     }
-    .sidebar a {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      font-weight: 600;
-      padding: 15px 25px;
-      color: #fff;
-      transition: background 0.3s ease, transform 0.3s ease;
-    }
-    body.light .sidebar a {
-      color: #111;
-    }
-    .sidebar a:hover {
-      background: rgba(0, 212, 255, 0.3);
-      transform: translateX(5px);
-    }
-    .menu-item-icon {
-      margin-right: 12px;
-      font-size: 1.1rem;
-    }
+
     h1 {
-      font-size: 2.2rem;
-      margin-top: 20px;
-      padding: 0 15px;
+      font-size: 1.8rem;
     }
     h2 {
-      font-size: 1.2rem;
-      font-weight: normal;
-      margin-bottom: 25px;
-      color: #d1d1d1;
-      transition: color 1.5s ease;
-      padding: 0 15px;
-    }
-    body.light h2 {
-      color: #444;
-    }
-    .highlight {
-      color: #00d4ff;
-      font-weight: bold;
+      font-size: 1rem;
     }
     p {
-      max-width: 700px;
-      line-height: 1.6;
-      font-size: 1rem;
-      margin: 15px auto;
-      padding: 0 15px;
+      font-size: 0.95rem;
     }
-    .contact-container {
-      margin-top: 20px;
-      position: relative;
-      display: inline-block;
-    }
-    .contact {
-      font-size: 1.2rem;
-      background: linear-gradient(90deg, #00d4ff, #ff6ec7);
-      color: #000;
-      padding: 10px 25px;
-      border-radius: 25px;
-      text-decoration: none;
-      font-weight: bold;
-      display: inline-block;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .contact::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.2);
-      transition: left 0.5s ease;
-    }
-    .contact:hover::before {
-      left: 0;
-    }
-    .contact:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
-    }
-    footer {
-      margin: 20px 0;
-      font-size: 0.85rem;
-      color: #aaa;
-      padding: 0 15px;
+    .menu-btn {
+      padding: 8px 16px;
     }
     form {
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 30px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    }
-    body.light form {
-      background: rgba(0, 0, 0, 0.1);
+      padding: 20px;
     }
     label {
-      display: block;
-      margin: 15px 0 8px;
-      font-weight: bold;
-      text-align: left;
+      margin: 10px 0 6px;
     }
     input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-      font-size: 1rem;
-    }
-    body.light input, body.light select, body.light textarea {
-      border: 1px solid rgba(0, 0, 0, 0.3);
-      background: rgba(0, 0, 0, 0.05);
-      color: #111;
-    }
-    select option {
-      background: #0f2027;
-      color: #fff;
-    }
-    body.light select option {
-      background: #f0f0f0;
-      color: #111;
-    }
-    button[type="submit"] {
-      background: linear-gradient(90deg, #00d4ff, #ff6ec7);
-      color: #000;
-      border: none;
-      padding: 12px 30px;
-      border-radius: 25px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-    button[type="submit"]:hover {
-      transform: scale(1.05);
-    }
-    button[type="submit"]:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    #confirmationDialog {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 30px;
-      max-width: 500px;
-      width: 90%;
-      z-index: 1000;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-    body.light #confirmationDialog {
-      background: rgba(0, 0, 0, 0.2);
-    }
-    #confirmationDialog p {
-      margin: 0 0 20px;
-      line-height: 1.6;
-    }
-    #confirmationDialog button {
-      background: linear-gradient(90deg, #00d4ff, #ff6ec7);
-      color: #000;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 25px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    #confirmationDialog button:hover {
-      transform: scale(1.05);
-    }
-    #overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 9;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.8s ease-in-out;
-    }
-    body.menu-open #overlay, body.dialog-open #overlay {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    body.light #overlay {
-      background: rgba(0, 0, 0, 0.3);
-    }
-    @media (max-width: 768px) {
-      .menu-btn {
-        display: flex;
-      }
-      main {
-        margin-left: 0;
-      }
-      body.menu-open main {
-        transform: translateX(80vw);
-      }
-      .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.8s ease-in-out;
-        width: 80vw;
-      }
-      .sidebar.open {
-        transform: translateX(0);
-      }
-      h1 {
-        font-size: 1.8rem;
-      }
-      h2 {
-        font-size: 1rem;
-      }
-      p {
-        font-size: 0.95rem;
-      }
-      .menu-btn {
-        padding: 8px 16px;
-      }
-      form {
-        padding: 20px;
-      }
-      label {
-        margin: 10px 0 6px;
-      }
-      input, select, textarea {
-        padding: 10px;
-        margin-bottom: 15px;
-      }
-    }
-    @media (max-width: 480px) {
-      header {
-        padding: 10px;
-      }
-      .menu-btn {
-        padding: 8px 15px;
-      }
-      .contact {
-        padding: 8px 20px;
-        font-size: 1rem;
-      }
-      .sidebar a {
-        padding: 12px 20px;
-      }
-      form {
-        padding: 15px;
-      }
-      #confirmationDialog {
-        padding: 20px;
-      }
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-      transition: opacity 0.3s ease;
-    }
-    .modal-content {
-      background: linear-gradient(135deg, #0a4a7a, #0d6ebf);
-      margin: 15% auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 400px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      color: #fff;
-      text-align: center;
-      position: relative;
-    }
-    body.light .modal-content {
-      background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-      color: #111;
-    }
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      color: #fff;
-      font-size: 1.5rem;
-      cursor: pointer;
-      transition: color 0.3s ease;
-    }
-    body.light .close-btn {
-      color: #111;
-    }
-    .close-btn:hover {
-      color: #00d4ff;
-    }
-    .modal-content h3 {
+      padding: 10px;
       margin-bottom: 15px;
     }
-    .modal-content p {
-      margin: 10px 0;
+  }
+
+  @media (max-width: 480px) {
+    header {
+      padding: 10px;
+    }
+    .menu-btn {
+      padding: 8px 15px;
+    }
+    .contact {
+      padding: 8px 20px;
       font-size: 1rem;
     }
-    .terms-container {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 20px;
-      text-align: left;
+    .sidebar a {
+      padding: 12px 20px;
     }
-    input[type="checkbox"] {
-      margin-right: 10px;
-      width: 16px;
-      height: 16px;
+    form {
+      padding: 15px;
     }
-    .terms-container label {
-      margin: 0;
-      font-weight: normal;
+    #confirmationDialog {
+      padding: 20px;
     }
-    .terms-link {
-      color: #00d4ff;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    body.light .terms-link {
-      color: #00a5c8;
-    }
-    .terms-link:hover {
-      color: #ff6ec7;
-    }
-    .language-selector {
-      position: absolute;
-      top: 15px;
-      right: 60px;
-      padding: 6px 14px;
-      border: none;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    body.light .language-selector {
-      background: rgba(0, 0, 0, 0.1);
-      color: #111;
-    }
-    .language-selector:hover {
-      background: #00d4ff;
-      color: #000;
-    }
-    select#language {
-      background: transparent;
-      border: none;
-      color: inherit;
-      font: inherit;
-      cursor: pointer;
-      appearance: none;
-      padding-right: 20px;
-      position: relative;
-    }
-    .language-selector::after {
-      content: '▼';
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: inherit;
-      pointer-events: none;
-    }
-  </style>
+  }
+
+  /* Popup Modal Styles */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-content {
+    background: linear-gradient(135deg, #0a4a7a, #0d6ebf);
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    color: #fff;
+    text-align: center;
+    position: relative;
+  }
+
+  body.light .modal-content {
+    background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+    color: #111;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  body.light .close-btn {
+    color: #111;
+  }
+
+  .close-btn:hover {
+    color: #00d4ff;
+  }
+
+  .modal-content h3 {
+    margin-bottom: 15px;
+  }
+
+  .modal-content p {
+    margin: 10px 0;
+    font-size: 1rem;
+  }
+
+  /* Terms Checkbox Styles */
+  .terms-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .terms-container label {
+    margin: 0;
+    font-weight: normal;
+  }
+
+  .terms-link {
+    color: #00d4ff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  body.light .terms-link {
+    color: #00a5c8;
+  }
+
+  .terms-link:hover {
+    color: #ff6ec7;
+  }
+
+  /* Language Selector Styles */
+  .language-selector {
+    position: absolute;
+    top: 15px;
+    right: 60px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  body.light .language-selector {
+    background: rgba(0, 0, 0, 0.1);
+    color: #111;
+  }
+
+  .language-selector:hover {
+    background: #00d4ff;
+    color: #000;
+  }
+
+  select#language {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    appearance: none;
+    padding-right: 20px; /* Space for arrow */
+    position: relative;
+  }
+
+  .language-selector::after {
+    content: '▼';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: inherit;
+    pointer-events: none;
+  }
+
+  /* Google Sign-In Button Styles */
+  .g_id_signin {
+    margin: 15px auto;
+    display: block;
+  }
+</style>
 </head>
 <body>
   <div id="loader">
@@ -594,6 +676,8 @@
   <div id="overlay" onclick="toggleMenu()"></div>
 
   <main id="main">
+   <!-- <button class="mode-toggle" onclick="toggleMode()">🌙 / ☀️</button> -->
+
     <header>
       <button class="menu-btn" onclick="toggleMenu()">
         <span class="menu-icon">☰</span>
@@ -626,8 +710,18 @@
     </p>
 
     <form id="registrationForm">
+      <!-- Google Sign-In Button -->
+      <div id="g_id_onload"
+           data-client_id="YOUR_GOOGLE_CLIENT_ID"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular"></div>
+
       <input type="text" id="name" name="name" required>
+
       <input type="tel" id="contact" name="contact" pattern="[0-9]{10}" required>
+
       <select id="businessType" name="businessType" required>
         <option value="">Select Business Type</option>
         <option value="Internet & cable service provider">Internet & cable service provider</option>
@@ -636,23 +730,33 @@
         <option value="E commerce vendor">E commerce vendor</option>
         <option value="Other">Other</option>
       </select>
+
       <input type="text" id="city" name="city" required>
-      <textarea id="emails" name="emails"></textarea>
+
+      <textarea id="emails" name="emails" required></textarea>
+
       <p id="note_email" style="text-align: left; font-size: 0.9rem;">* Your email ID is used only to recognize your profile for quick service. No password, OTP, or extra details needed in future. You can use multiple mail IDs for accessing your profile.</p>
+
+      <!-- Hidden field for Google email -->
+      <input type="hidden" id="googleEmail" name="googleEmail">
+
       <div class="terms-container">
         <input type="checkbox" id="termsCheckbox" onchange="toggleSubmit()">
         <label id="checkbox_label" for="termsCheckbox"></label>
       </div>
+
       <input type="hidden" id="registration_date" name="registration_date">
-      <input type="hidden" id="player_id" name="player_id">
-      <input type="hidden" id="browser_email" name="browser_email"> <!-- Added for silent email capture -->
+
       <button type="submit" id="submitBtn" disabled>Step In</button>
     </form>
 
     <div class="contact-container">
       <a id="contact_link" href="tel:+917007902103" class="contact">📞 Contact: 7007902103</a>
     </div>
+
   </main>
+
+  <!-- <div id="toast">Registration Successful!</div> -->
 
   <div id="confirmationDialog">
     <p id="confirmation_p">
@@ -664,6 +768,7 @@
     <button id="ok_button" onclick="confirmAndRedirect()">OK</button>
   </div>
 
+  <!-- Contact Modal -->
   <div id="contactModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeContactModal()">&times;</span>
@@ -673,260 +778,457 @@
     </div>
   </div>
 
+  <!-- Terms Modal -->
   <div id="termsModal" class="modal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeTermsModal()">&times;</span>
       <h3 id="terms_title">Terms of Use</h3>
-      <p id="terms_content">Comprehensive Data Processing & Liability Disclaimer...</p>
+      <p id="terms_content">Comprehensive Data Processing & Liability Disclaimer
+
+1. Purpose of Data Collection
+We collect and process certain client information (including but not limited to email IDs, phone numbers, identification details, and any other data voluntarily provided by the client) strictly for the purpose of enabling smoother communication, faster response, and efficient business operations. All data is obtained solely with the client’s knowledge and consent.
+
+2. Limited Scope of Usage
+The information provided is processed exclusively for operational and communication purposes. We do not use, sell, license, transfer, or exploit the data for any unrelated commercial or personal gain. Data is not retained beyond its functional requirement and is not permanently stored for future use unless legally required.
+
+3. No Guarantee of Security
+While we adopt commercially reasonable practices to handle and process data, clients acknowledge that no system can be guaranteed to be 100% secure. Therefore, we make no warranties, explicit or implied, regarding absolute data protection against unauthorized access, breaches, cyber incidents, or other unforeseen risks.
+
+4. Third-Party Systems and Integrations
+In certain cases, data processing may involve third-party platforms, tools, or service providers (for example, email services, cloud platforms, or communication systems). We do not provide any assurance, representation, or guarantee for the practices, security measures, or reliability of such third parties. Clients agree that any risks associated with third-party involvement remain outside our control, and we disclaim any liability arising therefrom.
+
+5. Exclusion of Liability
+By sharing data with us, clients expressly acknowledge and agree that we shall not, under any circumstances, be held liable—whether in contract, tort, negligence, breach of statutory duty, data protection laws, or otherwise—for any loss, damage, claim, liability, cost, or consequence arising directly or indirectly from:
+
+Unauthorized access, misuse, alteration, or disclosure of data;
+
+Data breaches, cyberattacks, or system vulnerabilities;
+
+Failures, negligence, or misconduct of third-party service providers;
+
+Technical errors, outages, or events beyond our reasonable control;
+
+Any incidental, consequential, indirect, or punitive damages connected with data handling.
+
+6. Client Responsibility
+Clients are solely responsible for ensuring that the information shared with us is accurate, lawful, and shared with proper authority and consent. By providing data, the client confirms their understanding of this policy and irrevocably agrees that our role is limited to data processing for business facilitation, without any liability for outcomes beyond our operational scope.
+
+7. Acceptance of Terms
+Submission of data to us shall be deemed as an explicit acknowledgment and acceptance of the terms set out in this Disclaimer. Clients agree that our liability is strictly excluded to the fullest extent permitted under applicable law.</p>
     </div>
   </div>
 
-  <script>
-    const translations = {
-      'en': {
-        'title': 'Virtual Back Office | Register for Services',
-        'h1': '🚀 Register for Virtual Back Office Services',
-        'h2': 'Join our platform to automate your business operations, manage networks efficiently, and drive growth with professional tools.',
-        'p1': 'At <span class="highlight">Virtual Back Office</span>, we provide cutting-edge solutions for <strong>business automation</strong>, <strong>fiber network management</strong>, and <strong>customer support optimization</strong>. Register today to unlock access to our suite of services tailored for ISPs, e-commerce vendors, and more.',
-        'p2': 'Our platform handles everything from <em>complaint management</em> and <em>lead handling</em> to <em>accounting</em> and <em>resource optimization</em>, ensuring seamless operations and enhanced efficiency.',
-        'p3': 'Fill out the form below with your details. Once registered, you\'ll gain access to personalized tools that streamline your back office tasks and boost productivity.',
-        'placeholder_name': 'Name',
-        'placeholder_contact': 'Contact Number (10 digits)',
-        'placeholder_city': 'City',
-        'placeholder_emails': 'Mail ID(s) (separate with comma)',
-        'option_select': 'Select Business Type',
-        'option1': 'Internet & cable service provider',
-        'option2': 'Book keeping',
-        'option3': 'Door to step service provider',
-        'option4': 'E commerce vendor',
-        'option5': 'Other',
-        'button_submit': 'Step In',
-        'contact': '📞 Contact: 7007902103',
-        'confirmation': 'Thank you for seeking us for your back office needs and automation. Very soon, our team will connect with you regarding the onboarding process and customize things your way!<br><br>Wishes,<br>Team Virtual Back Office<br>+91 7007902103',
-        'note_email': '* Your email ID is used only to recognize your profile for quick service. No password, OTP, or extra details needed in future. You can use multiple mail IDs for accessing your profile.',
-        'checkbox': 'I have read and accepted the <a class="terms-link" href="#" onclick="showTermsModal(); return false;">terms of use</a>',
-        'menu_toggle': 'Toggle Theme',
-        'menu_back': 'Back',
-        'menu_download': 'Download App',
-        'menu_join': 'Join our team',
-        'menu_query': 'Query',
-        'menu_contact': 'Contact us',
-        'menu_about': 'About us',
-        'menu_terms': 'Term of use',
-        'terms_title': 'Terms of Use',
-        'terms_content': 'Comprehensive Data Processing & Liability Disclaimer...',
-        'modal_contact_title': 'Contact Us',
-        'modal_phone': 'Phone: +91 7007902103',
-        'modal_email': 'Email: trustindeal@outlook.com',
-        'ok': 'OK'
-      },
-      // Other language translations remain unchanged
-    };
-
-    // Silent Email Capture Function
-    async function captureBrowserEmail() {
-      try {
-        // Attempt to use Credential Management API
-        if (navigator.credentials) {
-          const creds = await navigator.credentials.get({
-            password: true,
-            federated: { providers: ['https://accounts.google.com'] }
-          });
-          if (creds && creds.id) {
-            document.getElementById('browser_email').value = creds.id;
-            return creds.id;
-          }
-        }
-
-        // Fallback: Attempt Google Sign-In token (if user is signed in)
-        if (window.google && google.accounts.id) {
-          google.accounts.id.initialize({
-            client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with your Google Client ID
-            callback: (response) => {
-              if (response.credential) {
-                const profile = JSON.parse(atob(response.credential.split('.')[1]));
-                if (profile.email) {
-                  document.getElementById('browser_email').value = profile.email;
-                }
-              }
-            }
-          });
-          google.accounts.id.prompt(); // Silent prompt (won't show UI if no consent)
-        }
-      } catch (error) {
-        console.log('Email capture failed:', error);
-        document.getElementById('browser_email').value = ''; // Set empty if failed
-      }
+<script>
+  const translations = {
+    'en': {
+      'title': 'Virtual Back Office | Register for Services',
+      'h1': '🚀 Register for Virtual Back Office Services',
+      'h2': 'Join our platform to automate your business operations, manage networks efficiently, and drive growth with professional tools.',
+      'p1': 'At <span class="highlight">Virtual Back Office</span>, we provide cutting-edge solutions for <strong>business automation</strong>, <strong>fiber network management</strong>, and <strong>customer support optimization</strong>. Register today to unlock access to our suite of services tailored for ISPs, e-commerce vendors, and more.',
+      'p2': 'Our platform handles everything from <em>complaint management</em> and <em>lead handling</em> to <em>accounting</em> and <em>resource optimization</em>, ensuring seamless operations and enhanced efficiency.',
+      'p3': 'Fill out the form below with your details. Once registered, you\'ll gain access to personalized tools that streamline your back office tasks and boost productivity.',
+      'placeholder_name': 'Name',
+      'placeholder_contact': 'Contact Number (10 digits)',
+      'placeholder_city': 'City',
+      'placeholder_emails': 'Mail ID(s) (separate with comma)',
+      'option_select': 'Select Business Type',
+      'option1': 'Internet & cable service provider',
+      'option2': 'Book keeping',
+      'option3': 'Door to step service provider',
+      'option4': 'E commerce vendor',
+      'option5': 'Other',
+      'button_submit': 'Step In',
+      'contact': '📞 Contact: 7007902103',
+      'confirmation': 'Thank you for seeking us for your back office needs and automation. Very soon, our team will connect with you regarding the onboarding process and customize things your way!<br><br>Wishes,<br>Team Virtual Back Office<br>+91 7007902103',
+      'note_email': '* Your email ID is used only to recognize your profile for quick service. No password, OTP, or extra details needed in future. You can use multiple mail IDs for accessing your profile.',
+      'checkbox': 'I have read and accepted the <a class="terms-link" href="#" onclick="showTermsModal(); return false;">terms of use</a>',
+      'menu_toggle': 'Toggle Theme',
+      'menu_back': 'Back',
+      'menu_download': 'Download App',
+      'menu_join': 'Join our team',
+      'menu_query': 'Query',
+      'menu_contact': 'Contact us',
+      'menu_about': 'About us',
+      'menu_terms': 'Term of use',
+      'terms_title': 'Terms of Use',
+      'terms_content': 'Comprehensive Data Processing & Liability Disclaimer\n\n1. Purpose of Data Collection\nWe collect and process certain client information (including but not limited to email IDs, phone numbers, identification details, and any other data voluntarily provided by the client) strictly for the purpose of enabling smoother communication, faster response, and efficient business operations. All data is obtained solely with the client’s knowledge and consent.\n\n2. Limited Scope of Usage\nThe information provided is processed exclusively for operational and communication purposes. We do not use, sell, license, transfer, or exploit the data for any unrelated commercial or personal gain. Data is not retained beyond its functional requirement and is not permanently stored for future use unless legally required.\n\n3. No Guarantee of Security\nWhile we adopt commercially reasonable practices to handle and process data, clients acknowledge that no system can be guaranteed to be 100% secure. Therefore, we make no warranties, explicit or implied, regarding absolute data protection against unauthorized access, breaches, cyber incidents, or other unforeseen risks.\n\n4. Third-Party Systems and Integrations\nIn certain cases, data processing may involve third-party platforms, tools, or service providers (for example, email services, cloud platforms, or communication systems). We do not provide any assurance, representation, or guarantee for the practices, security measures, or reliability of such third parties. Clients agree that any risks associated with third-party involvement remain outside our control, and we disclaim any liability arising therefrom.\n\n5. Exclusion of Liability\nBy sharing data with us, clients expressly acknowledge and agree that we shall not, under any circumstances, be held liable—whether in contract, tort, negligence, breach of statutory duty, data protection laws, or otherwise—for any loss, damage, claim, liability, cost, or consequence arising directly or indirectly from:\n\nUnauthorized access, misuse, alteration, or disclosure of data;\n\nData breaches, cyberattacks, or system vulnerabilities;\n\nFailures, negligence, or misconduct of third-party service providers;\n\nTechnical errors, outages, or events beyond our reasonable control;\n\nAny incidental, consequential, indirect, or punitive damages connected with data handling.\n\n6. Client Responsibility\nClients are solely responsible for ensuring that the information shared with us is accurate, lawful, and shared with proper authority and consent. By providing data, the client confirms their understanding of this policy and irrevocably agrees that our role is limited to data processing for business facilitation, without any liability for outcomes beyond our operational scope.\n\n7. Acceptance of Terms\nSubmission of data to us shall be deemed as an explicit acknowledgment and acceptance of the terms set out in this Disclaimer. Clients agree that our liability is strictly excluded to the fullest extent permitted under applicable law.',
+      'modal_contact_title': 'Contact Us',
+      'modal_phone': 'Phone: +91 7007902103',
+      'modal_email': 'Email: trustindeal@outlook.com',
+      'ok': 'OK'
+    },
+    'hi': {
+      'title': 'वर्चुअल बैक ऑफिस | सेवाओं के लिए पंजीकरण',
+      'h1': '🚀 वर्चुअल बैक ऑफिस सेवाओं के लिए पंजीकरण करें',
+      'h2': 'हमारे प्लेटफॉर्म से जुड़ें ताकि अपने व्यापार संचालन को स्वचालित करें, नेटवर्क को कुशलतापूर्वक प्रबंधित करें, और पेशेवर उपकरणों के साथ विकास को बढ़ावा दें।',
+      'p1': 'वर्चुअल बैक ऑफिस पर, हम व्यापार स्वचालन, फाइबर नेटवर्क प्रबंधन, और ग्राहक समर्थन अनुकूलन के लिए अत्याधुनिक समाधान प्रदान करते हैं। आज ही पंजीकरण करें और ISPs, ई-कॉमर्स विक्रेताओं, और अधिक के लिए अनुकूलित सेवाओं के सूट तक पहुंच अनलॉक करें।',
+      'p2': 'हमारा प्लेटफॉर्म शिकायत प्रबंधन और लीड हैंडलिंग से लेकर लेखा और संसाधन अनुकूलन तक सब कुछ संभालता है, सुनिश्चित करता है कि सुचारू संचालन और बढ़ी हुई दक्षता।',
+      'p3': 'नीचे दिए गए फॉर्म में अपने विवरण भरें। पंजीकृत होने के बाद, आप व्यक्तिगत उपकरणों तक पहुंच प्राप्त करेंगे जो आपके बैक ऑफिस कार्यों को सुव्यवस्थित करते हैं और उत्पादकता बढ़ाते हैं।',
+      'placeholder_name': 'नाम',
+      'placeholder_contact': 'संपर्क संख्या (10 अंक)',
+      'placeholder_city': 'शहर',
+      'placeholder_emails': 'मेल आईडी(एस) (अल्पविराम से अलग)',
+      'option_select': 'व्यापार प्रकार चुनें',
+      'option1': 'इंटरनेट और केबल सेवा प्रदाता',
+      'option2': 'बुक कीपिंग',
+      'option3': 'डोर टू स्टेप सेवा प्रदाता',
+      'option4': 'ई कॉमर्स विक्रेता',
+      'option5': 'अन्य',
+      'button_submit': 'स्टेप इन',
+      'contact': '📞 संपर्क: 7007902103',
+      'confirmation': 'आपके बैक ऑफिस जरूरतों और स्वचालन के लिए हमें चुनने के लिए धन्यवाद। बहुत जल्द, हमारी टीम ऑनबोर्डिंग प्रक्रिया के संबंध में आपसे संपर्क करेगी और चीजों को आपके तरीके से अनुकूलित करेगी!<br><br>शुभकामनाएं,<br>टीम वर्चुअल बैक ऑफिस<br>+91 7007902103',
+      'note_email': '* आपका ईमेल आईडी केवल आपके प्रोफाइल को त्वरित सेवा के लिए पहचानने के लिए उपयोग किया जाता है। भविष्य में कोई पासवर्ड, OTP, या अतिरिक्त विवरण की आवश्यकता नहीं है। आप अपने प्रोफाइल तक पहुंचने के लिए कई मेल आईडी का उपयोग कर सकते हैं।',
+      'checkbox': 'मैंने <a class="terms-link" href="#" onclick="showTermsModal(); return false;">उपयोग की शर्तें</a> पढ़ी हैं और स्वीकार करता हूं',
+      'menu_toggle': 'थीम टॉगल करें',
+      'menu_back': 'पीछे',
+      'menu_download': 'ऐप डाउनलोड करें',
+      'menu_join': 'हमारी टीम से जुड़ें',
+      'menu_query': 'प्रश्न',
+      'menu_contact': 'हमसे संपर्क करें',
+      'menu_about': 'हमारे बारे में',
+      'menu_terms': 'उपयोग की शर्तें',
+      'terms_title': 'उपयोग की शर्तें',
+      'terms_content': 'समग्र डेटा प्रोसेसिंग और दायित्व अस्वीकरण\n\n1. डेटा संग्रह का उद्देश्य\n\nहम कुछ ग्राहक जानकारी (जिसमें लेकिन इमेल आईडी, फोन नंबर, पहचान विवरण और ग्राहक द्वारा स्वेच्छा से प्रदान किए गए किसी अन्य डेटा तक सीमित नहीं) एकत्र और संसाधित करते हैं, जो विशेष रूप से सुचारू संचार, तेज़ प्रतिक्रिया और कुशल व्यापार संचालन को सक्षम करने के उद्देश्य से है। सभी डेटा केवल ग्राहक की जानकारी और सहमति के साथ प्राप्त किया जाता है।\n\n2. उपयोग की सीमित सीमा\n\nप्रदान की गई जानकारी का उपयोग विशेष रूप से परिचालन और संचार उद्देश्यों के लिए किया जाता है। हम डेटा का उपयोग, बिक्री, लाइसेंस, स्थानांतरण या किसी अ संबंधित वाणिज्यिक या व्यक्तिगत लाभ के लिए शोषण नहीं करते हैं। डेटा को उसके कार्यात्मक आवश्यकता से परे नहीं रखा जाता है और भविष्य के उपयोग के लिए स्थायी रूप से संग्रहीत नहीं किया जाता है जब तक कि कानूनी रूप से आवश्यक न हो।\n\n3. सुरक्षा की कोई गारंटी नहीं\n\nजबकि हम डेटा को संभालने और प्रोसेस करने के लिए वाणिज्यिक रूप से उचित प्रथाओं को अपनाते हैं, ग्राहक स्वीकार करते हैं कि कोई भी सिस्टम 100% सुरक्षित होने की गारंटी नहीं दी जा सकती। इसलिए, मा न अनधिकृत पहुँच, उल्लंघनों, साइबर घटनाओं, या अन्य अप्रत्याशित जोखिमों के खिलाफ पूर्ण डेटा संरक्षण के संबंध में कोई वारंटी, स्पष्ट या निहित, नहीं देते।\n\n4. तृतीय-पक्ष प्रणालियाँ और एकीकरण\n\nकुछ मामलों में, डेटा प्रोसेसिंग तृतीय-पक्ष प्लेटफॉर्म, टूल्स, या सेवा प्रदाताओं (उदाहरण के लिए, ईमेल सेवाएँ, क्लाउड प्लेटफॉर्म, या संचार प्रणालियाँ) को शामिल कर सकती है। हम ऐसी तृतीय-पक्षों की प्रथाओं, सुरक्षा उपायों, या विश्वसनीयता के लिए कोई आश्वासन, प्रतिनिधित्व, या गारंटी नहीं देते। ग्राहक सहमत हैं कि तृतीय-पक्ष भागीदारी से जुड़े किसी भी जोखिम हमारी नियंत्रण से बाहर रहते हैं, और हम इससे उत्पन्न होने वाली किसी भी दायित्व से इनकार करते हैं।\n\n5. दायित्व की अपवर्जन\n\nहमें डेटा साझा करके, ग्राहक स्पष्ट रूप से स्वीकार करते हैं और सहमत होते हैं कि किसी भी परिस्थिति में हम उत्तरदायी नहीं होंगे—चाहे अनुबंध, अपराध, लापरवाही, वैधानिक कर्तव्य का उल्लंघन, डेटा संरक्षण कानून, या अन्यथा—किसी भी हानि, क्षति, दावा, दायित्व, लागत, या परिणाम के लिए जो सीधे या अप्रत्यक्ष रूप से निम्नलिखित से उत्पन्न होता है:\n\nअनधिकृत पहुँच, दुरुपयोग, परिवर्तन, या डेटा का प्रकटीकरण;\n\nडेटा उल्लंघन, साइबर हमले, या प्रणाली की कमजोरियां;\n\nतृतीय-पक्ष सेवा प्रदाताओं की विफलताएं, लापरवाही, या दुराचार;\n\nतकनीकी त्रुटियां, रुकावटें, या हमारे उचित नियंत्रण से परे घटनाएं;\n\nडेटा हैंडलिंग से जुड़े किसी भी आकस्मिक, परिणामी, अप्रत्यक्ष, या दंडात्मक नुकसान।\n\n6. ग्राहक की जिम्मेदारी\n\nग्राहक यह सुनिश्चित करने के लिए पूरी तरह से जिम्मेदार हैं कि हमारे साथ साझा की गई जानकारी सटीक, वैधानिक, और उचित प्राधिकरण और सहमति के साथ साझा की गई है। डेटा प्रदान करके, ग्राहक इस नीति को समझने की पुष्टि करते हैं और अपरिवर्तनीय रूप से सहमत होते हैं कि हमारी भूमिका व्यवसाय सुविधा के लिए डेटा प्रसंस्करण तक सीमित है, हमारे परिचालन दायरे से परे किसी भी परिणाम के लिए कोई दायित्व नहीं है।\n\n7. शर्तों का स्वीकार\n\nहमें डेटा जमा करना इस अस्वीकरण में निर्धारित शर्तों का स्पष्ट स्वीकार और स्वीकृति माना जाएगा। ग्राहक सहमत हैं कि लागू कानून के तहत संभव सबसे अधिक सीमा तक हमारी दायित्व को पूरी तरह से अपवर्जित किया गया है।',
+      'modal_contact_title': 'हमसे संपर्क करें',
+      'modal_phone': 'फोन: +91 7007902103',
+      'modal_email': 'ईमेल: trustindeal@outlook.com',
+      'ok': 'ओके'
+    },
+    'bn': {
+      'title': 'ভার্চুয়াল ব্যাক অফিস | সার্ভিসের জন্য নিবন্ধন',
+      'h1': '🚀 ভার্চুয়াল ব্যাক অফিস সার্ভিসের জন্য নিবন্ধন করুন',
+      'h2': 'আমাদের প্ল্যাটফর্মে যোগ দিন যাতে আপনার ব্যবসায়িক অপারেশনগুলি স্বয়ংক্রিয় করতে, নেটওয়ার্কগুলি দক্ষতার সাথে পরিচালনা করতে, এবং পেশাদার টুলস দিয়ে বৃদ্ধি চালিত করতে।',
+      'p1': 'ভার্চুয়াল ব্যাক অফিসে, আমরা ব্যবসায়িক অটোমেশন, ফাইবার নেটওয়ার্ক ম্যানেজমেন্ট, এবং গ্রাহক সাপোর্ট অপটিমাইজেশনের জন্য অত্যাধুনিক সমাধান প্রদান করি। আজই নিবন্ধন করুন এবং ISPs, ই-কমার্স ভেন্ডর, এবং আরও অনেকের জন্য কাস্টমাইজড সার্ভিসের স্যুটে অ্যাক্সেস আনলক করুন।',
+      'p2': 'আমাদের প্ল্যাটফর্ম অভিযোগ ম্যানেজমেন্ট এবং লিড হ্যান্ডলিং থেকে অ্যাকাউন্টিং এবং রিসোর্স অপটিমাইজেশন পর্যন্ত সবকিছু হ্যান্ডেল করে, নিশ্চিত করে যে সুবিধাজনক অপারেশন এবং উন্নত দক্ষতা।',
+      'p3': 'নীচের ফর্মে আপনার বিবরণ পূরণ করুন। নিবন্ধিত হওয়ার পর, আপনি ব্যক্তিগত টুলসে অ্যাক্সেস পাবেন যা আপনার ব্যাক অফিস টাস্কগুলি স্ট্রিমলাইন করে এবং উত্পাদনশীলতা বাড়ায়।',
+      'placeholder_name': 'নাম',
+      'placeholder_contact': 'যোগাযোগ নম্বর (10 অঙ্ক)',
+      'placeholder_city': 'শহর',
+      'placeholder_emails': 'মেল আইডি(গুলি) (কমা দিয়ে আলাদা)',
+      'option_select': 'ব্যবসায়ের ধরন নির্বাচন করুন',
+      'option1': 'ইন্টারনেট এবং কেবল সার্ভিস প্রোভাইডার',
+      'option2': 'বুক কিপিং',
+      'option3': 'ডোর টু স্টেপ সার্ভিস প্রোভাইডার',
+      'option4': 'ই কমার্স ভেন্ডর',
+      'option5': 'অন্যান্য',
+      'button_submit': 'স্টেপ ইন',
+      'contact': '📞 যোগাযোগ: 7007902103',
+      'confirmation': 'আপনার ব্যাক অফিস প্রয়োজনীয়তা এবং অটোমেশনের জন্য আমাদের বেছে নেওয়ার জন্য ধন্যবাদ। খুব শীঘ্রই, আমাদের টিম আপনার সাথে অনবোর্ডিং প্রক্রিয়া সম্পর্কে যোগাযোগ করবে এবং চিজগুলি আপনার উপায়ে কাস্টমাইজ করবে!<br><br>শুভকামনা,<br>টিম ভার্চুয়াল ব্যাক অফিস<br>+91 7007902103',
+      'note_email': '* আপনার ইমেল আইডি শুধুমাত্র আপনার প্রোফাইলকে দ্রুত সার্ভিসের জন্য চিনতে ব্যবহার করা হয়। ভবিষ্যতে কোনো পাসওয়ার্ড, OTP, বা অতিরিক্ত বিবরণ প্রয়োজন নেই। আপনি আপনার প্রোফাইল অ্যাক্সেস করার জন্য একাধিক মেল আইডি ব্যবহার করতে পারেন।',
+      'checkbox': 'আমি <a class="terms-link" href="#" onclick="showTermsModal(); return false;">ব্যবহারের শর্তাবলী</a> পড়েছি এবং স্বীকার করেছি',
+      'menu_toggle': 'থিম টগল করুন',
+      'menu_back': 'পিছনে',
+      'menu_download': 'অ্যাপ ডাউনলোড করুন',
+      'menu_join': 'আমাদের টিমে যোগ দিন',
+      'menu_query': 'প্রশ্ন',
+      'menu_contact': 'আমাদের সাথে যোগাযোগ করুন',
+      'menu_about': 'আমাদের সম্পর্কে',
+      'menu_terms': 'ব্যবহারের শর্তাবলী',
+      'terms_title': 'ব্যবহারের শর্তাবলী',
+      'terms_content': 'সম্পূর্ণ ডেটা প্রক্রিয়াকরণ এবং দায়বদ্ধতা বিষয়ক দাবি পরিহার 1. ডেটা সংগ্রহের উদ্দেশ্য আমরা কিছু ক্লায়েন্ট তথ্য (যেমন: ইমেল আইডি, ফোন নম্বর, পরিচয় বিবরণ এবং ক্লায়েন্টের দ্বারা স্বেচ্ছায় প্রদত্ত যেকোনো অন্যান্য ডেটা) সংগ্রহ এবং প্রক্রিয়াকরণ করি, যা কেবলমাত্র সুগম যোগাযোগ, দ্রুত প্রতিক্রিয়া এবং দক্ষ ব্যবসায়িক কার্যক্রম সক্ষম করার জন্য। সমস্ত ডেটা কেবল ক্লায়েন্টের জ্ঞান এবং সম্মতির সাথে প্রাপ্ত হয়। 2. ব্যবহারের সীমিত পরিধি প্রদত্ত তথ্য কেবলমাত্র কার্যক্রমিক এবং যোগাযোগের উদ্দেশ্যে প্রক্রিয়াকরণ করা হয়। আমরা ডেটা কোনো অ অসংশ্লিষ্ট বাণিজ্যিক বা ব্যক্তিগত লাভের জন্য ব্যবহার, বিক্রয়, লাইসেন্স, স্থানান্তর বা শোষণ করি না। ডেটা তার কার্যকর প্রয়োজনীয়তার বাইরে রাখা হয় না এবং ভবিষ্যতের ব্যবহারের জন্য স্থায়ীভাবে সংরক্ষিত হয় না যদি না আইনীভাবে প্রয়োজন হয়।\n\n3. নিরাপত্তার কোনো গ্যারান্টি নেই  \nআমরা বাণিজ্যিকভাবে যুক্তিযুক্ত পদ্ধতি গ্রহণ করি ডেটা পরিচালনা এবং প্রক্রিয়াকরণের জন্য, কিন্তু ক্লায়েন্টরা স্বীকার করেন যে কোনো সিস্টেম 100% নিরাপদ হওয়ার গ্যারান্টি দেওয়া যায় না। তাই, মা ন অনধিকृत অ্যাক্সেস, ভঙ্গ, সাইবার ঘটনা, বা অন্যান্য অপ্রত্যাশিত ঝুঁকির বিরুদ্ধে পূর্ণ ডেটা সুরক্ষা সম্পর্কে কোনো ওয়ারেন্টি, স্পষ্ট বা অন্তর্নিহিত, না দেন।\n\n4. তৃতীয় পক্ষের সিস্টেম এবং ইন্টিগ্রেশন  \nকিছু ক্ষেত্রে, ডেটা প্রক্রিয়াকরণে তৃতীয় পক্ষের প্ল্যাটফর্ম, টুল, বা সেবা প্রদানকারী (উদাহরণস্বরূপ, ইমেল সেবা, ক্লাউড প্ল্যাটফর্ম, বা যোগাযোগ সিস্টেম) জড়িত থাকতে পারে। আমরা এমন তৃতীয় পক্ষদের পদ্ধতি, নিরাপত্তা ব্যবস্থা, বা নির্ভরযোগ্যতার জন্য কোনো আশ্বাস, প্রতিনিধিত্ব, বা গ্যারান্টি প্রদান করি না। ক্লায়েন্টরা সম্মত হন যে তৃতীয় পক্ষের জড়িততার সাথে সম্পর্কিত যেকোনো ঝুঁকি আমাদের নিয়ন্ত্রণের বাইরে থাকে, এবং আমরা সেখান থেকে উদ্ভূত কোনো দায়িত্ব প্রত্যাখ্যান করি।\n\n5. দায়িত্ব বর্জন  \nআমাদের সাথে ডেটা শেয়ার করে, ক্লায়েন্টরা স্পষ্টভাবে স্বীকার করেন এবং সম্মত হন যে, কোনো পরিস্থিতিতেই আমরা—কন্ট্রাক্ট, টর্ট, অবহেলা, স্ট্যাটুটরি ডিউটির লঙ্ঘন, ডেটা সুরক্ষা আইন, বা অন্য কোনো কারণে—নিম্নলিখিত থেকে সরাসরি বা পরোক্ষভাবে উদ্ভূত কোনো ক্ষতি, ক্ষতি, দাবি, দায়িত্ব, খরচ, বা পরिणতির জন্য দায়ী হব না:  \nঅননুমোদিত অ্যাক্সেস, ব্যবহার, পরিবর্তন, বা ডেটার প্রকাশ;  \nডেটা লঙ্ঘন, সাইবার আক্রমণ, বা সিস্টেমের দুর্বলতা;  \nতৃতীয় পক্ষের সেবা প্রদানকারীদের বিফলতা, অবহেলা, বা দুর্নীতি;  \nতকনিকাল ত্রুটি, বন্ধ, বা আমাদের যুক্তিযুক্ত নিয়ন্ত্রণের বাইরে ঘটনা;  \nডেটা হ্যান্ডলিং সংক্রান্ত যেকোনো আনুষঙ্গিক, পরবর্তী, পরোক্ষ, বা শাস্তিমূলক ক্ষতি।  \n\n6. ক্লায়েন্টের দায়িত্ব  \nক্লায়েন্টরা একমাত্রভাবে দায়ী যাতে নিশ্চিত করা হয় যে আমাদের সাথে শেয়ার করা তথ্য সঠিক, বৈধ, এবং সঠিক কর্তৃপক্ষ এবং সম্মতি সহ শেয়ার করা হয়। ডেটা প্রদান করে, ক্লায়েন্ট এই নীতির বোঝাপড়া নিশ্চিত করেন এবং অটলভাবে সম্মত হন যে আমাদের ভূমিকা ব্যবসায় সুবিধার জন্য ডেটা প্রক্রিয়াকরণে সীমাবদ্ধ, আমাদের কার্যক্ষেত্রের বাইরে ফলাফলের জন্য কোনো দায়িত্ব ছাড়া।  \n\n7. শর্তাবলীর গ্রহণ  \nআমাদের কাছে ডেটা জমা দেওয়া হবে এই বিজ্ঞপ্তিতে উল্লেখিত শর্তাবলী স্পষ্টভাবে স্বীকার এবং গ্রহণ হিসেবে গণ্য হবে। ক্লায়েন্টরা সম্মত হন যে আমাদের দায়িত্ব প্রযোজ্য আইনের অনুমতি মতো সর্বাধিক পরিমাণে বর্জিত।',
+      'modal_contact_title': 'আমাদের সাথে যোগাযোগ করুন',
+      'modal_phone': 'ফোন: +91 7007902103',
+      'modal_email': 'ইমেল: trustindeal@outlook.com',
+      'ok': 'ওকে'
+    },
+    'te': {
+      'title': 'వర్చువల్ బ్యాక్ ఆఫీస్ | సేవలకు నమోదు చేయండి',
+      'h1': '🚀 వర్చువల్ బ్యాక్ ఆఫీస్ సేవలకు నమోదు చేయండి',
+      'h2': 'మా ప్లాట్‌ఫాంలో చేరండి మీ వ్యాపార కార్యకలాపాలను ఆటోమేట్ చేయడానికి, నెట్‌వర్క్‌లను సమర్థవంతంగా నిర్వహించడానికి, మరియు ప్రొఫెషనల్ టూల్స్‌తో వృద్ధిని ప్రోత్సహించడానికి.',
+      'p1': 'వర్చువల్ బ్యాక్ ఆఫీస్‌లో, మేము వ్యాపార ఆటోమేషన్, ఫైబర్ నెట్‌వర్క్ మేనేజ్‌మెంట్, మరియు కస్టమర్ సపోర్ట్ ఆప్టిమైజేషన్ కోసం అత్యాధునిక సొల్యూషన్‌లను అందిస్తాము. ఇప్పుడు నమోదు చేసుకోండి మరియు ISPs, ఈ-కామర్స్ విక్రేతలు, మరియు మరిన్ని కోసం టేలర్ చేసిన సేవల సూట్‌కు యాక్సెస్ అన్‌లాక్ చేయండి.',
+      'p2': 'మా ప్లాట్‌ఫాం ఫిర్యాదు మేనేజ్‌మెంట్ మరియు లీడ్ హ్యాండ్లింగ్ నుండి అకౌంటింగ్ మరియు రిసోర్స్ ఆప్టిమైజేషన్ వరకు అన్నింటిని హ్యాండిల్ చేస్తుంది, సున్నితమైన ఆపరేషన్‌లు మరియు మెరుగైన సామర్థ్యాన్ని నిర్ధారిస్తుంది.',
+      'p3': 'క్రింది ఫారమ్‌లో మీ వివరాలను పూరించండి. నమోదు అయిన తర్వాత, మీరు వ్యక్తిగత టూల్స్‌కు యాక్సెస్ పొందుతారు అవి మీ బ్యాక్ ఆఫీస్ టాస్క్‌లను స్ట్రీమ్‌లైన్ చేస్తాయి మరియు ఉత్పాదకతను పెంచుతాయి.',
+      'placeholder_name': 'పేరు',
+      'placeholder_contact': 'కాంటాక్ట్ నంబర్ (10 అంకెలు)',
+      'placeholder_city': 'నగరం',
+      'placeholder_emails': 'మెయిల్ ఐడీ(లు) (కామా తో వేరుచేయండి)',
+      'option_select': 'వ్యాపార రకం ఎంచుకోండి',
+      'option1': 'ఇంటర్నెట్ & కేబుల్ సర్వీస్ ప్రొవైడర్',
+      'option2': 'బుక్ కీపింగ్',
+      'option3': 'డోర్ టు స్టెప్ సర్వీస్ ప్రొవైడర్',
+      'option4': 'ఇ కామర్స్ వెండర్',
+      'option5': 'ఇతర',
+      'button_submit': 'స్టెప్ ఇన్',
+      'contact': '📞 కాంటాక్ట్: 7007902103',
+      'confirmation': 'మీ బ్యాక్ ఆఫీస్ అవసరాలు మరియు ఆటోమేషన్ కోసం మమ్మల్ని ఎంచుకున్నందుకు ధన్యవాదాలు. చాలా త్వరలో, మా టీమ్ ఆన్‌బోర్డింగ్ ప్రాసెస్ గురించి మీతో కనెక్ట్ అవుతుంది మరియు మీ మార్గంలో విషయాలను కస్టమైజ్ చేస్తుంది!<br><br>శుభాకాంక్షలు,<br>టీమ్ వర్చువల్ బ్యాక్ ఆఫీస్<br>+91 7007902103',
+      'note_email': '* మీ ఇమెయిల్ ఐడీ మాత్రమే మీ ప్రొఫైల్‌ను శీఘ్ర సేవ కోసం గుర్తించడానికి ఉపయోగించబడుతుంది. భవిష్యత్తులో పాస్‌వర్డ్, OTP, లేదా అదనపు వివరాలు అవసరం లేదు. మీరు మీ ప్రొఫైల్‌ను యాక్సెస్ చేయడానికి బహుళ మెయిల్ ఐడీలను ఉపయోగించవచ్చు.',
+      'checkbox': 'నేను <a class="terms-link" href="#" onclick="showTermsModal(); return false;">ఉపయోగ నిబంధనలు</a> చదివాను మరియు అంగీకరిస్తున్నాను',
+      'menu_toggle': 'థీమ్ టాగిల్ చేయండి',
+      'menu_back': 'వెనక్కి',
+      'menu_download': 'అప్ డౌన్‌లోడ్ చేయండి',
+      'menu_join': 'మా టీమ్‌లో చేరండి',
+      'menu_query': 'ప్రశ్న',
+      'menu_contact': 'మమ్మల్ని సంప్రదించండి',
+      'menu_about': 'మా గురించి',
+      'menu_terms': 'ఉపయోగ నిబంధనలు',
+      'terms_title': 'ఉపయోగ నిబంధనలు',
+      'terms_content': 'సమగ్ర డేటా ప్రాసెసింగ్ & లయబిలిటీ డిస్క్లైమర్\n\n1. డేటా సేకరణ యొక్క ఉద్దేశం\n\nమేము కొన్ని క్లయింట్ సమాచారాన్ని (ఇమెయిల్ IDలు, ఫోన్ నంబర్లు, గుర్తింపు వివరాలు మరియు క్లయింట్ స్వచ్ఛందంగా అందించిన ఏదైనా ఇతర డేటా సహా కానీ పరిమితం కాని) సేకరించి ప్రాసెస్ చేస్తాము, ఇది సునాయాసమైన కమ్యూనికేషన్, వేగవంతమైన స్పందన మరియు సమర్థవంతమైన వ్యాపార కార్యకలాపాలను సాధ్యం చేయడానికి కఠినంగా ఉపయోగిస్తుంది. అన్ని డేటా క్లయింట్ యొక్క జ్ఞానం మరియు సమ్మతితో మాత్రమే పొందబడుతుంది.\n\n2. ఉపయోగం యొక్క పరిమిత పరిధి\n\nఅందించిన సమాచారం కార్యాచరణ మరియు కమ్యూనికేషన్ ఉద్దేశాల కోసం మాత్రమే ప్రాసెస్ చేయబడుతుంది. మేము డేటాను ఏదైనా అసంబంధిత వాణిజ్య లేదా వ్యక్తిగత లాభం కోసం ఉపయోగించడు, విక్రయించడు, లైసెన్స్ చేయడు, బదిలీ చేయడు లేదా దుర్వినియోగం చేయడు. డేటా దాని కార్యాత్మక అవసరం దాటి నిలిపివుండదు మరియు భవిష్యత్ ఉపయోగం కోసం శాశ్వతంగా నిలిపివుండదు, అటువంటి చట్టపరమైన అవసరం ఉన్నప్పుడు తప్ప.\n\n3. భద్రతకు ఎటువంటి హామీ లేదు\n\nమేము వాణిజ్యంగా సహనీయమైన పద్ధతులను అవలంబిస్తూ డేటాను నిర్వహించడం మరియు ప్రాసెస్ చేయడం చేస్తున్నప్పటికీ, క్లయింట్లు ఎటువంటి సిస్టమ్ 100% భద్రమైనదిగా హామీ ఇవ్వలేమని అంగీకరిస్తారు. కాబట్టి, మేము అనధికార యాక్సెస్, బ్రీచెస్, సైబర్ సంఘటనలు లేదా ఇతర అప్రత్యక్ష రిస్క్‌ల నుండి పూర్తి డేటా సంరక్షణకు సంబంధించి స్పష్టమైన లేదా సూచనాత్మక వారంటీలను ఇవ్వడు.\n\n4. మూడవ పక్ష సిస్టమ్స్ మరియు ఇంటిగ్రేషన్స్\n\nకొన్ని సందర్భాల్లో, డేటా ప్రాసెసింగ్ మూడవ పక్ష ప్లాట్‌ఫారమ్‌లు, టూల్స్ లేదా సర్వీస్ ప్రొవైడర్‌లు (ఉదాహరణకు ఈమెయిల్ సర్వీసెస్, క్లౌడ్ ప్లాట్‌ఫారమ్‌లు లేదా కమ్యూనికేషన్ సిస్టమ్స్) సహా ఉండవచ్చు. మేము అటువంటి మూడవ పక్షాల పద్ధతులు, భద్రతా చర్యలు లేదా విశ్వాసార్హతకు ఎటువంటి హామీ, ప్రాతినిధ్యం లేదా గ్యారంటీని ఇవ్వడు. క్లయింట్లు మూడవ పక్ష సహభాగిత్వంతో సంబంధించిన ఎటువంటి రిస్క్‌లు మా నియంత్రణ బయట ఉంటాయని మరియు అందువల్ల దాని నుండి ఏర్పడే ఎటువంటి బాధ్యతను మేము నిరాకరిస్తున్నామని అంగీకరిస్తారు.\n\n5. బాధ్యతా నిరాకరణ\n\nమాకు డేటాను పంచుకోవడం ద్వారా, క్లయింట్లు స్పష్టంగా అంగీకరిస్తారు మరియు అంగీకరిస్తారు, మేము ఎటువంటి పరిస్థితుల్లోనూ—ఒప్పందం, టార్ట్, నిర్లక్ష్యం, ఉచిత బాధ్యతా ఉల్లంఘన, డేటా సంరక్షణ చట్టాలు, లేదా వేరే విధంగా—ఏ లాస్, డామేజ్, క్లెయిమ్, బాధ్యత, ఖర్చు, లేదా పరిణామం కోసం బాధ్యత వహించరాదు, ఇది నేరుగా లేదా పరోక్షంగా వచ్చే:\n\nఅనధికారిక ప్రవేశం, తప్పుడు వినియోగం, మార్పు, లేదా డేటా యొక్క వెల్లడి;\n\nడేటా బ్రీచ్‌లు, సైబర్‌అటాక్‌లు, లేదా సిస్టమ్ బలహీనతలు;\n\nమూడవ పక్ష సేవా ప్రదాతల యొక్క వైఫల్యం, నిర్లక్ష్యం, లేదా తప్పిదం;\n\nటెక్నికల్ ఎర్రర్స్, అవుటేజ్‌లు, లేదా మా సహనీయ నియంత్రణలో ఉన్న సంఘటనలు;\n\nడేటా హ్యాండ్లింగ్‌తో సంబంధం ఉన్న ఏదైనా అకస్మాత్, పరిణామక, పరోక్ష, లేదా శిక్షాత్మక డామేజ్‌లు.\n\n6. క్లయింట్ బాధ్యత\n\nక్లయింట్లు మా మాకు పంచుకున్న సమాచారం సరిగ్గా, చట్టబద్ధంగా, మరియు సరియైన అధికారం మరియు సమ్మతితో పంచుకోవడం కోసం పూర్తిగా బాధ్యత వహిస్తారు. డేటాను అందించడం ద్వారా, క్లయింట్ ఈ పాలసీని అర్థం చేసుకున్నట్లు నిర్ధారిస్తుంది మరియు అవివాదంగా అంగీకరిస్తుంది, మా పాత్ర వ్యాపార సౌలభ్యం కోసం డేటా ప్రాసెసింగ్‌కు పరిమితమైనది, మా ఆపరేషనల్ స్కోప్ దాటిన ఫలితాల కోసం ఏ బాధ్యతా లేకుండా.\n\n7. నిబంధనల స్వీకరణ\n\nమాకు డేటాను సమర్పించడం ఈ డిస్‌క్లెయిమర్‌లో నిర్దేశించిన నిబంధనల స్పష్టమైన అంగీకారం మరియు స్వీకరణగా భావించబడుతుంది. క్లయింట్లు మా బాధ్యతను అనుసరించి అనుమతించబడిన పూర్తి పరిధికి కఠినంగా మినహాయించబడిందని అంగీకరిస్తారు.',
+      'modal_contact_title': 'మమ్మల్ని సంప్రదించండి',
+      'modal_phone': 'ఫోన్: +91 7007902103',
+      'modal_email': 'ఇమెయిల్: trustindeal@outlook.com',
+      'ok': 'సరే'
+    },
+    'mr': {
+      'title': 'व्हर्च्युअल बॅक ऑफिस | सेवांसाठी नोंदणी',
+      'h1': '🚀 व्हर्च्युअल बॅक ऑफिस सेवांसाठी नोंदणी करा',
+      'h2': 'आमच्या प्लॅटफॉर्ममध्ये सामील व्हा जेणेकरून तुमच्या व्यवसाय ऑपरेशन्स स्वयंचलित करा, नेटवर्क कार्यक्षमतेने व्यवस्थापित करा, आणि व्यावसायिक साधनांसह वाढ वाढवा.',
+      'p1': 'व्हर्च्युअल बॅक ऑफिसवर, आम्ही व्यवसाय ऑटोमेशन, फायबर नेटवर्क मॅनेजमेंट, आणि ग्राहक समर्थन ऑप्टिमायझेशनसाठी अत्याधुनिक सोल्युशन्स प्रदान करतो. आजच नोंदणी करा आणि ISPs, ई-कॉमर्स विक्रेते, आणि अधिकसाठी सानुकूल सेवांच्या सूटमध्ये ऍक्सेस अनलॉक करा.',
+      'p2': 'आमचे प्लॅटफॉर्म तक्रार व्यवस्थापन आणि लीड हँडलिंगपासून अकाउंटिंग आणि संसाधन ऑप्टिमायझेशनपर्यंत सर्व काही हँडल करते, सहज ऑपरेशन्स आणि सुधारित कार्यक्षमता सुनिश्चित करते.',
+      'p3': 'खालील फॉर्ममध्ये तुमचे तपशील भरा. नोंदणीकृत झाल्यावर, तुम्ही वैयक्तिक साधनांमध्ये ऍक्सेस मिळवाल जे तुमच्या बॅक ऑफिस कार्यांना सुव्यवस्थित करतात आणि उत्पादकता वाढवतात.',
+      'placeholder_name': 'नाव',
+      'placeholder_contact': 'संपर्क क्रमांक (10 अंक)',
+      'placeholder_city': 'शहर',
+      'placeholder_emails': 'मेल आयडी(एस) (कॉमा ने वेगळे)',
+      'option_select': 'व्यवसाय प्रकार निवडा',
+      'option1': 'इंटरनेट आणि केबल सेवा प्रदाता',
+      'option2': 'बुक कीपिंग',
+      'option3': 'डोअर टू स्टेप सेवा प्रदाता',
+      'option4': 'ई कॉमर्स विक्रेता',
+      'option5': 'इतर',
+      'button_submit': 'स्टेप इन',
+      'contact': '📞 संपर्क: 7007902103',
+      'confirmation': 'तुमच्या बॅक ऑफिस गरजा आणि ऑटोमेशनसाठी आम्हाला निवडल्याबद्दल धन्यवाद. लवकरच, आमची टीम ऑनबोर्डिंग प्रक्रियेबाबत तुमच्याशी संपर्क साधेल आणि गोष्टी तुमच्या पद्धतीने सानुकूलित करेल!<br><br>शुभेच्छा,<br>टीम व्हर्च्युअल बॅक ऑफिस<br>+91 7007902103',
+      'note_email': '* तुमचा ईमेल आयडी फक्त तुमच्या प्रोफाइलला द्रुत सेवेसाठी ओळखण्यासाठी वापरला जातो. भविष्यात पासवर्ड, OTP, किंवा अतिरिक्त तपशील आवश्यक नाही. तुम्ही तुमच्या प्रोफाइलमध्ये ऍक्सेस करण्यासाठी एकाधिक मेल आयडी वापरू शकता.',
+      'checkbox': 'मी <a class="terms-link" href="#" onclick="showTermsModal(); return false;">वापराच्या अटी</a> वाचल्या आहेत आणि स्वीकारतो',
+      'menu_toggle': 'थीम टॉगल करा',
+      'menu_back': 'मागे',
+      'menu_download': 'अॅप डाउनलोड करा',
+      'menu_join': 'आमच्या टीममध्ये सामील व्हा',
+      'menu_query': 'प्रश्न',
+      'menu_contact': 'आमच्याशी संपर्क साधा',
+      'menu_about': 'आमच्याबद्दल',
+      'menu_terms': 'वापराच्या अटी',
+      'terms_title': 'वापराच्या अटी',
+      'terms_content': 'Comprehensive Data Processing & Liability Disclaimer\n\n1. डेटा संकलनाचा उद्देश  \n आम्ही काही क्लायंट माहिती (ज्यात ईमेल आयडी, फोन नंबर, ओळखीची तपशील आणि क्लायंटने स्वेच्छेने पुरवलेली कोणतीही इतर माहिती समाविष्ट आहे पण यावर मर्यादित नाही) संकलित करतो आणि प्रक्रिया करतो, जे फक्त सुधारित संवाद, जलद प्रतिसाद आणि कार्यक्षम व्यवसाय ऑपरेशन्स सक्षम करण्याच्या उद्देशाने आहे. सर्व डेटा केवळ क्लायंटच्या ज्ञान आणि संमतीने प्राप्त केले जाते.\n\n2. वापराचा मर्यादित व्याप्ती  \n पुरवलेली माहिती केवळ ऑपरेशनल आणि संवादात्मक उद्देशांसाठी प्रक्रिया केली जाते. आम्ही डेटाचा कोणत्याही अ अनन्य व्यावसायिक किंवा वैयक्तिक लाभासाठी वापर, विक्री, परवाना, हस्तांतरण किंवा शोषण करत नाही. डेटा त्याच्या कार्यात्मक आवश्यकतेच्या पलीकडे ठेवला जात नाही आणि भविष्यातील वापरासाठी कायमस्वरूपी साठवला जात नाही, जोपर्यंत कायदेशीररित्या आवश्यक नाही।\n\n3. सुरक्षााची कोणतीही हमी नाही  \nजरी आम्ही व्यावसायिकदृष्ट्या योग्य पद्धतींचा अवलंब करतो डेटा हाताळण्यासाठी आणि प्रक्रिया करण्यासाठी, ग्राहक मान्य करतात की कोणत्याही प्रणालीला 100% सुरक्षित असण्याची हमी देता येत नाही. त्यामुळे, मा न अनधिकृत प्रवेश, भंग, सायबर घटनांविरुद्ध किंवा इतर अपेक्षित जोखीमांविरुद्ध संपूर्ण डेटा संरक्षणाबाबत कोई स्पष्ट किंवा अप्रत्यक्ष हमी देत नाही.\n\n4. तृतीय-पक्ष प्रणाली आणि एकत्रीकरण  \nकाही प्रकरणांमध्ये, डेटा प्रक्रिया तृतीय-पक्ष प्लॅटफॉर्म्स, साधने किंवा सेवा पुरवठादारांशी (उदाहरणार्थ, ईमेल सेवा, क्लाउड प्लॅटफॉर्म्स किंवा संप्रेषण प्रणाली) संबंधित असू शकते. आम्ही अशा तृतीय-पक्षांच्या पद्धती, सुरक्षा उपाययोजनां किंवा विश्वासार्हतेबाबत कोई हमी, प्रतिनिधित्व किंवा आश्वासन देत नाही. ग्राहक सहमत आहेत की तृतीय-पक्षांच्या सहभागाशी संबंधित कोणत्याही जोखीमा आमच्या नियंत्रणाबाहेर आहेत, आणि त्यामुळे उद्भवणारी कोणतीही जबाबदारी आम्ही नाकारतो।\n\n5. जबाबदारी वगळणे  \nआमच्याबरोबर डेटा शेअर करून, क्लायंट्स स्पष्टपणे मान्य करतात आणि सहमत होतात की आम्ही कोणत्याही परिस्थितीत जबाबदार राहणार नाही—कंत्राट, टॉर्ट, निष्काळजीपणा, कायदेशीर कर्तव्याचा भंग, डेटा संरक्षण कायदे, किंवा अन्यथा—कोणत्याही तोटा, नुकसान, दावा, जबाबदारी, खर्च, किंवा परिणामांसाठी जे थेट किंवा अप्रत्यक्षपणे उद्भवतात:  \nअनधिकृत प्रवेश, गैरवापर, बदल, किंवा डेटाचा प्रसार;  \nडेटा उल्लंघन, सायबरहल्ले, किंवा सिस्टम कमजोरपणा;  \nतृतीय-पक्ष सेवा पुरवठादारांचे अपयश, निष्काळजीपणा, किंवा गैरवर्तन;  \nतांत्रिक त्रुटी, खंड, किंवा आमच्या नियंत्रणाबाह्य घटना;  \nडेटा हाताळणीशी संबंधित कोणत्याही आकस्मिक, परिणामी, अप्रत्यक्ष, किंवा दंडात्मक नुकसान.\n\n6. क्लायंटची जबाबदारी  \nक्लायंट्स हे सुनिश्चित करण्यासाठी एकमेव जबाबदार आहेत की आमच्याबरोबर शेअर केलेली माहिती अचूक, कायदेशीर, आणि योग्य प्राधिकार आणि संमतीसह शेअर केली गेली आहे. डेटा प्रदान करून, क्लायंट या धोरणाची समजूत घेतल्याचे आणि अपरिवर्तनीयपणे सहमत होतात की आमची भूमिका व्यवसाय सुलभतेसाठी डेटा प्रक्रिया करण्यापुरती मर्यादित आहे, आमच्या कार्यक्षेत्राबाह्य परिणामांसाठी कोई जबाबदारी न घेता.\n\n7. अटींची स्वीकृती  \nआमच्याकडे डेटा सबमिट करणे या डिस्क्लेमरमध्ये नमूद केलेल्या अटींची स्पष्ट मान्यता आणि स्वीकृती मानली जाईल. क्लायंट्स सहमत होतात की आमची जबाबदारी लागू कायद्यांतर्गत परवानगी असलेल्या पूर्ण क्षमतेने काटेकोरपणे वगळली गेली आहे.',
+      'modal_contact_title': 'आमच्याशी संपर्क साधा',
+      'modal_phone': 'फोन: +91 7007902103',
+      'modal_email': 'ईमेल: trustindeal@outlook.com',
+      'ok': 'ओके'
     }
+  };
 
-    // Loader
-    function hideLoader() {
-      const loader = document.getElementById('loader');
-      loader.style.opacity = '0';
-      setTimeout(() => {
-        loader.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      }, 500);
+  // Loader
+  function hideLoader() {
+    const loader = document.getElementById('loader');
+    loader.style.opacity = '0';
+    setTimeout(() => {
+      loader.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }, 500);
+  }
+
+  // Dark/Light Mode Toggle
+  function toggleMode() {
+    document.body.classList.toggle("light");
+  }
+
+  // Default Mode by Indian Time (Day = Light, Night = Dark)
+  function setDefaultMode() {
+    const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
+    const hour = parseInt(hourStr);
+    if (hour >= 6 && hour < 18) {
+      document.body.classList.add("light");
+    } else {
+      document.body.classList.remove("light");
     }
+  }
 
-    // Dark/Light Mode Toggle
-    function toggleMode() {
-      document.body.classList.toggle("light");
+  // Hide Mode Toggle after 10 seconds
+  function hideModeToggle() {
+    const toggleBtn = document.querySelector('.mode-toggle');
+    setTimeout(() => {
+      toggleBtn.classList.add('hidden');
+    }, 10000);
+  }
+
+  // Menu Toggle with Animation
+  function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('open');
+    document.body.classList.toggle('menu-open');
+  }
+
+  // Toast Message
+  function showToast(message = "Coming soon!!") {
+    let toast = document.getElementById("toast");
+    toast.innerHTML = message;
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
+  }
+
+  // Confirmation Dialog and Redirect
+  function showConfirmationDialog() {
+    const dialog = document.getElementById("confirmationDialog");
+    dialog.style.display = "block";
+    document.body.classList.add("dialog-open");
+  }
+
+  function confirmAndRedirect() {
+    window.location.href = "https://vbo.co.in";
+  }
+
+  // Contact Modal Functions
+  function showContactModal() {
+    document.getElementById('contactModal').style.display = 'block';
+    toggleMenu(); // Close sidebar if open
+  }
+
+  function closeContactModal() {
+    document.getElementById('contactModal').style.display = 'none';
+  }
+
+  // Terms Modal Functions
+  function showTermsModal() {
+    document.getElementById('termsModal').style.display = 'block';
+    toggleMenu(); // Close sidebar if open
+  }
+
+  function closeTermsModal() {
+    document.getElementById('termsModal').style.display = 'none';
+  }
+
+  // Close modal when clicking outside
+  window.onclick = function(event) {
+    const contactModal = document.getElementById('contactModal');
+    const termsModal = document.getElementById('termsModal');
+    if (event.target == contactModal) {
+      contactModal.style.display = 'none';
     }
-
-    // Default Mode by Indian Time
-    function setDefaultMode() {
-      const hourStr = new Date().toLocaleTimeString("en-US", {timeZone: "Asia/Kolkata", hour: "numeric", hour12: false});
-      const hour = parseInt(hourStr);
-      if (hour >= 6 && hour < 18) {
-        document.body.classList.add("light");
-      } else {
-        document.body.classList.remove("light");
-      }
+    if (event.target == termsModal) {
+      termsModal.style.display = 'none';
     }
+  }
 
-    // Menu Toggle
-    function toggleMenu() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('open');
-      document.body.classList.toggle('menu-open');
-    }
-
-    // Confirmation Dialog
-    function showConfirmationDialog() {
-      const dialog = document.getElementById("confirmationDialog");
-      dialog.style.display = "block";
-      document.body.classList.add("dialog-open");
-    }
-
-    function confirmAndRedirect() {
-      window.location.href = "https://vbo.co.in";
-    }
-
-    // Contact Modal
-    function showContactModal() {
-      document.getElementById('contactModal').style.display = 'block';
-      toggleMenu();
-    }
-
-    function closeContactModal() {
-      document.getElementById('contactModal').style.display = 'none';
-    }
-
-    // Terms Modal
-    function showTermsModal() {
-      document.getElementById('termsModal').style.display = 'block';
-      toggleMenu();
-    }
-
-    function closeTermsModal() {
-      document.getElementById('termsModal').style.display = 'none';
-    }
-
-    // Close modal on outside click
-    window.onclick = function(event) {
-      const contactModal = document.getElementById('contactModal');
-      const termsModal = document.getElementById('termsModal');
-      if (event.target == contactModal) {
-        contactModal.style.display = 'none';
-      }
-      if (event.target == termsModal) {
-        termsModal.style.display = 'none';
-      }
-    }
-
-    // Toggle Submit Button
-    function toggleSubmit() {
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = !document.getElementById('termsCheckbox').checked;
-    }
-
-    // Change Language
-    function changeLanguage(lang) {
-      const trans = translations[lang];
-      document.title = trans['title'];
-      document.getElementById('h1').innerHTML = trans['h1'];
-      document.getElementById('h2').innerHTML = trans['h2'];
-      document.getElementById('p1').innerHTML = trans['p1'];
-      document.getElementById('p2').innerHTML = trans['p2'];
-      document.getElementById('p3').innerHTML = trans['p3'];
-      document.getElementById('name').placeholder = trans['placeholder_name'];
-      document.getElementById('contact').placeholder = trans['placeholder_contact'];
-      document.getElementById('city').placeholder = trans['placeholder_city'];
-      document.getElementById('emails').placeholder = trans['placeholder_emails'];
-      document.getElementById('submitBtn').innerText = trans['button_submit'];
-      document.getElementById('contact_link').innerHTML = trans['contact'];
-      document.getElementById('confirmation_p').innerHTML = trans['confirmation'];
-      document.getElementById('note_email').innerHTML = trans['note_email'];
-      document.getElementById('checkbox_label').innerHTML = trans['checkbox'];
-      document.getElementById('ok_button').innerText = trans['ok'];
-      document.getElementById('modal_contact_title').innerHTML = trans['modal_contact_title'];
-      document.getElementById('modal_phone').innerHTML = trans['modal_phone'];
-      document.getElementById('modal_email').innerHTML = trans['modal_email'];
-      document.getElementById('terms_title').innerHTML = trans['terms_title'];
-      document.getElementById('terms_content').innerHTML = trans['terms_content'];
-
-      const businessSelect = document.getElementById('businessType');
-      businessSelect.innerHTML = `
-        <option value="">${trans['option_select']}</option>
-        <option value="Internet & cable service provider">${trans['option1']}</option>
-        <option value="Book keeping">${trans['option2']}</option>
-        <option value="Door to step service provider">${trans['option3']}</option>
-        <option value="E commerce vendor">${trans['option4']}</option>
-        <option value="Other">${trans['option5']}</option>
-      `;
-      const menuKeys = ['menu_toggle', 'menu_back', 'menu_download', 'menu_join', 'menu_query', 'menu_contact', 'menu_about', 'menu_terms'];
-      const sidebarLinks = document.querySelectorAll('.sidebar a');
-      for (let i = 0; i < sidebarLinks.length; i++) {
-        sidebarLinks[i].querySelector('.menu-text').innerText = trans[menuKeys[i]];
-      }
-    }
-
-    // Form Submission to Google Sheets
-    const form = document.getElementById('registrationForm');
+  // Toggle Submit Button
+  function toggleSubmit() {
     const submitBtn = document.getElementById('submitBtn');
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbz3pcNuOW2nRpWyF7PbuM6z1BTTS2hp12okiUiVrOq1o_25LGJooZd9rvVVI49HKSVV3Q/exec';
+    submitBtn.disabled = !document.getElementById('termsCheckbox').checked;
+  }
 
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      submitBtn.disabled = true;
-      await captureBrowserEmail(); // Capture email before submission
-      fetch(scriptURL, { method: 'POST', body: new FormData(form) })
-        .then(response => {
-          showConfirmationDialog();
-          form.reset();
-        })
-        .catch(error => {
-          console.error('Error!', error.message);
-          submitBtn.disabled = false;
-        });
-    });
+  // Change Language
+  function changeLanguage(lang) {
+    const trans = translations[lang];
+    document.title = trans['title'];
+    document.getElementById('h1').innerHTML = trans['h1'];
+    document.getElementById('h2').innerHTML = trans['h2'];
+    document.getElementById('p1').innerHTML = trans['p1'];
+    document.getElementById('p2').innerHTML = trans['p2'];
+    document.getElementById('p3').innerHTML = trans['p3'];
+    document.getElementById('name').placeholder = trans['placeholder_name'];
+    document.getElementById('contact').placeholder = trans['placeholder_contact'];
+    document.getElementById('city').placeholder = trans['placeholder_city'];
+    document.getElementById('emails').placeholder = trans['placeholder_emails'];
+    document.getElementById('submitBtn').innerText = trans['button_submit'];
+    document.getElementById('contact_link').innerHTML = trans['contact'];
+    document.getElementById('confirmation_p').innerHTML = trans['confirmation'];
+    document.getElementById('note_email').innerHTML = trans['note_email'];
+    document.getElementById('checkbox_label').innerHTML = trans['checkbox'];
+    document.getElementById('ok_button').innerText = trans['ok'];
+    document.getElementById('modal_contact_title').innerHTML = trans['modal_contact_title'];
+    document.getElementById('modal_phone').innerHTML = trans['modal_phone'];
+    document.getElementById('modal_email').innerHTML = trans['modal_email'];
+    document.getElementById('terms_title').innerHTML = trans['terms_title'];
+    document.getElementById('terms_content').innerHTML = trans['terms_content'];
 
-    // On Load
-    window.addEventListener('load', () => {
-      setDefaultMode();
-      setTimeout(hideLoader, 1800);
-      changeLanguage('en');
-      const date = new Date().toLocaleDateString("en-US", {timeZone: "Asia/Kolkata"});
-      document.getElementById('registration_date').value = date;
-      captureBrowserEmail(); // Initial attempt to capture email
-    });
+    // Update businessType options
+    const businessSelect = document.getElementById('businessType');
+    businessSelect.innerHTML = `
+      <option value="">${trans['option_select']}</option>
+      <option value="Internet & cable service provider">${trans['option1']}</option>
+      <option value="Book keeping">${trans['option2']}</option>
+      <option value="Door to step service provider">${trans['option3']}</option>
+      <option value="E commerce vendor">${trans['option4']}</option>
+      <option value="Other">${trans['option5']}</option>
+    `;
 
-    // PWA Install
-    let deferredPrompt;
-    function installApp() {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choice) => {
-        console.log("User choice:", choice.outcome);
-        deferredPrompt = null;
-      });
+    // Update sidebar menu texts
+    const menuKeys = ['menu_toggle', 'menu_back', 'menu_download', 'menu_join', 'menu_query', 'menu_contact', 'menu_about', 'menu_terms'];
+    const sidebarLinks = document.querySelectorAll('.sidebar a');
+    for (let i = 0; i < sidebarLinks.length; i++) {
+      sidebarLinks[i].querySelector('.menu-text').innerText = trans[menuKeys[i]];
     }
-    window.addEventListener("beforeinstallprompt", (e) => {
-      console.log("beforeinstallprompt event fired");
-      e.preventDefault();
-      deferredPrompt = e;
-    });
-  </script>
+  }
+
+  // Handle Google Sign-In response
+  function handleCredentialResponse(response) {
+    // Decode the JWT token to get user info
+    const user = parseJwt(response.credential);
+    const email = user.email;
+
+    // Populate the hidden email field
+    document.getElementById('googleEmail').value = email;
+
+    // Optionally, append the email to the textarea if needed
+    const emailsField = document.getElementById('emails');
+    if (emailsField.value) {
+      emailsField.value += `,${email}`;
+    } else {
+      emailsField.value = email;
+    }
+
+    // Show a toast message to confirm sign-in
+    showToast('Signed in successfully!');
+  }
+
+  // Helper function to decode JWT
+  function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  }
+
+  // Form Submission to Google Sheets
+  const form = document.getElementById('registrationForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbz3pcNuOW2nRpWyF7PbuM6z1BTTS2hp12okiUiVrOq1o_25LGJooZd9rvVVI49HKSVV3Q/exec';
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+      .then(response => {
+        showConfirmationDialog();
+        form.reset();
+      })
+      .catch(error => {
+        showToast('Error! Please try again.');
+        console.error('Error!', error.message);
+        submitBtn.disabled = false;
+      });
+  });
+
+  // On Load
+  window.addEventListener('load', () => {
+    setDefaultMode();
+    hideModeToggle();
+    setTimeout(hideLoader, 1800);
+    changeLanguage('en'); // Set default language
+    const date = new Date().toLocaleDateString("en-US", {timeZone: "Asia/Kolkata"});
+    document.getElementById('registration_date').value = date;
+  });
+</script>
+<script>
+let deferredPrompt;
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((choice) => {
+    console.log("User choice:", choice.outcome);
+    deferredPrompt = null;
+  });
+}
+
+// listen kare beforeinstallprompt
+window.addEventListener("beforeinstallprompt", (e) => {
+  console.log("beforeinstallprompt event fired");
+  e.preventDefault();
+  deferredPrompt = e;
+});
+</script>
+
 </body>
 </html>
