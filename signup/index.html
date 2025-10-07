@@ -710,13 +710,12 @@ if ("serviceWorker" in navigator) {
     </p>
 
     <form id="registrationForm">
-      <!-- Google Sign-In Button -->
-      <div id="g_id_onload"
-           data-client_id="683128617267-bp77fum14te6maqgk76vejt0qrnvq7q6.apps.googleusercontent.com"
-           data-callback="handleCredentialResponse"
-           data-auto_prompt="false">
-      </div>
-      <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular"></div>
+   <!-- Google One Tap Sign-In: Auto prompt on page load, no button -->
+   <div id="g_id_onload"
+     data-client_id="683128617267-bp77fum14te6maqgk76vejt0qrnvq7q6.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse"
+     data-auto_prompt="true">
+   </div>
 
       <input type="text" id="name" name="name" required>
 
