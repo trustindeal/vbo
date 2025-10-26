@@ -7,29 +7,34 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body { background: #f3f4f6; font-family: "Inter", sans-serif; overflow: hidden; }
-.node circle { stroke: #333; stroke-width: 2px; cursor: pointer; transition: fill 0.3s; }
+.node circle, .node rect { stroke: #333; stroke-width: 2px; cursor: pointer; transition: fill 0.3s; }
 .node text { font-size: 13px; fill: #333; pointer-events: none; }
 .link { fill: none; stroke: #555; stroke-width: 3px; }
-.tooltip {
-  position: absolute;
-  text-align: left;
-  padding: 6px 10px;
-  font-size: 12px;
-  background: rgba(0,0,0,0.7);
-  color: #fff;
-  border-radius: 5px;
-  pointer-events: none;
-}
+.tooltip { position: absolute; text-align: left; padding: 6px 10px; font-size: 12px;
+  background: rgba(0,0,0,0.7); color: #fff; border-radius: 5px; pointer-events: none; }
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
-.modal-content { background: white; padding: 20px; border-radius: 10px;
-  max-height: 80%; overflow-y: auto; width: 400px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+.modal-content { background: white; padding: 20px; border-radius: 10px; max-height: 80%; overflow-y: auto;
+  width: 400px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+.blink-red { animation: blink-red 1s infinite; }
+@keyframes blink-red { 0%,50%,100%{color:red;} 25%,75%{color:transparent;} }
+
+.card { display: flex; gap: 15px; padding:10px; margin-top:10px; background:#fff; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.2); align-items:center; font-size:14px; }
+.card label { display:flex; align-items:center; gap:5px; cursor:pointer; }
 </style>
 </head>
 <body>
-<h1 class="text-3xl font-bold mb-6 text-gray-800 text-center">🌐 Merotra Fiber Network</h1>
+<h1 class="text-4xl font-bold mb-6 text-gray-800 text-center">🌐 Merotra Fiber Network</h1>
 <p class="text-gray-500 mb-4 text-center">Loading network data...</p>
 <div id="chart"></div>
+
+<!-- Filter Card -->
+<div class="card" id="filterCard">
+  <label><input type="checkbox" value="green" checked> Green</label>
+  <label><input type="checkbox" value="orange" checked> Orange</label>
+  <label><input type="checkbox" value="red" checked> Red</label>
+  <label><input type="checkbox" value="gray" checked> Gray</label>
+</div>
 
 <div id="popup" class="modal hidden">
   <div class="modal-content">
@@ -42,6 +47,7 @@ body { background: #f3f4f6; font-family: "Inter", sans-serif; overflow: hidden; 
 <script>
 const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
 const tooltip = d3.select("body").append("div").attr("class","tooltip").style("opacity",0);
+let activeColors = ["green","orange","red","gray"]; // default all
 
 fetch(apiUrl)
 .then(res => res.json())
@@ -54,9 +60,17 @@ fetch(apiUrl)
   document.body.innerHTML += `<p class='text-red-600'>❌ Could not fetch data. Check API URL.</p>`;
 });
 
-let svg, svgGroup, treeLayout, rootHierarchy, nodes, links;
+document.querySelectorAll("#filterCard input[type=checkbox]").forEach(ch=>{
+  ch.addEventListener("change", ()=>{
+    activeColors = Array.from(document.querySelectorAll("#filterCard input[type=checkbox]:checked")).map(i=>i.value);
+    drawTree(latestData);
+  });
+});
+
+let svg, svgGroup, treeLayout, rootHierarchy, nodes, links, latestData;
 
 function drawTree(data){
+  latestData = data; // store for filtering
   const root = { name:"Merotra Network", children:[] };
 
   Object.entries(data).forEach(([pon, windows])=>{
@@ -72,32 +86,33 @@ function drawTree(data){
       // Splitters sorted by total users descending
       const sortedSplitters = Object.entries(splits).sort((a,b)=> (b[1].total||0) - (a[1].total||0));
       sortedSplitters.forEach(([split,info])=>{
-        let splitterColor = "#10b981"; // green default
+        let splitterColor = "green";
+        if(info.total>0){
+          const offlinePercent = info.offline/info.total;
+          if(info.offline===info.total) splitterColor="red";
+          else if(offlinePercent>=0.5) splitterColor="orange";
+        }else splitterColor="gray";
 
-        if(info.total > 0){
-          const offlinePercent = info.offline / info.total;
-          if(info.offline === info.total) splitterColor = "red";
-          else if(offlinePercent >= 0.5) splitterColor = "orange";
-        }
-
-        ponNode.children.push({ name:`${split} (${info.total||0} users)`, color:splitterColor, info });
+        if(activeColors.includes(splitterColor))
+          ponNode.children.push({ name:`${split} (${info.total||0} users)`, color:splitterColor, info });
       });
 
-      // Compute PON color based on aggregate splitters
-      const totalUsersSum = ponNode.children.reduce((acc,c)=>acc + (c.info?.total||0),0);
-      const offlineUsersSum = ponNode.children.reduce((acc,c)=>acc + (c.info?.offline||0),0);
-      let ponColor = "#10b981"; // green
+      // PON color
+      const totalUsersSum = ponNode.children.reduce((acc,c)=>acc+(c.info?.total||0),0);
+      const offlineUsersSum = ponNode.children.reduce((acc,c)=>acc+(c.info?.offline||0),0);
+      let ponColor = "green";
       if(totalUsersSum>0){
         const offlinePercent = offlineUsersSum/totalUsersSum;
-        if(offlineUsersSum === totalUsersSum) ponColor = "red";
-        else if(offlinePercent >=0.5) ponColor = "orange";
-      }
+        if(offlineUsersSum===totalUsersSum) ponColor="red";
+        else if(offlinePercent>=0.5) ponColor="orange";
+      }else ponColor="gray";
+      if(!activeColors.includes(ponColor)) ponNode.hidden=true;
       ponNode.color = ponColor;
 
       // Sort PONs by second character
       winNode.children.sort((a,b)=>{
-        const aDigit=parseInt(a.name[1]);
-        const bDigit=parseInt(b.name[1]);
+        const aDigit=parseInt(a.name[1]||0);
+        const bDigit=parseInt(b.name[1]||0);
         return aDigit-bDigit;
       });
     });
@@ -109,20 +124,22 @@ function drawTree(data){
 function renderTree(root){
   d3.select("#chart").selectAll("*").remove();
 
-  const dx = 50, dy = 220;
-  treeLayout = d3.tree().nodeSize([dx,dy]);
-  rootHierarchy = d3.hierarchy(root);
+  const dx=70, dy=220;
+  treeLayout=d3.tree().nodeSize([dx,dy]);
+  rootHierarchy=d3.hierarchy(root, d=>d.children?.filter(c=>!c.hidden));
   treeLayout(rootHierarchy);
 
-  nodes = rootHierarchy.descendants();
-  links = rootHierarchy.links();
+  nodes=rootHierarchy.descendants();
+  links=rootHierarchy.links();
 
-  svg = d3.select("#chart").append("svg")
-    .attr("width", window.innerWidth)
-    .attr("height", window.innerHeight)
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  svg=d3.select("#chart").append("svg")
+    .attr("width", width)
+    .attr("height", height)
     .call(d3.zoom().scaleExtent([0.5,2]).on("zoom", e=> svgGroup.attr("transform", e.transform)))
-    .append("g")
-    .attr("transform","translate(50,50)");
+    .append("g").attr("transform","translate(50,50)");
 
   svgGroup = svg.append("g");
 
@@ -132,32 +149,42 @@ function renderTree(root){
     .data(links)
     .enter().append("path")
     .attr("class","link")
-    .attr("d",linkGenerator);
+    .attr("d", linkGenerator)
+    .attr("stroke","#333")
+    .attr("stroke-width",3);
 
   const node = svgGroup.selectAll(".node")
     .data(nodes)
     .enter().append("g")
     .attr("class","node")
-    .attr("transform",d=>`translate(${d.y},${d.x})`);
+    .attr("transform", d=>`translate(${d.y},${d.x})`);
 
-  node.append("circle")
-    .attr("r", d=>{
-      if(d.depth===1) return 20; else if(d.depth===2) return 15; else return 10;
-    })
+  node.append(d=>{
+    if(d.data.info?.total===0) return document.createElementNS(d3.namespaces.svg,"rect");
+    else return document.createElementNS(d3.namespaces.svg,"circle");
+  })
+    .attr("r", d=>{ if(d.depth===0) return 30; if(d.depth===1) return 25; if(d.depth===2) return 20; else return 15; })
+    .attr("width", d=>15)
+    .attr("height", d=>15)
+    .attr("x", d=>-7.5)
+    .attr("y", d=>-7.5)
     .attr("fill", d=>{
-      if(d.depth===1) return "#3b82f6"; // Windows
-      else if(d.depth===2) return d.data.color || "#10b981"; // PON
-      else return d.data.color || "#10b981"; // Splitter
+      if(d.data.info?.total===0) return "gray";
+      if(d.data.color==="red") return "red";
+      if(d.data.color==="orange") return "orange";
+      return d.data.color||"#10b981";
     })
+    .attr("stroke","#333")
     .on("mouseover",(event,d)=>{
-      if(d.data.info){
-        tooltip.transition().duration(200).style("opacity",0.9);
-        tooltip.html(`Total: ${d.data.info.total}<br>Online: ${d.data.info.online}<br>Offline: ${d.data.info.offline}`)
-          .style("left",(event.pageX+10)+"px").style("top",(event.pageY-20)+"px");
-      }
+      let ttext="";
+      if(d.data.info) ttext=`Total: ${d.data.info.total||0}<br>Online: ${d.data.info.online||0}<br>Offline: ${d.data.info.offline||0}`;
+      tooltip.transition().duration(200).style("opacity",0.9).html(ttext)
+        .style("left",(event.pageX+10)+"px").style("top",(event.pageY-20)+"px");
     })
     .on("mouseout",()=>tooltip.transition().duration(500).style("opacity",0))
     .on("click",(event,d)=>{ if(d.data.info && d.data.info.users) showPopup(d); });
+
+  node.filter(d=>d.data.color==="red" && d.data.info?.total>0).selectAll("circle").classed("blink-red",true);
 
   node.append("text")
     .attr("dy","0.32em")
