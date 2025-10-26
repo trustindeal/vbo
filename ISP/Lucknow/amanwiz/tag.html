@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Merotra Network Tree</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #f3f4f6;
+      font-family: "Inter", sans-serif;
+      overflow-x: hidden;
+    }
+    .node circle {
+      stroke: #999;
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: fill 0.3s;
+    }
+    .node text {
+      font-size: 14px;
+      fill: #333;
+      pointer-events: none;
+    }
+    .link {
+      fill: none;
+      stroke: #ccc;
+      stroke-width: 2px;
+    }
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-height: 80%;
+      overflow-y: auto;
+      width: 400px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center p-4">
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">🌐 Merotra Fiber Network</h1>
+  <div id="chart"></div>
+
+  <div id="popup" class="modal hidden">
+    <div class="modal-content">
+      <h2 class="text-xl font-semibold mb-2" id="popupTitle"></h2>
+      <ul id="userList" class="list-disc pl-5 text-sm text-gray-700"></ul>
+      <button onclick="closePopup()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = "https://script.google.com/macros/s/AKfycbwEjNX5oc9FvVnkwZrWpFymizoIhMkK_UpMSWcD-jhs3haalaSiXNrWmnI0AmWR7CDL/exec"; // ← Replace with your Apps Script URL
+
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then(data => drawTree(data));
+
+    function drawTree(data) {
+      const root = { name: "ERP", children: [] };
+      Object.entries(data).forEach(([pon, windows]) => {
+        const ponNode = { name: pon, children: [] };
+        Object.entries(windows).forEach(([win, splits]) => {
+          const winNode = { name: win, children: [] };
+          Object.entries(splits).forEach(([split, info]) => {
+            let color = "#999"; // default gray
+            if (info.offline == info.total) color = "red";
+            else if (info.tag == "Tagged") color = "green";
+            else if (info.tag == "Pending") color = "gray";
+
+            winNode.children.push({
+              name: `${split} (${info.total} users)`,
+              color,
+              info
+            });
+          });
+          ponNode.children.push(winNode);
+        });
+        root.children.push(ponNode);
+      });
+
+      const width = 1200, dx = 25, dy = 200;
+      const tree = d3.tree().nodeSize([dx, dy]);
+      const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
+      const hierarchy = d3.hierarchy(root);
+      const nodes = tree(hierarchy);
+
+      const svg = d3.select("#chart").append("svg")
+        .attr("viewBox", [-50, -50, width, 800])
+        .style("font", "14px sans-serif");
+
+      svg.selectAll(".link")
+        .data(nodes.links())
+        .enter().append("path")
+        .attr("class", "link")
+        .attr("d", diagonal);
+
+      const node = svg.selectAll(".node")
+        .data(nodes.descendants())
+        .enter().append("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+      node.append("circle")
+        .attr("r", 8)
+        .attr("fill", d => d.data.color || "#60a5fa")
+        .on("click", (event, d) => {
+          if (d.data.info && d.data.info.users) showPopup(d);
+        });
+
+      node.append("text")
+        .attr("dy", "0.32em")
+        .attr("x", d => d.children ? -12 : 12)
+        .attr("text-anchor", d => d.children ? "end" : "start")
+        .text(d => d.data.name);
+    }
+
+    function showPopup(d) {
+      const popup = document.getElementById("popup");
+      const list = document.getElementById("userList");
+      const title = document.getElementById("popupTitle");
+      popup.classList.remove("hidden");
+      title.textContent = d.data.name + " — Users";
+      list.innerHTML = "";
+      d.data.info.users.forEach(u => {
+        const li = document.createElement("li");
+        li.textContent = u;
+        list.appendChild(li);
+      });
+    }
+
+    function closePopup() {
+      document.getElementById("popup").classList.add("hidden");
+    }
+  </script>
+</body>
+</html>
