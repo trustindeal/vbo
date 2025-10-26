@@ -1,131 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>🌐 Merotra Fiber Network</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      background: #f3f4f6;
-      font-family: "Inter", sans-serif;
-      overflow-x: auto;
-    }
-    .node circle {
-      stroke: #999;
-      stroke-width: 2px;
-      cursor: pointer;
-      transition: fill 0.3s;
-    }
-    .node text {
-      font-size: 14px;
-      fill: #333;
-      pointer-events: none;
-    }
-    .link {
-      fill: none;
-      stroke: #ccc;
-      stroke-width: 2px;
-    }
-    .modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-height: 80%;
-      overflow-y: auto;
-      width: 400px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    }
-  </style>
+<meta charset="UTF-8">
+<title>🌐 Merotra Fiber Network</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #f3f4f6; font-family: "Inter", sans-serif; overflow: hidden; }
+  .node circle { stroke: #999; stroke-width: 2px; cursor: pointer; transition: fill 0.3s; }
+  .node text { font-size: 13px; fill: #333; pointer-events: none; }
+  .link { fill: none; stroke: #ccc; stroke-width: 2px; }
+  .tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 6px 10px;
+    font-size: 12px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border-radius: 5px;
+    pointer-events: none;
+  }
+  .modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50;
+  }
+  .modal-content {
+    background: white; padding: 20px; border-radius: 10px;
+    max-height: 80%; overflow-y: auto; width: 400px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  }
+</style>
 </head>
-<body class="flex flex-col items-center p-4">
-  <h1 class="text-3xl font-bold mb-6 text-gray-800">🌐 Merotra Fiber Network</h1>
-  <p class="text-gray-500 mb-4">Loading network data...</p>
-  <div id="chart"></div>
+<body>
+<h1 class="text-3xl font-bold mb-6 text-gray-800 text-center">🌐 Merotra Fiber Network</h1>
+<p class="text-gray-500 mb-4 text-center">Loading network data...</p>
+<div id="chart"></div>
 
-  <div id="popup" class="modal hidden">
-    <div class="modal-content">
-      <h2 class="text-xl font-semibold mb-2" id="popupTitle"></h2>
-      <ul id="userList" class="list-disc pl-5 text-sm text-gray-700"></ul>
-      <button onclick="closePopup()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Close</button>
-    </div>
+<!-- Popup for Users -->
+<div id="popup" class="modal hidden">
+  <div class="modal-content">
+    <h2 class="text-xl font-semibold mb-2" id="popupTitle"></h2>
+    <ul id="userList" class="list-disc pl-5 text-sm text-gray-700"></ul>
+    <button onclick="closePopup()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Close</button>
   </div>
+</div>
 
-  <script>
-    const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
+<script>
+const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
 
-    fetch(apiUrl)
-      .then(async res => {
-        const text = await res.text();
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch(err) {
-          console.error("JSON parse error:", err);
-          document.body.innerHTML += `<p class='text-red-600'>❌ Error parsing data. Check console.</p>`;
-          return;
-        }
+// Tooltip for hovering nodes
+const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
 
-        if (Object.keys(data).length === 0) {
-          document.body.innerHTML += `<p class='text-red-600'>❌ No data found in API.</p>`;
-          return;
-        }
+fetch(apiUrl)
+.then(res => res.json())
+.then(data => {
+  document.querySelector("p.text-gray-500").remove();
+  drawTree(data);
+})
+.catch(err => {
+  console.error("Fetch error:", err);
+  document.body.innerHTML += `<p class='text-red-600'>❌ Could not fetch data. Check API URL.</p>`;
+});
 
-        document.querySelector("p.text-gray-500").remove();
-        drawTree(data);
-      })
-      .catch(err => {
-        console.error("Fetch failed:", err);
-        document.body.innerHTML += `<p class='text-red-600'>❌ Could not fetch data. Check URL.</p>`;
-      });
-
-    function drawTree(data) {
-  const root = { name: "ERP", children: [] };
+function drawTree(data) {
+  const root = { name: "Merotra Network", children: [] };
 
   Object.entries(data).forEach(([pon, windows]) => {
     Object.entries(windows).forEach(([win, splits]) => {
-      // Window node under root
       let winNode = root.children.find(n => n.name === win);
-      if (!winNode) {
-        winNode = { name: win, children: [] };
-        root.children.push(winNode);
-      }
+      if (!winNode) { winNode = { name: win, children: [] }; root.children.push(winNode); }
 
-      // PON node under window
       let ponNode = winNode.children.find(n => n.name === pon);
-      if (!ponNode) {
-        ponNode = { name: pon, children: [] };
-        winNode.children.push(ponNode);
-      }
+      if (!ponNode) { ponNode = { name: pon, children: [] }; winNode.children.push(ponNode); }
 
-      // Splitters under PON
       Object.entries(splits).forEach(([split, info]) => {
         let color = "#9ca3af"; // default gray
-        if (info.offline === info.total && info.total > 0) color = "red";
+        if (info.offline === info.total && info.total>0) color = "red";
         else if (info.tag && info.tag.includes("✔️")) color = "green";
 
-        ponNode.children.push({
-          name: `${split} (${info.total || 0} users)`,
-          color,
-          info
-        });
+        ponNode.children.push({ name: `${split} (${info.total || 0} users)`, color, info });
       });
     });
   });
 
-  // --- D3 tree rendering logic remains unchanged ---
-  const dx = 40;
-  const dy = 180;
+  const dx = 50, dy = 220;
   const treeLayout = d3.tree().nodeSize([dx, dy]);
   const rootHierarchy = d3.hierarchy(root);
   treeLayout(rootHierarchy);
@@ -136,60 +93,74 @@
   const width = Math.max(1000, rootHierarchy.height * dy + 200);
   const height = Math.max(600, nodes.length * dx + 200);
 
+  // Add zoom & pan
   const svg = d3.select("#chart").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .style("font", "14px sans-serif");
+    .attr("width", window.innerWidth)
+    .attr("height", window.innerHeight)
+    .call(d3.zoom().scaleExtent([0.5, 2]).on("zoom", e => svgGroup.attr("transform", e.transform)))
+    .append("g")
+    .attr("transform", "translate(50,50)");
 
-  svg.selectAll(".link")
+  const svgGroup = svg.append("g");
+
+  svgGroup.selectAll(".link")
     .data(links)
     .enter().append("path")
     .attr("class", "link")
-    .attr("d", d3.linkHorizontal()
-      .x(d => d.y)
-      .y(d => d.x)
-    );
+    .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
 
-  const node = svg.selectAll(".node")
+  const node = svgGroup.selectAll(".node")
     .data(nodes)
     .enter().append("g")
     .attr("class", "node")
     .attr("transform", d => `translate(${d.y},${d.x})`);
 
   node.append("circle")
-    .attr("r", 10)
-    .attr("fill", d => d.data.color || "#60a5fa")
-    .on("click", (event, d) => {
-      if (d.data.info && d.data.info.users) showPopup(d);
-    });
+    .attr("r", d => {
+      if(d.depth===1) return 20;       // Window
+      else if(d.depth===2) return 15;  // PON
+      else return 10;                   // Splitter
+    })
+    .attr("fill", d => {
+      if(d.depth===1) return "#3b82f6";  // Window Blue
+      else if(d.depth===2) return "#9ca3af"; // PON Gray
+      else return d.data.color || "#9ca3af"; // Splitter colored by status
+    })
+    .on("mouseover", (event,d)=>{
+      if(d.data.info) {
+        tooltip.transition().duration(200).style("opacity",0.9);
+        tooltip.html(
+          `Total: ${d.data.info.total || 0}<br>
+           Online: ${d.data.info.online || 0}<br>
+           Offline: ${d.data.info.offline || 0}`
+        ).style("left", (event.pageX+10)+"px").style("top",(event.pageY-20)+"px");
+      }
+    })
+    .on("mouseout",()=>tooltip.transition().duration(500).style("opacity",0))
+    .on("click",(event,d)=>{ if(d.data.info && d.data.info.users) showPopup(d); });
 
   node.append("text")
-    .attr("dy", "0.32em")
-    .attr("x", d => d.children ? -12 : 12)
-    .attr("text-anchor", d => d.children ? "end" : "start")
-    .text(d => d.data.name);
+    .attr("dy","0.32em")
+    .attr("x", d=>d.children?-12:12)
+    .attr("text-anchor", d=>d.children?"end":"start")
+    .text(d=>d.data.name);
 }
 
-
-    function showPopup(d) {
-      const popup = document.getElementById("popup");
-      const list = document.getElementById("userList");
-      const title = document.getElementById("popupTitle");
-
-      popup.classList.remove("hidden");
-      title.textContent = d.data.name + " — Users";
-      list.innerHTML = "";
-
-      d.data.info.users.forEach(u => {
-        const li = document.createElement("li");
-        li.textContent = u;
-        list.appendChild(li);
-      });
-    }
-
-    function closePopup() {
-      document.getElementById("popup").classList.add("hidden");
-    }
-  </script>
+// Popup functions
+function showPopup(d){
+  const popup=document.getElementById("popup");
+  const list=document.getElementById("userList");
+  const title=document.getElementById("popupTitle");
+  popup.classList.remove("hidden");
+  title.textContent=d.data.name+" — Users";
+  list.innerHTML="";
+  d.data.info.users.forEach(u=>{
+    const li=document.createElement("li");
+    li.textContent=u;
+    list.appendChild(li);
+  });
+}
+function closePopup(){ document.getElementById("popup").classList.add("hidden"); }
+</script>
 </body>
 </html>
