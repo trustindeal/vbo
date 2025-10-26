@@ -76,8 +76,8 @@ function drawTree(data){
       // Splitters sorted by total users descending
       const sortedSplitters = Object.entries(splits).sort((a,b)=> (b[1].total||0) - (a[1].total||0));
       sortedSplitters.forEach(([split,info])=>{
-        let color="#9ca3af"; // gray default
-        if(info.offline===info.total && info.total>0) color="red";
+        let color="#9ca3af"; // default gray
+        if(info.offline === info.total && info.total>0) color="red";
         else if(info.tag && info.tag.includes("✔️")) color="green";
 
         ponNode.children.push({ name:`${split} (${info.total||0} users)`, color, info });
@@ -105,9 +105,6 @@ function renderTree(root){
 
   nodes = rootHierarchy.descendants();
   links = rootHierarchy.links();
-
-  const width = Math.max(1000, rootHierarchy.height*dy+200);
-  const height = Math.max(600, nodes.length*dx+200);
 
   svg = d3.select("#chart").append("svg")
     .attr("width", window.innerWidth)
@@ -144,7 +141,7 @@ function renderTree(root){
     .on("mouseover",(event,d)=>{
       if(d.data.info){
         tooltip.transition().duration(200).style("opacity",0.9);
-        tooltip.html(`Total: ${d.data.info.total||0}<br>Online: ${d.data.info.online||0}<br>Offline: ${d.data.info.offline||0}`)
+        tooltip.html(`Total: ${d.data.info.total}<br>Online: ${d.data.info.online}<br>Offline: ${d.data.info.offline}`)
           .style("left",(event.pageX+10)+"px").style("top",(event.pageY-20)+"px");
       }
     })
