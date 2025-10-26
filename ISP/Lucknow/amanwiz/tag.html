@@ -9,7 +9,7 @@
     body {
       background: #f3f4f6;
       font-family: "Inter", sans-serif;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
     .node circle {
       stroke: #999;
@@ -53,7 +53,6 @@
   <p class="text-gray-500 mb-4">Loading network data...</p>
   <div id="chart"></div>
 
-  <!-- Popup -->
   <div id="popup" class="modal hidden">
     <div class="modal-content">
       <h2 class="text-xl font-semibold mb-2" id="popupTitle"></h2>
@@ -63,19 +62,15 @@
   </div>
 
   <script>
-    // 🔗 Your API endpoint
     const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
-
-    console.log("Fetching data from:", apiUrl);
 
     fetch(apiUrl)
       .then(async res => {
         const text = await res.text();
-        console.log("Raw response:", text.slice(0, 500));
         let data;
         try {
           data = JSON.parse(text);
-        } catch (err) {
+        } catch(err) {
           console.error("JSON parse error:", err);
           document.body.innerHTML += `<p class='text-red-600'>❌ Error parsing data. Check console.</p>`;
           return;
@@ -95,21 +90,16 @@
       });
 
     function drawTree(data) {
-      console.log("Drawing tree:", data);
-
       const root = { name: "ERP", children: [] };
 
       Object.entries(data).forEach(([pon, windows]) => {
         const ponNode = { name: pon, children: [] };
-
         Object.entries(windows).forEach(([win, splits]) => {
           const winNode = { name: win, children: [] };
-
           Object.entries(splits).forEach(([split, info]) => {
             let color = "#9ca3af"; // default gray
-            if (info.offline == info.total && info.total > 0) color = "red";
-            else if (info.tag && info.tag.toLowerCase() === "tagged") color = "green";
-            else if (info.tag && info.tag.toLowerCase() === "pending") color = "gray";
+            if (info.offline === info.total && info.total > 0) color = "red";
+            else if (info.tag && info.tag.includes("✔️")) color = "green";
 
             winNode.children.push({
               name: `${split} (${info.total || 0} users)`,
@@ -117,24 +107,26 @@
               info
             });
           });
-
           ponNode.children.push(winNode);
         });
-
         root.children.push(ponNode);
       });
 
-      const width = 1600;
-      const dx = 25;
-      const dy = 250;
-
+      const dx = 40;
+      const dy = 180;
       const treeLayout = d3.tree().nodeSize([dx, dy]);
       const rootHierarchy = d3.hierarchy(root);
-      const links = treeLayout(rootHierarchy).links();
+      treeLayout(rootHierarchy);
+
       const nodes = rootHierarchy.descendants();
+      const links = rootHierarchy.links();
+
+      const width = Math.max(1000, rootHierarchy.height * dy + 200);
+      const height = Math.max(600, nodes.length * dx + 200);
 
       const svg = d3.select("#chart").append("svg")
-        .attr("viewBox", [0, 0, width, 1200])
+        .attr("width", width)
+        .attr("height", height)
         .style("font", "14px sans-serif");
 
       svg.selectAll(".link")
@@ -153,7 +145,7 @@
         .attr("transform", d => `translate(${d.y},${d.x})`);
 
       node.append("circle")
-        .attr("r", 8)
+        .attr("r", 10)
         .attr("fill", d => d.data.color || "#60a5fa")
         .on("click", (event, d) => {
           if (d.data.info && d.data.info.users) showPopup(d);
