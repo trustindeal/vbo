@@ -90,73 +90,86 @@
       });
 
     function drawTree(data) {
-      const root = { name: "ERP", children: [] };
+  const root = { name: "ERP", children: [] };
 
-      Object.entries(data).forEach(([pon, windows]) => {
-        const ponNode = { name: pon, children: [] };
-        Object.entries(windows).forEach(([win, splits]) => {
-          const winNode = { name: win, children: [] };
-          Object.entries(splits).forEach(([split, info]) => {
-            let color = "#9ca3af"; // default gray
-            if (info.offline === info.total && info.total > 0) color = "red";
-            else if (info.tag && info.tag.includes("✔️")) color = "green";
+  Object.entries(data).forEach(([pon, windows]) => {
+    Object.entries(windows).forEach(([win, splits]) => {
+      // Window node under root
+      let winNode = root.children.find(n => n.name === win);
+      if (!winNode) {
+        winNode = { name: win, children: [] };
+        root.children.push(winNode);
+      }
 
-            winNode.children.push({
-              name: `${split} (${info.total || 0} users)`,
-              color,
-              info
-            });
-          });
-          ponNode.children.push(winNode);
+      // PON node under window
+      let ponNode = winNode.children.find(n => n.name === pon);
+      if (!ponNode) {
+        ponNode = { name: pon, children: [] };
+        winNode.children.push(ponNode);
+      }
+
+      // Splitters under PON
+      Object.entries(splits).forEach(([split, info]) => {
+        let color = "#9ca3af"; // default gray
+        if (info.offline === info.total && info.total > 0) color = "red";
+        else if (info.tag && info.tag.includes("✔️")) color = "green";
+
+        ponNode.children.push({
+          name: `${split} (${info.total || 0} users)`,
+          color,
+          info
         });
-        root.children.push(ponNode);
       });
+    });
+  });
 
-      const dx = 40;
-      const dy = 180;
-      const treeLayout = d3.tree().nodeSize([dx, dy]);
-      const rootHierarchy = d3.hierarchy(root);
-      treeLayout(rootHierarchy);
+  // --- D3 tree rendering logic remains unchanged ---
+  const dx = 40;
+  const dy = 180;
+  const treeLayout = d3.tree().nodeSize([dx, dy]);
+  const rootHierarchy = d3.hierarchy(root);
+  treeLayout(rootHierarchy);
 
-      const nodes = rootHierarchy.descendants();
-      const links = rootHierarchy.links();
+  const nodes = rootHierarchy.descendants();
+  const links = rootHierarchy.links();
 
-      const width = Math.max(1000, rootHierarchy.height * dy + 200);
-      const height = Math.max(600, nodes.length * dx + 200);
+  const width = Math.max(1000, rootHierarchy.height * dy + 200);
+  const height = Math.max(600, nodes.length * dx + 200);
 
-      const svg = d3.select("#chart").append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .style("font", "14px sans-serif");
+  const svg = d3.select("#chart").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .style("font", "14px sans-serif");
 
-      svg.selectAll(".link")
-        .data(links)
-        .enter().append("path")
-        .attr("class", "link")
-        .attr("d", d3.linkHorizontal()
-          .x(d => d.y)
-          .y(d => d.x)
-        );
+  svg.selectAll(".link")
+    .data(links)
+    .enter().append("path")
+    .attr("class", "link")
+    .attr("d", d3.linkHorizontal()
+      .x(d => d.y)
+      .y(d => d.x)
+    );
 
-      const node = svg.selectAll(".node")
-        .data(nodes)
-        .enter().append("g")
-        .attr("class", "node")
-        .attr("transform", d => `translate(${d.y},${d.x})`);
+  const node = svg.selectAll(".node")
+    .data(nodes)
+    .enter().append("g")
+    .attr("class", "node")
+    .attr("transform", d => `translate(${d.y},${d.x})`);
 
-      node.append("circle")
-        .attr("r", 10)
-        .attr("fill", d => d.data.color || "#60a5fa")
-        .on("click", (event, d) => {
-          if (d.data.info && d.data.info.users) showPopup(d);
-        });
+  node.append("circle")
+    .attr("r", 10)
+    .attr("fill", d => d.data.color || "#60a5fa")
+    .on("click", (event, d) => {
+      if (d.data.info && d.data.info.users) showPopup(d);
+    });
 
-      node.append("text")
-        .attr("dy", "0.32em")
-        .attr("x", d => d.children ? -12 : 12)
-        .attr("text-anchor", d => d.children ? "end" : "start")
-        .text(d => d.data.name);
-    }
+  node.append("text")
+    .attr("dy", "0.32em")
+    .attr("x", d => d.children ? -12 : 12)
+    .attr("text-anchor", d => d.children ? "end" : "start")
+    .text(d => d.data.name);
+}
+
 
     function showPopup(d) {
       const popup = document.getElementById("popup");
