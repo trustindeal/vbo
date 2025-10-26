@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Merotra Network Tree</title>
+  <title>🌐 Merotra Fiber Network</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -50,8 +50,10 @@
 </head>
 <body class="flex flex-col items-center p-4">
   <h1 class="text-3xl font-bold mb-6 text-gray-800">🌐 Merotra Fiber Network</h1>
+  <p class="text-gray-500 mb-4">Loading network data...</p>
   <div id="chart"></div>
 
+  <!-- Popup -->
   <div id="popup" class="modal hidden">
     <div class="modal-content">
       <h2 class="text-xl font-semibold mb-2" id="popupTitle"></h2>
@@ -61,53 +63,91 @@
   </div>
 
   <script>
-    const apiUrl = "https://script.google.com/macros/s/AKfycbwEjNX5oc9FvVnkwZrWpFymizoIhMkK_UpMSWcD-jhs3haalaSiXNrWmnI0AmWR7CDL/exec?mode=data"; // ← Replace with your Apps Script URL
+    // 🔗 Your API endpoint
+    const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
+
+    console.log("Fetching data from:", apiUrl);
 
     fetch(apiUrl)
-      .then(res => res.json())
-      .then(data => drawTree(data));
+      .then(async res => {
+        const text = await res.text();
+        console.log("Raw response:", text.slice(0, 500));
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          console.error("JSON parse error:", err);
+          document.body.innerHTML += `<p class='text-red-600'>❌ Error parsing data. Check console.</p>`;
+          return;
+        }
+
+        if (Object.keys(data).length === 0) {
+          document.body.innerHTML += `<p class='text-red-600'>❌ No data found in API.</p>`;
+          return;
+        }
+
+        document.querySelector("p.text-gray-500").remove();
+        drawTree(data);
+      })
+      .catch(err => {
+        console.error("Fetch failed:", err);
+        document.body.innerHTML += `<p class='text-red-600'>❌ Could not fetch data. Check URL.</p>`;
+      });
 
     function drawTree(data) {
+      console.log("Drawing tree:", data);
+
       const root = { name: "ERP", children: [] };
+
       Object.entries(data).forEach(([pon, windows]) => {
         const ponNode = { name: pon, children: [] };
+
         Object.entries(windows).forEach(([win, splits]) => {
           const winNode = { name: win, children: [] };
+
           Object.entries(splits).forEach(([split, info]) => {
-            let color = "#999"; // default gray
-            if (info.offline == info.total) color = "red";
-            else if (info.tag == "Tagged") color = "green";
-            else if (info.tag == "Pending") color = "gray";
+            let color = "#9ca3af"; // default gray
+            if (info.offline == info.total && info.total > 0) color = "red";
+            else if (info.tag && info.tag.toLowerCase() === "tagged") color = "green";
+            else if (info.tag && info.tag.toLowerCase() === "pending") color = "gray";
 
             winNode.children.push({
-              name: `${split} (${info.total} users)`,
+              name: `${split} (${info.total || 0} users)`,
               color,
               info
             });
           });
+
           ponNode.children.push(winNode);
         });
+
         root.children.push(ponNode);
       });
 
-      const width = 1200, dx = 25, dy = 200;
-      const tree = d3.tree().nodeSize([dx, dy]);
-      const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
-      const hierarchy = d3.hierarchy(root);
-      const nodes = tree(hierarchy);
+      const width = 1600;
+      const dx = 25;
+      const dy = 250;
+
+      const treeLayout = d3.tree().nodeSize([dx, dy]);
+      const rootHierarchy = d3.hierarchy(root);
+      const links = treeLayout(rootHierarchy).links();
+      const nodes = rootHierarchy.descendants();
 
       const svg = d3.select("#chart").append("svg")
-        .attr("viewBox", [-50, -50, width, 800])
+        .attr("viewBox", [0, 0, width, 1200])
         .style("font", "14px sans-serif");
 
       svg.selectAll(".link")
-        .data(nodes.links())
+        .data(links)
         .enter().append("path")
         .attr("class", "link")
-        .attr("d", diagonal);
+        .attr("d", d3.linkHorizontal()
+          .x(d => d.y)
+          .y(d => d.x)
+        );
 
       const node = svg.selectAll(".node")
-        .data(nodes.descendants())
+        .data(nodes)
         .enter().append("g")
         .attr("class", "node")
         .attr("transform", d => `translate(${d.y},${d.x})`);
@@ -130,9 +170,11 @@
       const popup = document.getElementById("popup");
       const list = document.getElementById("userList");
       const title = document.getElementById("popupTitle");
+
       popup.classList.remove("hidden");
       title.textContent = d.data.name + " — Users";
       list.innerHTML = "";
+
       d.data.info.users.forEach(u => {
         const li = document.createElement("li");
         li.textContent = u;
