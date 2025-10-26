@@ -33,9 +33,6 @@ body { background: #f3f4f6; font-family: "Inter", sans-serif; overflow: hidden; 
 <body>
 <h1 class="text-3xl font-bold mb-6 text-gray-800 text-center">🌐 Merotra Fiber Network</h1>
 <p class="text-gray-500 mb-4 text-center">Loading network data...</p>
-<div class="mb-4 text-center">
-  <button id="rotateBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Rotate Tree</button>
-</div>
 <div id="chart"></div>
 
 <div id="popup" class="modal hidden">
@@ -49,7 +46,6 @@ body { background: #f3f4f6; font-family: "Inter", sans-serif; overflow: hidden; 
 <script>
 const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
 const tooltip = d3.select("body").append("div").attr("class","tooltip").style("opacity",0);
-let isHorizontal = true;
 
 fetch(apiUrl)
 .then(res => res.json())
@@ -73,7 +69,7 @@ function drawTree(data){
       let winNode = root.children.find(n=>n.name===win);
       if(!winNode){ winNode={name:win,children:[]}; root.children.push(winNode); }
 
-      // Sort PON numbers ascending
+      // PON node
       let ponNode = winNode.children.find(n=>n.name===pon);
       if(!ponNode){ ponNode={name:pon,children:[]}; winNode.children.push(ponNode); }
 
@@ -86,15 +82,21 @@ function drawTree(data){
 
         ponNode.children.push({ name:`${split} (${info.total||0} users)`, color, info });
       });
+
+      // Sort PONs by second character
+      winNode.children.sort((a,b)=>{
+        const aDigit=parseInt(a.name[1]);
+        const bDigit=parseInt(b.name[1]);
+        return aDigit-bDigit;
+      });
     });
   });
 
   renderTree(root);
 }
 
-// Render function with horizontal/vertical toggle
 function renderTree(root){
-  d3.select("#chart").selectAll("*").remove(); // clear previous tree
+  d3.select("#chart").selectAll("*").remove();
 
   const dx = 50, dy = 220;
   treeLayout = d3.tree().nodeSize([dx,dy]);
@@ -116,9 +118,7 @@ function renderTree(root){
 
   svgGroup = svg.append("g");
 
-  const linkGenerator = isHorizontal ? 
-    d3.linkHorizontal().x(d=>d.y).y(d=>d.x) : 
-    d3.linkVertical().x(d=>d.x).y(d=>d.y);
+  const linkGenerator = d3.linkHorizontal().x(d=>d.y).y(d=>d.x);
 
   svgGroup.selectAll(".link")
     .data(links)
@@ -157,12 +157,6 @@ function renderTree(root){
     .attr("text-anchor",d=>d.children?"end":"start")
     .text(d=>d.data.name);
 }
-
-// Rotate tree
-document.getElementById("rotateBtn").addEventListener("click",()=>{
-  isHorizontal = !isHorizontal;
-  renderTree(rootHierarchy.data);
-});
 
 // Popup
 function showPopup(d){
