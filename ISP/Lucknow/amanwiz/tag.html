@@ -19,6 +19,8 @@
       --border: #e5e7eb;
       --shadow: rgba(0,0,0,0.1);
       --tooltip-bg: rgba(0,0,0,0.85);
+      --tooltip-text: #fff;
+      --link: #1d4ed8;
     }
     body.dark {
       --bg-primary: linear-gradient(135deg, #111827 0%, #1f2937 100%);
@@ -28,7 +30,8 @@
       --border: #374151;
       --shadow: rgba(0,0,0,0.3);
       --tooltip-bg: rgba(255,255,255,0.9);
-      color: var(--text-primary);
+      --tooltip-text: #000;
+      --link: #60a5fa;
     }
     body {
       font-family: 'Inter', sans-serif;
@@ -52,7 +55,7 @@
       display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 0.5rem;
       font-size: 0.9rem;
     }
-    .stat-item { background: var(--card-bg); padding: 0.4rem 0.8rem; border-radius: 8px; box-shadow: 0 2px 8px var(--shadow); }
+    .stat-item { background: var(--card-bg); padding: 0.4rem 0.8rem; border-radius: 8px; box-shadow: 0 2px 8px var(--shadow); color: var(--text-primary); }
     .btn-controls {
       background: linear-gradient(to right, #1d4ed8, #1e40af); color: white; font-weight: 600;
       padding: 0.6rem 1.4rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(29,78,216,0.3);
@@ -67,18 +70,17 @@
     #chart { width: 100%; height: calc(100vh - 160px); }
     .node text { 
       font-weight: 600; pointer-events: none; text-shadow: 1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(0,0,0,0.1);
-      z-index: 10;
+      fill: var(--text-primary); z-index: 10;
     }
     body.dark .node text { text-shadow: 1px 1px 2px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.1); }
     .node circle, .node rect { transition: all 0.3s; cursor: pointer; stroke: #fff; stroke-width: 2; }
     .link { fill: none; stroke: #94a3b8; stroke-width: 2.5; }
     body.dark .link { stroke: #4b5563; }
     .tooltip {
-      position: absolute; padding: 10px 14px; background: var(--tooltip-bg); color: var(--text-primary);
+      position: absolute; padding: 10px 14px; background: var(--tooltip-bg); color: var(--tooltip-text);
       border-radius: 8px; font-size: 13px; pointer-events: none; backdrop-filter: blur(5px);
       box-shadow: 0 4px 15px var(--shadow); opacity: 0; transition: opacity 0.2s;
     }
-    body.dark .tooltip { color: #000; }
     .modal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
@@ -87,12 +89,12 @@
     .modal-content {
       background: var(--card-bg); border-radius: 16px; width: 90%; max-width: 500px; max-height: 85vh;
       overflow-y: auto; box-shadow: 0 20px 50px var(--shadow); animation: pop 0.3s ease;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border); color: var(--text-primary);
     }
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .controls-panel {
       background: var(--card-bg); border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 30px var(--shadow);
-      max-height: 80vh; overflow-y: auto;
+      max-height: 80vh; overflow-y: auto; color: var(--text-primary);
     }
     .filter-group { margin: 1rem 0; }
     .filter-title { font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.1rem; }
@@ -103,21 +105,21 @@
     }
     .checkbox-item input:checked + span { font-weight: 600; }
     .checkbox-item label:hover { background: var(--border); }
-    .select-all { color: #1d4ed8; font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
-    .theme-toggle { background: none; border: 2px solid #1d4ed8; color: #1d4ed8; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
-    .user-item { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .select-all { color: var(--link); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+    .theme-toggle { background: none; border: 2px solid var(--link); color: var(--link); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+    .user-item { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-primary); }
     .user-id { font-weight: 600; }
     .user-item.offline { color: #ef4444; background: rgba(239,68,68,0.1); border-radius: 4px; padding: 4px; }
     .links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .link-btn {
       display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem;
-      color: #1d4ed8; text-decoration: underline; cursor: pointer; background: none; border: none;
+      color: var(--link); text-decoration: underline; cursor: pointer; background: none; border: none;
     }
     .download-btns { display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
-    .download-btn { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; border: none; }
-    .btn-screenshot { background: #10b981; color: white; }
-    .btn-pdf { background: #ef4444; color: white; }
-    .btn-csv { background: #f59e0b; color: white; }
+    .download-btn { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; border: none; color: white; }
+    .btn-screenshot { background: #10b981; }
+    .btn-pdf { background: #ef4444; }
+    .btn-csv { background: #f59e0b; }
     .blink-red { animation: blink 1.2s infinite; }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
     @media (max-width: 640px) {
@@ -132,7 +134,7 @@
 <body>
 
   <div class="header">
-    <h1>🌐 Merotra Fiber Network Dashboard</h1>
+    <h1>🌐 Merotra Fiber Network</h1>
     <div class="stats">
       <div class="stat-item">Total Users: <strong id="totalUsers">0</strong></div>
       <div class="stat-item">Online: <strong id="totalOnline" style="color:#10b981;">0</strong></div>
@@ -216,7 +218,7 @@
   <script>
     const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
     const tooltip = d3.select("body").append("div").attr("class", "tooltip");
-    let rawData = {}, filteredData = {}, svg, g, treeLayout, root, nodes, links, currentUsers = [], currentPon = '', currentSplitter = '';
+    let rawData = {}, filteredData = {}, svg, g, treeLayout, root, nodes, links, currentUsers = [], currentPon = '', currentSplitter = '', currentLocation = '', currentJcPic = '', currentPolePic = '';
     let filters = { colors: ["green","orange","red","gray"], windows: [], pons: [] };
     let totalStats = { users: 0, online: 0, offline: 0, splitters: 0 };
 
@@ -233,6 +235,7 @@
     function toggleTheme() {
       document.body.classList.toggle('dark');
       localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+      applyFiltersAndDraw(); // Redraw to update colors
     }
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 
@@ -420,8 +423,9 @@
         .attr("class", "node")
         .attr("transform", d => `translate(${d.y},${d.x})`);
 
-      node.append("circle")
-        .attr("r", d => d.depth === 0 ? 32 : d.depth === 1 ? 26 : d.depth === 2 ? 22 : 18)
+      // For non-root nodes
+      node.filter(d => d.depth > 0).append("circle")
+        .attr("r", d => d.depth === 1 ? 26 : d.depth === 2 ? 22 : 18)
         .attr("fill", d => {
           if (d.data.color === "green") return "#10b981";
           if (d.data.color === "orange") return "#f59e0b";
@@ -433,14 +437,18 @@
         .style("filter", d => d.data.color === "red" ? "drop-shadow(0 0 8px rgba(239,68,68,0.6))" : "")
         .on("mouseover", handleMouseOver)
         .on("mouseout", () => tooltip.style("opacity", 0))
-        .on("click", (e, d) => {
-          if (d.data.info && d.data.info.users && d.data.info.users.length > 0) {
-            currentUsers = d.data.info.users;
-            currentPon = d.data.info.pon || d.parent?.data.info?.pon || '';
-            currentSplitter = d.data.info.splitter || '';
-            showUserPopup(d);
-          }
-        });
+        .on("click", handleClick);
+
+      // For root node: Animated GIF icon
+      node.filter(d => d.depth === 0).append("image")
+        .attr("xlink:href", "https://cdn.dribbble.com/userupload/23881870/file/original-58bafc43cc73bc75eeb2ff46077739cc.gif")
+        .attr("width", 60)
+        .attr("height", 60)
+        .attr("x", -30)
+        .attr("y", -30)
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", () => tooltip.style("opacity", 0))
+        .on("click", handleClick);
 
       node.filter(d => d.data.color === "red" && (d.data.info?.total || 0) > 0)
         .select("circle").classed("blink-red", true);
@@ -483,6 +491,18 @@
         .transition().duration(200).style("opacity", 1);
     }
 
+    function handleClick(e, d) {
+      if (d.data.info && d.data.info.users && d.data.info.users.length > 0) {
+        currentUsers = d.data.info.users;
+        currentPon = d.data.info.pon || d.parent?.data.info?.pon || '';
+        currentSplitter = d.data.info.splitter || '';
+        currentLocation = d.data.info.location || '';
+        currentJcPic = d.data.info.jcPic || '';
+        currentPolePic = d.data.info.polePic || '';
+        showUserPopup(d);
+      }
+    }
+
     function showUserPopup(d) {
       const modal = document.getElementById("userModal");
       const title = document.getElementById("popupTitle");
@@ -491,15 +511,11 @@
       title.textContent = `${currentPon} ${currentSplitter ? `- ${currentSplitter}` : ''} — User Details`;
       list.innerHTML = "";
 
-      if (d.data.info.location || d.data.info.jcPic || d.data.info.polePic) {
-        let locHtml = '';
-        if (d.data.info.location) locHtml += `<span class="link-btn" onclick="openLink('${d.data.info.location}')">📍 Location</span>`;
-        if (d.data.info.jcPic) locHtml += `<span class="link-btn" onclick="openLink('${d.data.info.jcPic}')">📸 JC Pic</span>`;
-        if (d.data.info.polePic) locHtml += `<span class="link-btn" onclick="openLink('${d.data.info.polePic}')">🪵 Pole Pic</span>`;
-        locationDiv.innerHTML = `<div class="links">${locHtml}</div>`;
-      } else {
-        locationDiv.innerHTML = '';
-      }
+      let locHtml = '';
+      if (currentLocation) locHtml += `<span class="link-btn" onclick="openLink('${currentLocation}')">📍 Location</span>`;
+      if (currentJcPic) locHtml += `<span class="link-btn" onclick="openLink('${currentJcPic}')">📸 JC Pic</span>`;
+      if (currentPolePic) locHtml += `<span class="link-btn" onclick="openLink('${currentPolePic}')">🪵 Pole Pic</span>`;
+      locationDiv.innerHTML = locHtml ? `<div class="links">${locHtml}</div>` : '';
 
       currentUsers.forEach((u, index) => {
         const div = document.createElement("div");
@@ -522,9 +538,10 @@
 
     // Downloads
     function downloadScreenshot() {
-      html2canvas(document.getElementById('chart')).then(canvas => {
+      const modalContent = document.querySelector("#userModal .modal-content");
+      html2canvas(modalContent, { backgroundColor: document.body.classList.contains('dark') ? '#1f2937' : '#fff' }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `merotra-network-${new Date().toISOString().split('T')[0]}.png`;
+        link.download = `merotra-users-list-${new Date().toISOString().split('T')[0]}.png`;
         link.href = canvas.toDataURL();
         link.click();
       });
@@ -554,7 +571,7 @@
       link.click();
     }
 
-    window.addEventListener("resize", () => { if (latestData) drawTree(latestData); });
+    window.addEventListener("resize", () => applyFiltersAndDraw());
   </script>
 </body>
 </html>
