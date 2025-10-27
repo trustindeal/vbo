@@ -1,214 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>🌐 Merotra Fiber Network</title>
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-body { background: #f3f4f6; font-family: "Inter", sans-serif; overflow: hidden; }
-.node circle, .node rect { stroke: #333; stroke-width: 2px; cursor: pointer; transition: fill 0.3s; }
-.node text { font-size: 13px; fill: #333; pointer-events: none; }
-.link { fill: none; stroke: #555; stroke-width: 3px; }
-.tooltip { position: absolute; text-align: left; padding: 6px 10px; font-size: 12px;
-  background: rgba(0,0,0,0.7); color: #fff; border-radius: 5px; pointer-events: none; }
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 50; }
-.modal-content { background: white; padding: 20px; border-radius: 10px; max-height: 80%; overflow-y: auto;
-  width: 400px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
-.blink-red { animation: blink-red 1s infinite; }
-@keyframes blink-red { 0%,50%,100%{color:red;} 25%,75%{color:transparent;} }
-
-.card { display: flex; gap: 15px; padding:10px; margin-top:10px; background:#fff; border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.2); align-items:center; font-size:14px; }
-.card label { display:flex; align-items:center; gap:5px; cursor:pointer; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌐 Merotra Fiber Network</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1d4ed8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --gray: #6b7280;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      margin: 0; padding: 0; overflow: hidden; height: 100vh;
+    }
+    .header {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 1rem; text-align: center;
+      position: sticky; top: 0; z-index: 40;
+    }
+    .header h1 {
+      font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, var(--primary), #1e40af);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0;
+    }
+    .btn-controls {
+      background: var(--primary); color: white; font-weight: 600;
+      padding: 0.6rem 1.4rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(29,78,216,0.3);
+      transition: all 0.3s; margin-top: 0.5rem; display: inline-block;
+    }
+    .btn-controls:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(29,78,216,0.4); }
+    #chart { width: 100%; height: calc(100vh - 140px); }
+    .node text { font-weight: 600; pointer-events: none; }
+    .node circle, .node rect { transition: all 0.3s; cursor: pointer; }
+    .link { fill: none; stroke: #94a3b8; stroke-width: 2.5; }
+    .tooltip {
+      position: absolute; padding: 10px 14px; background: rgba(0,0,0,0.85); color: white;
+      border-radius: 8px; font-size: 13px; pointer-events: none; backdrop-filter: blur(5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.2s;
+    }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+      z-index: 100; backdrop-filter: blur(8px);
+    }
+    .modal-content {
+      background: white; border-radius: 16px; width: 90%; max-width: 500px; max-height: 85vh;
+      overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: pop 0.3s ease;
+    }
+    @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .controls-panel {
+      background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .filter-group { margin: 1rem 0; }
+    .filter-title { font-weight: 700; color: #1f2937; margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; }
+    .checkbox-item label {
+      display: flex; align-items: center; gap: 8px; font-size: 0.95rem; cursor: pointer;
+      padding: 6px 10px; border-radius: 8px; transition: background 0.2s;
+    }
+    .checkbox-item input:checked + span { font-weight: 600; }
+    .checkbox-item label:hover { background: #f3f4f6; }
+    .select-all { color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+    .user-item { padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+    .user-item.offline { color: var(--danger); font-weight: 600; }
+    .link-btn {
+      display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem;
+      color: var(--primary); text-decoration: underline; margin-right: 8px;
+    }
+    .blink-red { animation: blink 1.2s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @media (max-width: 640px) {
+      .header h1 { font-size: 1.8rem; }
+      .btn-controls { padding: 0.5rem 1rem; font-size: 0.9rem; }
+      .modal-content { width: 95%; }
+    }
+  </style>
 </head>
-<body>
-<h1 class="text-4xl font-bold mb-6 text-gray-800 text-center">🌐 Merotra Fiber Network</h1>
-<p class="text-gray-500 mb-4 text-center">Loading network data...</p>
-<div id="chart"></div>
+<body class="text-gray-800">
 
-<!-- Filter Card -->
-<div class="card" id="filterCard">
-  <label><input type="checkbox" value="green" checked> Green</label>
-  <label><input type="checkbox" value="orange" checked> Orange</label>
-  <label><input type="checkbox" value="red" checked> Red</label>
-  <label><input type="checkbox" value="gray" checked> Gray</label>
-</div>
-
-<div id="popup" class="modal hidden">
-  <div class="modal-content">
-    <h2 class="text-xl font-semibold mb-2" id="popupTitle"></h2>
-    <ul id="userList" class="list-disc pl-5 text-sm text-gray-700"></ul>
-    <button onclick="closePopup()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Close</button>
+  <div class="header">
+    <h1>🌐 Merotra Fiber Network</h1>
+    <button class="btn-controls" onclick="toggleControls()">Controls</button>
   </div>
-</div>
 
-<script>
-const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
-const tooltip = d3.select("body").append("div").attr("class","tooltip").style("opacity",0);
-let activeColors = ["green","orange","red","gray"]; // default all
+  <p class="text-center text-gray-600 mt-4" id="loading">Loading network visualization...</p>
+  <div id="chart"></div>
 
-fetch(apiUrl)
-.then(res => res.json())
-.then(data => {
-  document.querySelector("p.text-gray-500").remove();
-  drawTree(data);
-})
-.catch(err => {
-  console.error("Fetch error:", err);
-  document.body.innerHTML += `<p class='text-red-600'>❌ Could not fetch data. Check API URL.</p>`;
-});
+  <!-- Controls Modal -->
+  <div id="controlsModal" class="modal hidden">
+    <div class="modal-content controls-panel">
+      <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">Controls</h2>
 
-document.querySelectorAll("#filterCard input[type=checkbox]").forEach(ch=>{
-  ch.addEventListener("change", ()=>{
-    activeColors = Array.from(document.querySelectorAll("#filterCard input[type=checkbox]:checked")).map(i=>i.value);
-    drawTree(latestData);
-  });
-});
+      <div class="filter-group">
+        <div class="filter-title">Status Colors</div>
+        <div class="checkbox-grid" id="colorFilters">
+          <div class="checkbox-item"><label><input type="checkbox" value="green" checked><span style="color:var(--success)">● Green</span></label></div>
+          <div class="checkbox-item"><label><input type="checkbox" value="orange" checked><span style="color:var(--warning)">● Orange</span></label></div>
+          <div class="checkbox-item"><label><input type="checkbox" value="red" checked><span style="color:var(--danger)">● Red</span></label></div>
+          <div class="checkbox-item"><label><input type="checkbox" value="gray" checked><span style="color:var(--gray)">● Gray</span></label></div>
+        </div>
+        <div class="mt-2 text-center">
+          <span class="select-all" onclick="selectAllColors()">Select All</span> |
+          <span class="select-all" onclick="deselectAllColors()">Deselect All</span>
+        </div>
+      </div>
 
-let svg, svgGroup, treeLayout, rootHierarchy, nodes, links, latestData;
+      <div class="filter-group">
+        <div class="filter-title">Windows</div>
+        <div class="checkbox-grid" id="windowFilters"></div>
+        <div class="mt-2 text-center">
+          <span class="select-all" onclick="selectAll('window')">Select All</span> |
+          <span class="select-all" onclick="deselectAll('window')">Deselect All</span>
+        </div>
+      </div>
 
-function drawTree(data){
-  latestData = data; // store for filtering
-  const root = { name:"Merotra Network", children:[] };
+      <div class="filter-group">
+        <div class="filter-title">PONs</div>
+        <div class="checkbox-grid" id="ponFilters"></div>
+        <div class="mt-2 text-center">
+          <span class="select-all" onclick="selectAll('pon')">Select All</span> |
+          <span class="select-all" onclick="deselectAll('pon')">Deselect All</span>
+        </div>
+      </div>
 
-  Object.entries(data).forEach(([pon, windows])=>{
-    Object.entries(windows).forEach(([win,splits])=>{
-      // Window node
-      let winNode = root.children.find(n=>n.name===win);
-      if(!winNode){ winNode={name:win,children:[]}; root.children.push(winNode); }
+      <button onclick="applyFilters()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
+        Apply Filters
+      </button>
+      <button onclick="toggleControls()" class="w-full mt-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 rounded-lg">
+        Close
+      </button>
+    </div>
+  </div>
 
-      // PON node
-      let ponNode = winNode.children.find(n=>n.name===pon);
-      if(!ponNode){ ponNode={name:pon,children:[]}; winNode.children.push(ponNode); }
+  <!-- User Popup -->
+  <div id="userModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-3" id="popupTitle"></h2>
+      <div id="userList"></div>
+      <button onclick="closeUserModal()" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold">
+        Close
+      </button>
+    </div>
+  </div>
 
-      // Splitters sorted by total users descending
-      const sortedSplitters = Object.entries(splits).sort((a,b)=> (b[1].total||0) - (a[1].total||0));
-      sortedSplitters.forEach(([split,info])=>{
-        let splitterColor = "green";
-        if(info.total>0){
-          const offlinePercent = info.offline/info.total;
-          if(info.offline===info.total) splitterColor="red";
-          else if(offlinePercent>=0.5) splitterColor="orange";
-        }else splitterColor="gray";
+  <script>
+    const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
+    const tooltip = d3.select("body").append("div").attr("class", "tooltip");
+    let rawData = {}, filteredData = {}, svg, g, treeLayout, root, nodes, links;
+    let filters = { colors: ["green","orange","red","gray"], windows: [], pons: [] };
 
-        if(activeColors.includes(splitterColor))
-          ponNode.children.push({ name:`${split} (${info.total||0} users)`, color:splitterColor, info });
+    fetch(apiUrl)
+      .then(r => r.json())
+      .then(data => {
+        rawData = data;
+        document.getElementById("loading").remove();
+        populateFilters();
+        applyFiltersAndDraw();
+      })
+      .catch(err => {
+        console.error(err);
+        document.body.innerHTML += `<p class='text-red-600 text-center'>Failed to load data.</p>`;
       });
 
-      // PON color
-      const totalUsersSum = ponNode.children.reduce((acc,c)=>acc+(c.info?.total||0),0);
-      const offlineUsersSum = ponNode.children.reduce((acc,c)=>acc+(c.info?.offline||0),0);
-      let ponColor = "green";
-      if(totalUsersSum>0){
-        const offlinePercent = offlineUsersSum/totalUsersSum;
-        if(offlineUsersSum===totalUsersSum) ponColor="red";
-        else if(offlinePercent>=0.5) ponColor="orange";
-      }else ponColor="gray";
-      if(!activeColors.includes(ponColor)) ponNode.hidden=true;
-      ponNode.color = ponColor;
-
-      // Sort PONs by second character
-      winNode.children.sort((a,b)=>{
-        const aDigit=parseInt(a.name[1]||0);
-        const bDigit=parseInt(b.name[1]||0);
-        return aDigit-bDigit;
+    function populateFilters() {
+      const windows = new Set(), pons = new Set();
+      Object.keys(rawData).forEach(pon => {
+        pons.add(pon);
+        Object.keys(rawData[pon]).forEach(win => windows.add(win));
       });
-    });
-  });
 
-  renderTree(root);
-}
+      filters.windows = [...windows];
+      filters.pons = [...pons];
 
-function renderTree(root){
-  d3.select("#chart").selectAll("*").remove();
+      const winDiv = document.getElementById("windowFilters");
+      const ponDiv = document.getElementById("ponFilters");
+      winDiv.innerHTML = ""; ponDiv.innerHTML = "";
 
-  const dx=70, dy=220;
-  treeLayout=d3.tree().nodeSize([dx,dy]);
-  rootHierarchy=d3.hierarchy(root, d=>d.children?.filter(c=>!c.hidden));
-  treeLayout(rootHierarchy);
+      [...windows].sort().forEach(w => {
+        winDiv.innerHTML += `<div class="checkbox-item"><label><input type="checkbox" value="${w}" checked><span>${w}</span></label></div>`;
+      });
+      [...pons].sort().forEach(p => {
+        ponDiv.innerHTML += `<div class="checkbox-item"><label><input type="checkbox" value="${p}" checked><span>${p}</span></label></div>`;
+      });
+    }
 
-  nodes=rootHierarchy.descendants();
-  links=rootHierarchy.links();
+    function selectAll(type) {
+      document.querySelectorAll(`#${type}Filters input`).forEach(ch => ch.checked = true);
+    }
+    function deselectAll(type) {
+      document.querySelectorAll(`#${type}Filters input`).forEach(ch => ch.checked = false);
+    }
+    function selectAllColors() { document.querySelectorAll("#colorFilters input").forEach(ch => ch.checked = true); }
+    function deselectAllColors() { document.querySelectorAll("#colorFilters input").forEach(ch => ch.checked = false); }
 
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+    function applyFilters() {
+      filters.colors = Array.from(document.querySelectorAll("#colorFilters input:checked")).map(i => i.value);
+      filters.windows = Array.from(document.querySelectorAll("#windowFilters input:checked")).map(i => i.value);
+      filters.pons = Array.from(document.querySelectorAll("#ponFilters input:checked")).map(i => i.value);
+      toggleControls();
+      applyFiltersAndDraw();
+    }
 
-  svg=d3.select("#chart").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .call(d3.zoom().scaleExtent([0.5,2]).on("zoom", e=> svgGroup.attr("transform", e.transform)))
-    .append("g").attr("transform","translate(50,50)");
+    function applyFiltersAndDraw() {
+      filteredData = {};
+      Object.entries(rawData).forEach(([pon, windows]) => {
+        if (!filters.pons.includes(pon)) return;
+        if (!filteredData[pon]) filteredData[pon] = {};
+        Object.entries(windows).forEach(([win, splits]) => {
+          if (!filters.windows.includes(win)) return;
+          filteredData[pon][win] = splits;
+        });
+      });
+      drawTree(filteredData);
+    }
 
-  svgGroup = svg.append("g");
+    function drawTree(data) {
+      d3.select("#chart svg").remove();
+      const width = window.innerWidth, height = window.innerHeight - 140;
+      const dx = 90, dy = width > 768 ? 280 : 220;
 
-  const linkGenerator = d3.linkHorizontal().x(d=>d.y).y(d=>d.x);
+      treeLayout = d3.tree().nodeSize([dx, dy]);
+      const rootNode = { name: "Merotra Network", children: [], color: "#1d4ed8" };
 
-  svgGroup.selectAll(".link")
-    .data(links)
-    .enter().append("path")
-    .attr("class","link")
-    .attr("d", linkGenerator)
-    .attr("stroke","#333")
-    .attr("stroke-width",3);
+      Object.entries(data).forEach(([pon, windows]) => {
+        Object.entries(windows).forEach(([win, splits]) => {
+          let winNode = rootNode.children.find(n => n.name === win);
+          if (!winNode) { winNode = { name: win, children: [], color: "#1e40af" }; rootNode.children.push(winNode); }
 
-  const node = svgGroup.selectAll(".node")
-    .data(nodes)
-    .enter().append("g")
-    .attr("class","node")
-    .attr("transform", d=>`translate(${d.y},${d.x})`);
+          let ponNode = winNode.children.find(n => n.name === pon);
+          if (!ponNode) { ponNode = { name: pon, children: [], color: "#1e3a8a" }; winNode.children.push(ponNode); }
 
-  node.append(d=>{
-    if(d.data.info?.total===0) return document.createElementNS(d3.namespaces.svg,"rect");
-    else return document.createElementNS(d3.namespaces.svg,"circle");
-  })
-    .attr("r", d=>{ if(d.depth===0) return 30; if(d.depth===1) return 25; if(d.depth===2) return 20; else return 15; })
-    .attr("width", d=>15)
-    .attr("height", d=>15)
-    .attr("x", d=>-7.5)
-    .attr("y", d=>-7.5)
-    .attr("fill", d=>{
-      if(d.data.info?.total===0) return "gray";
-      if(d.data.color==="red") return "red";
-      if(d.data.color==="orange") return "orange";
-      return d.data.color||"#10b981";
-    })
-    .attr("stroke","#333")
-    .on("mouseover",(event,d)=>{
-      let ttext="";
-      if(d.data.info) ttext=`Total: ${d.data.info.total||0}<br>Online: ${d.data.info.online||0}<br>Offline: ${d.data.info.offline||0}`;
-      tooltip.transition().duration(200).style("opacity",0.9).html(ttext)
-        .style("left",(event.pageX+10)+"px").style("top",(event.pageY-20)+"px");
-    })
-    .on("mouseout",()=>tooltip.transition().duration(500).style("opacity",0))
-    .on("click",(event,d)=>{ if(d.data.info && d.data.info.users) showPopup(d); });
+          const totalU = Object.values(splits).reduce((a, s) => a + (s.total || 0), 0);
+          const offlineU = Object.values(splits).reduce((a, s) => a + (s.offline || 0), 0);
+          const color = getColor(totalU, offlineU);
+          if (!filters.colors.includes(color)) ponNode.hidden = true;
+          ponNode.color = color;
 
-  node.filter(d=>d.data.color==="red" && d.data.info?.total>0).selectAll("circle").classed("blink-red",true);
+          Object.entries(splits).forEach(([split, info]) => {
+            const spColor = getColor(info.total, info.offline);
+            if (filters.colors.includes(spColor)) {
+              ponNode.children.push({
+                name: `${split}`,
+                subtitle: `${info.total} users`,
+                color: spColor,
+                info: info
+              });
+            }
+          });
 
-  node.append("text")
-    .attr("dy","0.32em")
-    .attr("x",d=>d.children?-12:12)
-    .attr("text-anchor",d=>d.children?"end":"start")
-    .text(d=>d.data.name);
-}
+          winNode.children.sort((a, b) => (parseInt(a.name[1]) || 0) - (parseInt(b.name[1]) || 0));
+        });
+      });
 
-// Popup
-function showPopup(d){
-  const popup=document.getElementById("popup");
-  const list=document.getElementById("userList");
-  const title=document.getElementById("popupTitle");
-  popup.classList.remove("hidden");
-  title.textContent=d.data.name+" — Users";
-  list.innerHTML="";
-  d.data.info.users.forEach(u=>{
-    const li=document.createElement("li");
-    li.textContent=u;
-    list.appendChild(li);
-  });
-}
+      root = d3.hierarchy(rootNode, d => d.children?.filter(c => !c.hidden));
+      treeLayout(root);
 
-function closePopup(){ document.getElementById("popup").classList.add("hidden"); }
-</script>
+      nodes = root.descendants();
+      links = root.links();
+
+      svg = d3.select("#chart").append("svg")
+        .attr("width", width).attr("height", height)
+        .call(d3.zoom().scaleExtent([0.4, 3]).on("zoom", e => g.attr("transform", e.transform)))
+        .append("g").attr("transform", "translate(80,60)");
+
+      g = svg.append("g");
+
+      // Animated Links
+      const link = g.selectAll(".link")
+        .data(links).enter()
+        .append("path")
+        .attr("class", "link")
+        .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
+        .attr("stroke-dasharray", function() { return this.getTotalLength(); })
+        .attr("stroke-dashoffset", function() { return this.getTotalLength(); });
+
+      link.transition().duration(1200).ease(d3.easeCubicInOut)
+        .attr("stroke-dashoffset", 0);
+
+      // Nodes
+      const node = g.selectAll(".node")
+        .data(nodes).enter()
+        .append("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+      node.append("circle")
+        .attr("r", d => d.depth === 0 ? 32 : d.depth === 1 ? 26 : d.depth === 2 ? 22 : 18)
+        .attr("fill", d => d.data.color || "#10b981")
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 3)
+        .style("filter", d => d.data.color === "red" ? "drop-shadow(0 0 8px rgba(239,68,68,0.6))" : "")
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", () => tooltip.style("opacity", 0))
+        .on("click", (e, d) => d.data.info?.users && showUserPopup(d));
+
+      node.filter(d => d.data.color === "red" && d.data.info?.total > 0)
+        .select("circle").classed("blink-red", true);
+
+      node.append("text")
+        .attr("dy", "0.32em")
+        .attr("x", d => d.children ? -14 : 14)
+        .attr("text-anchor", d => d.children ? "end" : "start")
+        .style("font-size", d => d.depth === 0 ? "18px" : d.depth === 1 ? "16px" : "14px")
+        .style("font-weight", d => d.depth <= 1 ? "700" : "600")
+        .text(d => d.data.name);
+
+      node.filter(d => d.depth >= 3).append("text")
+        .attr("dy", "1.3em")
+        .attr("x", d => d.children ? -14 : 14)
+        .attr("text-anchor", d => d.children ? "end" : "start")
+        .style("font-size", "11px")
+        .style("fill", "#666")
+        .text(d => d.data.subtitle || "");
+    }
+
+    function getColor(total, offline) {
+      if (total === 0) return "gray";
+      const ratio = offline / total;
+      if (ratio >= 1) return "red";
+      if (ratio >= 0.5) return "orange";
+      return "green";
+    }
+
+    function handleMouseOver(event, d) {
+      if (!d.data.info) return;
+      const { total=0, online=0, offline=0 } = d.data.info;
+      tooltip.html(`
+        <strong>${d.data.name}</strong><br>
+        Total: <strong>${total}</strong><br>
+        Online: <strong style="color:#10b981">${online}</strong><br>
+        Offline: <strong style="color:#ef4444">${offline}</strong>
+      `).style("left", (event.pageX + 15) + "px")
+        .style("top", (event.pageY - 10) + "px")
+        .transition().duration(200).style("opacity", 1);
+    }
+
+    function showUserPopup(d) {
+      const modal = document.getElementById("userModal");
+      const title = document.getElementById("popupTitle");
+      const list = document.getElementById("userList");
+      title.textContent = `${d.data.name} — User Details`;
+      list.innerHTML = "";
+
+      d.data.info.users.forEach(u => {
+        const div = document.createElement("div");
+        div.className = "user-item" + (u.offline ? " offline" : "");
+        div.innerHTML = `
+          <div><strong>${u.id}</strong></div>
+          ${u.location ? `<div class="link-btn" onclick="openLink('${u.location}')">📍 Location</div>` : ''}
+          ${u.jcPic ? `<div class="link-btn" onclick="openLink('${u.jcPic}')">📸 JC Pic</div>` : ''}
+          ${u.polePic ? `<div class="link-btn" onclick="openLink('${u.polePic}')">🪵 Pole Pic</div>` : ''}
+        `;
+        list.appendChild(div);
+      });
+
+      modal.classList.remove("hidden");
+    }
+
+    function openLink(url) { window.open(url, "_blank"); }
+    function closeUserModal() { document.getElementById("userModal").classList.add("hidden"); }
+    function toggleControls() {
+      document.getElementById("controlsModal").classList.toggle("hidden");
+    }
+
+    window.addEventListener("resize", () => applyFiltersAndDraw());
+  </script>
 </body>
 </html>
