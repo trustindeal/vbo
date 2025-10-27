@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌐 Merotra Fiber Network</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.32/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      --card-bg: rgba(255,255,255,0.95);
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --shadow: rgba(0,0,0,0.1);
+      --tooltip-bg: rgba(0,0,0,0.85);
+      --tooltip-text: #fff;
+      --link: #1d4ed8;
+    }
+    body.dark {
+      --bg-primary: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+      --card-bg: rgba(31,41,55,0.95);
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --border: #374151;
+      --shadow: rgba(0,0,0,0.3);
+      --tooltip-bg: rgba(255,255,255,0.9);
+      --tooltip-text: #000;
+      --link: #60a5fa;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      margin: 0; padding: 0; overflow: hidden; height: 100vh;
+      color: var(--text-primary);
+      transition: background 0.3s ease;
+    }
+    .header {
+      background: var(--card-bg); backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px var(--shadow); padding: 1rem; text-align: center;
+      position: sticky; top: 0; z-index: 40; border-bottom: 1px solid var(--border);
+    }
+    .header h1 {
+      font-size: 2.5rem; font-weight: 800; 
+      background: linear-gradient(to right, #1d4ed8, #1e40af, #1e3a8a);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 0.5rem 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .stats {
+      display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .stat-item { background: var(--card-bg); padding: 0.4rem 0.8rem; border-radius: 8px; box-shadow: 0 2px 8px var(--shadow); color: var(--text-primary); }
+    .btn-controls {
+      background: linear-gradient(to right, #1d4ed8, #1e40af); color: white; font-weight: 600;
+      padding: 0.6rem 1.4rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(29,78,216,0.3);
+      transition: all 0.3s; margin-top: 0.5rem; display: inline-block; border: none; cursor: pointer;
+      animation: bounce 4s infinite ease-in-out;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .btn-controls:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(29,78,216,0.4); animation-play-state: paused; }
+    #chart { width: 100%; height: calc(100vh - 160px); }
+    .node text { 
+      font-weight: 600; pointer-events: none; text-shadow: 1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(0,0,0,0.1);
+      fill: var(--text-primary); z-index: 10;
+    }
+    body.dark .node text { text-shadow: 1px 1px 2px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.1); }
+    .node circle, .node rect { transition: all 0.3s; cursor: pointer; stroke: #fff; stroke-width: 2; }
+    .link { fill: none; stroke: #94a3b8; stroke-width: 2.5; }
+    body.dark .link { stroke: #4b5563; }
+    .tooltip {
+      position: absolute; padding: 10px 14px; background: var(--tooltip-bg); color: var(--tooltip-text);
+      border-radius: 8px; font-size: 13px; pointer-events: none; backdrop-filter: blur(5px);
+      box-shadow: 0 4px 15px var(--shadow); opacity: 0; transition: opacity 0.2s;
+    }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+      z-index: 100; backdrop-filter: blur(8px);
+    }
+    .modal-content {
+      background: var(--card-bg); border-radius: 16px; width: 90%; max-width: 500px; max-height: 85vh;
+      overflow-y: auto; box-shadow: 0 20px 50px var(--shadow); animation: pop 0.3s ease;
+      border: 1px solid var(--border); color: var(--text-primary);
+    }
+    @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .controls-panel {
+      background: var(--card-bg); border-radius: 16px; padding: 1.5rem; box-shadow: 0 10px 30px var(--shadow);
+      max-height: 80vh; overflow-y: auto; color: var(--text-primary);
+    }
+    .filter-group { margin: 1rem 0; }
+    .filter-title { font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; }
+    .checkbox-item label {
+      display: flex; align-items: center; gap: 8px; font-size: 0.95rem; cursor: pointer;
+      padding: 6px 10px; border-radius: 8px; transition: background 0.2s; color: var(--text-primary);
+    }
+    .checkbox-item input:checked + span { font-weight: 600; }
+    .checkbox-item label:hover { background: var(--border); }
+    .select-all { color: var(--link); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+    .theme-toggle { background: none; border: 2px solid var(--link); color: var(--link); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; }
+    .user-item { padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: var(--text-primary); }
+    .user-id { font-weight: 600; }
+    .user-item.offline { color: #ef4444; background: rgba(239,68,68,0.1); border-radius: 4px; padding: 4px; }
+    .links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .link-btn {
+      display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem;
+      color: var(--link); text-decoration: underline; cursor: pointer; background: none; border: none;
+    }
+    .download-btns { display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
+    .download-btn { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; border: none; color: white; }
+    .btn-screenshot { background: #10b981; }
+    .btn-pdf { background: #ef4444; }
+    .btn-csv { background: #f59e0b; }
+    .blink-red { animation: blink 1.2s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @media (max-width: 640px) {
+      .header h1 { font-size: 2rem; }
+      .btn-controls { padding: 0.5rem 1rem; font-size: 0.9rem; }
+      .stats { gap: 1rem; justify-content: center; }
+      .modal-content { width: 95%; }
+      .stats { flex-direction: column; align-items: center; gap: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>🌐 Merotra Fiber Network</h1>
+    <div class="stats">
+      <div class="stat-item">Total Users: <strong id="totalUsers">0</strong></div>
+      <div class="stat-item">Online: <strong id="totalOnline" style="color:#10b981;">0</strong></div>
+      <div class="stat-item">Offline: <strong id="totalOffline" style="color:#ef4444;">0</strong></div>
+      <div class="stat-item">Splitters: <strong id="totalSplitters">0</strong></div>
+    </div>
+    <button class="btn-controls" onclick="toggleControls()">Controls</button>
+  </div>
+
+  <p class="text-center text-gray-600 mt-4" id="loading" style="color: var(--text-secondary);">Loading network visualization...</p>
+  <div id="chart"></div>
+
+  <!-- Controls Modal -->
+  <div id="controlsModal" class="modal hidden">
+    <div class="modal-content controls-panel">
+      <h2 class="text-2xl font-bold mb-4 text-center" style="color: var(--text-primary);">Controls</h2>
+
+      <div class="filter-group">
+        <div class="filter-title">Status Colors</div>
+        <div class="checkbox-grid" id="colorFilters">
+          <div class="checkbox-item"><label><input type="checkbox" value="green" checked><span style="color:#10b981">● Green</span></label></div>
+          <div class="checkbox-item"><label><input type="checkbox" value="orange" checked><span style="color:#f59e0b">● Orange</span></label></div>
+          <div class="checkbox-item"><label><input type="checkbox" value="red" checked><span style="color:#ef4444">● Red</span></label></div>
+          <div class="checkbox-item"><label><input type="checkbox" value="gray" checked><span style="color:#6b7280">● Gray</span></label></div>
+        </div>
+        <div class="mt-2 text-center">
+          <span class="select-all" onclick="selectAllColors()">Select All</span> |
+          <span class="select-all" onclick="deselectAllColors()">Deselect All</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-title">Windows</div>
+        <div class="checkbox-grid" id="windowFilters"></div>
+        <div class="mt-2 text-center">
+          <span class="select-all" onclick="selectAll('window')">Select All</span> |
+          <span class="select-all" onclick="deselectAll('window')">Deselect All</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-title">PONs</div>
+        <div class="checkbox-grid" id="ponFilters"></div>
+        <div class="mt-2 text-center">
+          <span class="select-all" onclick="selectAll('pon')">Select All</span> |
+          <span class="select-all" onclick="deselectAll('pon')">Deselect All</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-title">Theme</div>
+        <button class="theme-toggle w-full" onclick="toggleTheme()">Toggle Dark/Light Mode</button>
+      </div>
+
+      <button onclick="applyFilters()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition" style="background: #1d4ed8;">
+        Apply Filters
+      </button>
+      <button onclick="toggleControls()" class="w-full mt-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 rounded-lg">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- User Popup -->
+  <div id="userModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-3" id="popupTitle" style="color: var(--text-primary);"></h2>
+      <div id="popupLocation" class="mb-2" style="color: var(--text-secondary);"></div>
+      <div id="userList" class="mb-4 max-h-60 overflow-y-auto"></div>
+      <div class="download-btns">
+        <button class="download-btn btn-screenshot" onclick="downloadScreenshot()">📸 Screenshot</button>
+        <button class="download-btn btn-pdf" onclick="downloadPDF()">📄 PDF</button>
+        <button class="download-btn btn-csv" onclick="downloadCSV()">📊 CSV</button>
+      </div>
+      <button onclick="closeUserModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold mt-2">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const apiUrl = "https://script.google.com/macros/s/AKfycbypM1hegFj6sqo2UGx3zX1xPVSL6dxcqlQqQ9zPJhNMcvS08rbfMnxiKkSzv6a2PxYP/exec?mode=data";
+    const tooltip = d3.select("body").append("div").attr("class", "tooltip");
+    let rawData = {}, filteredData = {}, svg, g, treeLayout, root, nodes, links, currentUsers = [], currentPon = '', currentSplitter = '', currentLocation = '', currentJcPic = '', currentPolePic = '';
+    let filters = { colors: ["green","orange","red","gray"], windows: [], pons: [] };
+    let totalStats = { users: 0, online: 0, offline: 0, splitters: 0 };
+
+    // Auto theme based on Lucknow (IST) time
+    function setAutoTheme() {
+      const now = new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"});
+      const hour = new Date(now).getHours();
+      if (hour >= 18 || hour < 6) {
+        document.body.classList.add('dark');
+      }
+    }
+    setAutoTheme();
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+      applyFiltersAndDraw(); // Redraw to update colors
+    }
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+
+    fetch(apiUrl)
+      .then(r => r.json())
+      .then(data => {
+        rawData = data;
+        calculateTotals();
+        updateStats();
+        document.getElementById("loading").remove();
+        populateFilters();
+        applyFiltersAndDraw();
+      })
+      .catch(err => {
+        console.error(err);
+        document.body.innerHTML += `<p class='text-red-600 text-center' style="color: #ef4444;">Failed to load data.</p>`;
+      });
+
+    function calculateTotals() {
+      totalStats.users = 0;
+      totalStats.online = 0;
+      totalStats.offline = 0;
+      totalStats.splitters = 0;
+      Object.values(rawData).forEach(ponData => {
+        Object.values(ponData).forEach(winData => {
+          Object.values(winData).forEach(split => {
+            totalStats.splitters++;
+            totalStats.users += split.total || 0;
+            totalStats.online += split.online || 0;
+            totalStats.offline += split.offline || 0;
+          });
+        });
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('totalUsers').textContent = totalStats.users;
+      document.getElementById('totalOnline').textContent = totalStats.online;
+      document.getElementById('totalOffline').textContent = totalStats.offline;
+      document.getElementById('totalSplitters').textContent = totalStats.splitters;
+    }
+
+    function populateFilters() {
+      const windows = new Set(), pons = new Set();
+      Object.keys(rawData).forEach(pon => {
+        pons.add(pon);
+        Object.keys(rawData[pon]).forEach(win => windows.add(win));
+      });
+
+      filters.windows = [...windows];
+      filters.pons = [...pons];
+
+      const winDiv = document.getElementById("windowFilters");
+      const ponDiv = document.getElementById("ponFilters");
+      winDiv.innerHTML = ""; ponDiv.innerHTML = "";
+
+      [...windows].sort().forEach(w => {
+        winDiv.innerHTML += `<div class="checkbox-item"><label><input type="checkbox" value="${w}" checked><span>${w}</span></label></div>`;
+      });
+      [...pons].sort().forEach(p => {
+        ponDiv.innerHTML += `<div class="checkbox-item"><label><input type="checkbox" value="${p}" checked><span>${p}</span></label></div>`;
+      });
+    }
+
+    function selectAll(type) {
+      document.querySelectorAll(`#${type}Filters input`).forEach(ch => ch.checked = true);
+    }
+    function deselectAll(type) {
+      document.querySelectorAll(`#${type}Filters input`).forEach(ch => ch.checked = false);
+    }
+    function selectAllColors() { document.querySelectorAll("#colorFilters input").forEach(ch => ch.checked = true); }
+    function deselectAllColors() { document.querySelectorAll("#colorFilters input").forEach(ch => ch.checked = false); }
+
+    function applyFilters() {
+      filters.colors = Array.from(document.querySelectorAll("#colorFilters input:checked")).map(i => i.value);
+      filters.windows = Array.from(document.querySelectorAll("#windowFilters input:checked")).map(i => i.value);
+      filters.pons = Array.from(document.querySelectorAll("#ponFilters input:checked")).map(i => i.value);
+      toggleControls();
+      applyFiltersAndDraw();
+    }
+
+    function applyFiltersAndDraw() {
+      filteredData = {};
+      Object.entries(rawData).forEach(([pon, windows]) => {
+        if (!filters.pons.includes(pon)) return;
+        if (!filteredData[pon]) filteredData[pon] = {};
+        Object.entries(windows).forEach(([win, splits]) => {
+          if (!filters.windows.includes(win)) return;
+          filteredData[pon][win] = {};
+          Object.entries(splits).forEach(([split, info]) => {
+            const color = getColor(info.total, info.offline);
+            if (filters.colors.includes(color)) {
+              filteredData[pon][win][split] = info;
+            }
+          });
+        });
+      });
+      drawTree(filteredData);
+    }
+
+    function drawTree(data) {
+      d3.select("#chart svg").remove();
+      const width = window.innerWidth, height = window.innerHeight - 160;
+      const dx = 100, dy = width > 768 ? 300 : 240;
+
+      treeLayout = d3.tree().nodeSize([dx, dy]);
+      const rootNode = { name: "Merotra Network", children: [], color: "#1d4ed8" };
+
+      Object.entries(data).forEach(([pon, windows]) => {
+        Object.entries(windows).forEach(([win, splits]) => {
+          let winNode = rootNode.children.find(n => n.name === win);
+          if (!winNode) { 
+            winNode = { name: win, children: [], color: "#1e40af" }; 
+            rootNode.children.push(winNode); 
+          }
+
+          let ponNode = winNode.children.find(n => n.name === pon);
+          if (!ponNode) { 
+            ponNode = { name: pon, children: [], color: "#1e3a8a" }; 
+            winNode.children.push(ponNode); 
+          }
+
+          let ponTotal = 0, ponOffline = 0, ponOnline = 0, ponUsers = [];
+          Object.entries(splits).forEach(([split, info]) => {
+            const spColor = getColor(info.total, info.offline);
+            ponNode.children.push({
+              name: `${split}`,
+              subtitle: `${info.total} users`,
+              color: spColor,
+              info: { ...info, pon: pon, splitter: split, location: info.location, jcPic: info.jcPic, polePic: info.polePic }
+            });
+            ponTotal += info.total || 0;
+            ponOffline += info.offline || 0;
+            ponOnline += info.online || 0;
+            ponUsers = ponUsers.concat(info.users || []);
+          });
+
+          // Set PON info for hover/click
+          ponNode.info = { total: ponTotal, offline: ponOffline, online: ponOnline, users: ponUsers, pon: pon };
+          ponNode.color = getColor(ponTotal, ponOffline);
+
+          // Hide PON only if no children
+          if (ponNode.children.length === 0) ponNode.hidden = true;
+
+          // Sort PONs
+          winNode.children.sort((a, b) => (parseInt(a.name[1]) || 0) - (parseInt(b.name[1]) || 0));
+        });
+
+        // For windows, similar logic if needed
+        rootNode.children.forEach(winNode => {
+          if (winNode.children.length === 0) winNode.hidden = true;
+        });
+      });
+
+      root = d3.hierarchy(rootNode, d => d.children?.filter(c => !c.hidden));
+      treeLayout(root);
+
+      nodes = root.descendants();
+      links = root.links();
+
+      svg = d3.select("#chart").append("svg")
+        .attr("width", width).attr("height", height)
+        .call(d3.zoom().scaleExtent([0.4, 3]).on("zoom", e => g.attr("transform", e.transform)))
+        .append("g").attr("transform", "translate(80,60)");
+
+      g = svg.append("g");
+
+      // Animated Links
+      const link = g.selectAll(".link")
+        .data(links).enter()
+        .append("path")
+        .attr("class", "link")
+        .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
+        .attr("stroke-dasharray", function() { return this.getTotalLength(); })
+        .attr("stroke-dashoffset", function() { return this.getTotalLength(); })
+        .attr("stroke", "var(--text-secondary)");
+
+      link.transition().duration(1200).ease(d3.easeCubicInOut)
+        .attr("stroke-dashoffset", 0);
+
+      // Nodes
+      const node = g.selectAll(".node")
+        .data(nodes).enter()
+        .append("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+      // For non-root nodes
+      node.filter(d => d.depth > 0).append("circle")
+        .attr("r", d => d.depth === 1 ? 26 : d.depth === 2 ? 22 : 18)
+        .attr("fill", d => {
+          if (d.data.color === "green") return "#10b981";
+          if (d.data.color === "orange") return "#f59e0b";
+          if (d.data.color === "red") return "#ef4444";
+          if (d.data.color === "gray") return "#6b7280";
+          return d.data.color;
+        })
+        .attr("stroke-width", 3)
+        .style("filter", d => d.data.color === "red" ? "drop-shadow(0 0 8px rgba(239,68,68,0.6))" : "")
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", () => tooltip.style("opacity", 0))
+        .on("click", handleClick);
+
+      // For root node: Animated GIF icon
+      node.filter(d => d.depth === 0).append("image")
+        .attr("xlink:href", "https://cdn.dribbble.com/userupload/23881870/file/original-58bafc43cc73bc75eeb2ff46077739cc.gif")
+        .attr("width", 60)
+        .attr("height", 60)
+        .attr("x", -30)
+        .attr("y", -30)
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", () => tooltip.style("opacity", 0))
+        .on("click", handleClick);
+
+      node.filter(d => d.data.color === "red" && (d.data.info?.total || 0) > 0)
+        .select("circle").classed("blink-red", true);
+
+      node.append("text")
+        .attr("dy", "0.32em")
+        .attr("x", d => d.children ? -20 : 20)  // Increased spacing to avoid overlap
+        .attr("text-anchor", d => d.children ? "end" : "start")
+        .style("font-size", d => d.depth === 0 ? "18px" : d.depth === 1 ? "16px" : "14px")
+        .style("font-weight", d => d.depth <= 1 ? "700" : "600")
+        .text(d => d.data.name);
+
+      node.filter(d => d.data.subtitle).append("text")
+        .attr("dy", "1.8em")  // Below to avoid overlap
+        .attr("x", d => 20)
+        .attr("text-anchor", "start")
+        .style("font-size", "11px")
+        .style("fill", "var(--text-secondary)")
+        .text(d => d.data.subtitle);
+    }
+
+    function getColor(total, offline) {
+      if (total === 0) return "gray";
+      const ratio = offline / total;
+      if (ratio >= 1) return "red";
+      if (ratio >= 0.5) return "orange";
+      return "green";
+    }
+
+    function handleMouseOver(event, d) {
+      if (!d.data.info) return;
+      const { total=0, online=0, offline=0 } = d.data.info;
+      tooltip.html(`
+        <strong>${d.data.name}</strong><br>
+        Total: <strong>${total}</strong><br>
+        Online: <strong style="color:#10b981">${online}</strong><br>
+        Offline: <strong style="color:#ef4444">${offline}</strong>
+      `).style("left", (event.pageX + 15) + "px")
+        .style("top", (event.pageY - 10) + "px")
+        .transition().duration(200).style("opacity", 1);
+    }
+
+    function handleClick(e, d) {
+      if (d.data.info && d.data.info.users && d.data.info.users.length > 0) {
+        currentUsers = d.data.info.users;
+        currentPon = d.data.info.pon || d.parent?.data.info?.pon || '';
+        currentSplitter = d.data.info.splitter || '';
+        currentLocation = d.data.info.location || '';
+        currentJcPic = d.data.info.jcPic || '';
+        currentPolePic = d.data.info.polePic || '';
+        showUserPopup(d);
+      }
+    }
+
+    function showUserPopup(d) {
+      const modal = document.getElementById("userModal");
+      const title = document.getElementById("popupTitle");
+      const locationDiv = document.getElementById("popupLocation");
+      const list = document.getElementById("userList");
+      title.textContent = `${currentPon} ${currentSplitter ? `- ${currentSplitter}` : ''} — User Details`;
+      list.innerHTML = "";
+
+      let locHtml = '';
+      if (currentLocation) locHtml += `<span class="link-btn" onclick="openLink('${currentLocation}')">📍 Location</span>`;
+      if (currentJcPic) locHtml += `<span class="link-btn" onclick="openLink('${currentJcPic}')">📸 JC Pic</span>`;
+      if (currentPolePic) locHtml += `<span class="link-btn" onclick="openLink('${currentPolePic}')">🪵 Pole Pic</span>`;
+      locationDiv.innerHTML = locHtml ? `<div class="links">${locHtml}</div>` : '';
+
+      currentUsers.forEach((u, index) => {
+        const div = document.createElement("div");
+        div.className = `user-item ${u.offline ? "offline" : ""}`;
+        div.innerHTML = `
+          <span class="user-id">${index + 1}. ${u.id}</span>
+          <span>${u.offline ? 'Offline' : 'Online'}</span>
+        `;
+        list.appendChild(div);
+      });
+
+      modal.classList.remove("hidden");
+    }
+
+    function openLink(url) { if (url) window.open(url, "_blank"); }
+    function closeUserModal() { document.getElementById("userModal").classList.add("hidden"); }
+    function toggleControls() {
+      document.getElementById("controlsModal").classList.toggle("hidden");
+    }
+
+    // Downloads
+    function downloadScreenshot() {
+      const modalContent = document.querySelector("#userModal .modal-content");
+      html2canvas(modalContent, { backgroundColor: document.body.classList.contains('dark') ? '#1f2937' : '#fff' }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `merotra-users-list-${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text(`${currentPon} ${currentSplitter ? `- ${currentSplitter}` : ''} — User Report`, 20, 20);
+      if (currentUsers.length > 0) {
+        doc.autoTable({
+          startY: 30,
+          head: [['Sr. No.', 'User ID', 'Status']],
+          body: currentUsers.map((u, i) => [i+1, u.id, u.offline ? 'Offline' : 'Online'])
+        });
+      }
+      doc.save(`merotra-users-${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+    function downloadCSV() {
+      const csv = ['Sr. No.,User ID,Status'].concat(currentUsers.map((u, i) => `${i+1},${u.id},${u.offline ? 'Offline' : 'Online'}`)).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.download = `merotra-users-${new Date().toISOString().split('T')[0]}.csv`;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }
+
+    window.addEventListener("resize", () => applyFiltersAndDraw());
+  </script>
+</body>
+</html>
