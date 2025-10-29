@@ -15,20 +15,24 @@
       height: 100vh;
       overflow: hidden;
     }
+
     a {
       text-decoration: none !important;
     }
+
     .header {
       text-align: center;
       margin: 10px 0;
       position: relative;
     }
+
     .brand-title {
       font-size: 2.5rem;
       font-weight: 700;
       color: #2c3e50;
       margin-bottom: 5px;
     }
+
     .logout-btn {
       position: absolute;
       top: 10px;
@@ -42,9 +46,11 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
+
     .logout-btn:hover {
       background-color: #c0392b;
     }
+
     .container {
       max-width: 100%;
       margin: 0;
@@ -58,9 +64,11 @@
       flex-direction: column;
       position: relative;
     }
+
     .container:hover {
       box-shadow: none;
     }
+
     .right-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -68,6 +76,7 @@
       flex-grow: 1;
       overflow: auto;
     }
+
     .right-button, .right-button-small, .notes-button {
       animation: fadeIn 0.5s ease forwards;
       opacity: 0;
@@ -75,12 +84,14 @@
       border-radius: 15px;
       padding: 2rem 1rem;
     }
+
     @keyframes fadeIn {
       to {
         opacity: 1;
         transform: translateY(0);
       }
     }
+
     .right-button {
       color: #202124;
       text-align: center;
@@ -96,6 +107,7 @@
       cursor: pointer;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(52, 152, 219, 0.4);
     }
+
     .right-button::before {
       content: '';
       position: absolute;
@@ -106,30 +118,37 @@
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
       transition: left 0.5s ease;
     }
+
     .right-button:hover::before {
       left: 100%;
     }
+
     .right-button:hover {
       transform: translateY(-5px);
       box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25), 0 0 20px rgba(52, 152, 219, 0.6);
     }
+
     .right-button i {
       font-size: 1.8rem;
       margin-bottom: 0.3rem;
       transition: color 0.3s ease;
     }
+
     .right-button:hover i {
       color: #3498db;
     }
+
     .dropdown-options {
       display: none;
       flex-direction: column;
       gap: 0.5rem;
       margin-top: 0.5rem;
     }
+
     .dropdown-options.show {
       display: flex;
     }
+
     .right-button-small {
       padding: 0.8rem 1rem;
       font-size: 0.9rem;
@@ -144,6 +163,7 @@
       transition: transform 0.3s ease, box-shadow 0.5s ease;
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15), 0 0 12px rgba(52, 152, 219, 0.3);
     }
+
     .right-button-small::before {
       content: '';
       position: absolute;
@@ -154,45 +174,55 @@
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
       transition: left 0.5s ease;
     }
+
     .right-button-small:hover::before {
       left: 100%;
     }
+
     .right-button-small:hover {
       background: #f8fafc;
       transform: translateY(-3px);
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 18px rgba(52, 152, 219, 0.5);
     }
+
     .right-button-small i {
       font-size: 1rem;
       transition: color 0.2s;
     }
+
     .right-button-small:hover i {
       color: #1a5276;
     }
+
     .btn-internet { background: #C8E6C9; }
     .btn-cable { background: #FFCDD2; }
     .btn-admin { background: #BBDEFB; }
     .btn-stock { background: #FFE0B2; }
+
     .btn-disabled {
       background: #eeeeee;
       color: #999;
       cursor: not-allowed;
       box-shadow: none;
     }
+
     .btn-disabled:hover {
       transform: none;
       box-shadow: none;
       background: #eeeeee;
     }
+
     .btn-disabled::before {
       display: none;
     }
+
     footer {
       margin: 10px 0;
       text-align: center;
       font-size: 0.8rem;
       color: #7f8c8d;
     }
+
     .notes-section {
       display: flex;
       justify-content: center;
@@ -200,6 +230,7 @@
       width: 100%;
       margin-top: 1rem;
     }
+
     .notes-button {
       background: #DCEDC8;
       color: #202124;
@@ -216,6 +247,7 @@
       position: relative;
       overflow: hidden;
     }
+
     .notes-button::before {
       content: '';
       position: absolute;
@@ -226,13 +258,16 @@
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
       transition: left 0.5s ease;
     }
+
     .notes-button:hover::before {
       left: 100%;
     }
+
     .notes-button:hover {
       transform: translateY(-5px);
       box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25), 0 0 20px rgba(52, 152, 219, 0.6);
     }
+
     #popupMessage {
       display: none;
       position: fixed;
@@ -248,14 +283,17 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       animation: fadeOut 3s forwards;
     }
+
     #popupMessage.show {
       display: block;
     }
+
     @keyframes fadeOut {
       0% { opacity: 1; }
       80% { opacity: 1; }
       100% { opacity: 0; }
     }
+
     /* Tab System Styles */
     .tab-bar {
       display: flex;
@@ -268,16 +306,20 @@
       scrollbar-width: thin;
       scrollbar-color: #bdc3c7 #f1f2f6;
     }
+
     .tab-bar::-webkit-scrollbar {
       height: 4px;
     }
+
     .tab-bar::-webkit-scrollbar-track {
       background: #f1f2f6;
     }
+
     .tab-bar::-webkit-scrollbar-thumb {
       background: #bdc3c7;
       border-radius: 2px;
     }
+
     .tab-btn {
       padding: 8px 15px;
       color: #333;
@@ -294,16 +336,19 @@
       transform: translateX(-100%);
       animation: flyInTab 1s ease forwards;
     }
+
     @keyframes flyInTab {
       to {
         opacity: 1;
         transform: translateX(0);
       }
     }
+
     .tab-btn:hover {
       background: rgba(52, 152, 219, 0.1);
       color: #3498db;
     }
+
     .tab-btn.active {
       background: #ffffff;
       color: #2c3e50;
@@ -311,6 +356,7 @@
       border-bottom: none;
       box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
     }
+
     .close-tab {
       margin-left: 8px;
       font-weight: bold;
@@ -318,10 +364,12 @@
       transition: color 0.3s ease;
       opacity: 0.7;
     }
+
     .tab-btn:hover .close-tab {
       opacity: 1;
       color: #e74c3c;
     }
+
     .tab-contents .tab-content {
       opacity: 0;
       transform: translateX(-100%);
@@ -333,22 +381,25 @@
       height: 100%;
       overflow: auto;
     }
+
     .tab-contents .tab-content.active {
       opacity: 1;
       transform: translateX(0);
       position: relative;
     }
+
     @media screen and (max-width: 768px) {
       .container {
         height: 100vh;
         padding: 10px;
       }
+
       .right-grid {
         grid-template-columns: 1fr;
-        gap: 1.2rem;          /* gap बढ़ाया */
-        padding: 0 0.5rem;    /* साइड में थोड़ा पैडिंग */
+        gap: 0.8rem;
         margin-bottom: 1rem;
       }
+
       .notes-section {
         display: flex;
         justify-content: center;
@@ -356,81 +407,53 @@
         width: 100%;
         margin-top: 0.8rem;
       }
+
       .notes-button {
         width: 100%;
         max-width: 100%;
         padding: 1.5rem 1rem;
         font-size: 1rem;
       }
+
       .right-button, .right-button-small, .notes-button {
         width: 100%;
         box-sizing: border-box;
-        padding: 1.8rem 1rem !important;   /* ऊपर-नीचे ज्यादा स्पेस */
-        min-height: 70px;                  /* न्यूनतम ऊंचाई */
-        font-size: 0.9rem;                 /* टेक्स्ट थोड़ा बड़ा */
+        padding: 1.5rem 1rem;
       }
+
+      .right-button {
+        padding: 1.5rem 1rem;
+        font-size: 0.85rem;
+      }
+
       .right-button i {
-        font-size: 1.6rem !important;
-        margin-bottom: 0.4rem;
+        font-size: 1.5rem;
       }
-      .right-button-small i {
-        font-size: 1.6rem !important;
-        margin-bottom: 0.4rem;
-      }
-      .notes-button i {
-        font-size: 1.6rem !important;
-        margin-bottom: 0.4rem;
-      }
+
       .right-button-small {
         padding: 0.6rem 1rem;
         font-size: 0.85rem;
       }
+
       .tab-btn {
         padding: 6px 12px;
         font-size: 0.8rem;
       }
+
       .brand-title {
         font-size: 2rem;
       }
+
       .logout-btn {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
       }
+
       footer {
         font-size: 0.7rem;
       }
-      /* ड्रॉपडाउन ऑप्शन की ऊंचाई और पैडिंग */
-      .dropdown-options {
-        gap: 0.6rem;          /* प्रत्येक छोटे बटन के बीच स्पेस */
-      }
-      /* अगर कोई लंबा टेक्स्ट है तो wrap हो */
-      .right-button,
-      .right-button-small,
-      .notes-button,
-      .right-button-small a {
-        white-space: normal !important;
-        word-wrap: break-word;
-      }
-      /* स्क्रॉल बार को थोड़ा पतला रखें, कंटेंट को ओवरफ़्लो न होने दें */
-      .tab-contents,
-      .right-grid,
-      .dropdown-options {
-        overflow: visible;
-      }
-      .dropdown-options.show {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        padding: 0 0.8rem;
-        box-sizing: border-box;
-      }
-      .right-button-small {
-        width: 100% !important;
-        justify-content: flex-start;
-        text-align: left;
-        padding-left: 1.2rem !important;
-      }
     }
+
     @media screen and (min-width: 769px) {
       .notes-section {
         display: flex;
@@ -444,6 +467,7 @@
     <div class="brand-title"><br>Merotra Networks</div>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </header>
+
   <div class="container">
     <div class="tab-bar" id="tab-bar"></div>
     <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
@@ -465,6 +489,7 @@
                 <i class="bi bi-slash-circle"></i> Splitter tagging report</a>
             </div>
           </div>
+
           <!-- CABLE -->
           <div>
             <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
@@ -481,19 +506,20 @@
                 <i class="bi bi-person-square"></i> Den Login</a>
             </div>
           </div>
+
           <!-- ADMIN -->
           <div>
             <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
               <i class="bi bi-buildings-fill"></i> Administration
             </div>
             <div class="dropdown-options">
-<a class="right-button btn-admin right-button-small clickable"
-   href="https://script.google.com/macros/s/AKfycbzI3zNPDSRNadTLXygYsEW7CyK3L0Wfn3x8vXiFxUrbBzoNk3E-LZwKF0nFH2WfXQsqLw/exec?page=mehrotranetwork"
+<a class="right-button btn-admin right-button-small clickable" 
+   href="https://script.google.com/macros/s/AKfycbzI3zNPDSRNadTLXygYsEW7CyK3L0Wfn3x8vXiFxUrbBzoNk3E-LZwKF0nFH2WfXQsqLw/exec?page=mehrotranetwork" 
    target="_blank">
    <i class="bi bi-person-badge"></i> Manager Dashboard
 </a>
-<a class="right-button btn-admin right-button-small clickable"
-   href="https://script.google.com/macros/s/AKfycbyU0-_cPkzR8o3NH7g-JiAd1ZgtGUq-kqK2i4LeIt7hEGbvPeP4xt-y41iUhmojtYSKmQ/exec"
+<a class="right-button btn-admin right-button-small clickable" 
+   href="https://script.google.com/macros/s/AKfycbyU0-_cPkzR8o3NH7g-JiAd1ZgtGUq-kqK2i4LeIt7hEGbvPeP4xt-y41iUhmojtYSKmQ/exec" 
    target="_blank">
    <i class="bi bi-people"></i> Team Dashboard
 </a>
@@ -502,7 +528,7 @@
               <a class="right-button btn-admin right-button-small clickable" href="https://docs.google.com/spreadsheets/d/15k3YqOk3WuUB9jPwe86sM3B8hxY-rKJ7ryg4WstH4Z8/edit?gid=1106289681#gid=1106289681" target="_blank">
                 <i class="bi bi-journal-richtext"></i> Payroll</a>
               <a class="right-button btn-admin right-button-small clickable" href="#" onclick="openTab('https://vbo.co.in/merotranetworks/eCommeceDataHandle/', 'eCommerce Data Handle'); return false;">
-               
+                
                 <i class="bi bi-journal-richtext"></i> eCommerce Data Handle</a>
               <a class="right-button btn-admin right-button-small clickable" href="#" onclick="openTab('https://vbo.co.in/ISP/Lucknow/Merotra/indexOLD.html', 'Old version'); return false;">
                  <i class="bi bi-journal-richtext"></i> Old version</a>
@@ -510,6 +536,7 @@
                 <i class="bi bi-bar-chart-line"></i> Financial Reports</div>
             </div>
           </div>
+
           <!-- STOCK -->
           <div>
             <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
@@ -523,21 +550,26 @@
             </div>
           </div>
         </div>
+
         <!-- Notes Button -->
         <div class="notes-section">
-<a class="notes-button clickable"
-   href="https://script.google.com/macros/s/AKfycby8CaCPbyewf5djwJjwhCPX94lkZrbgRHjJp5QWaF2n/dev?page=notes"
+<a class="notes-button clickable" 
+   href="https://script.google.com/macros/s/AKfycby8CaCPbyewf5djwJjwhCPX94lkZrbgRHjJp5QWaF2n/dev?page=notes" 
    target="_blank">
    <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
 </a>
+
         </div>
       </div>
     </div>
   </div>
+
   <footer>Powered by: Trust In Deal Enterprises</footer>
+
   <div id="popupMessage">Coming soon</div>
- 
+  
   <audio id="errorSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3" preload="auto"></audio>
+
   <script>
     function toggleOptions(clickedBtn) {
       const allDropdowns = document.querySelectorAll(".dropdown-options");
@@ -547,15 +579,18 @@
       const drop = clickedBtn.nextElementSibling;
       drop.classList.toggle("show");
     }
+
     function playErrorSound() {
       document.getElementById("errorSound").play();
       const popup = document.getElementById("popupMessage");
       popup.classList.add("show");
       setTimeout(() => popup.classList.remove("show"), 2000);
     }
+
     // Tab System
     let tabIdCounter = 0;
     const tabs = [];
+
     function initTabs() {
       const homeId = tabIdCounter++;
       const homeBtn = document.createElement('div');
@@ -567,11 +602,13 @@
       homeContent.classList.add('tab-content', 'active');
       tabs.push({id: homeId, btn: homeBtn, content: homeContent, isHome: true});
     }
+
     function openTab(url, title) {
       if (url.includes('docs.google.com/spreadsheets') || url.includes('del-desk.excitel.in') || url.includes('partners.denonline.in')) {
         window.open(url, '_blank');
         return;
       }
+
       const tabId = tabIdCounter++;
       const tabBtn = document.createElement('div');
       tabBtn.className = 'tab-btn';
@@ -620,6 +657,7 @@
       tabs.push({id: tabId, btn: tabBtn, content: contentDiv, isHome: false});
       switchTab(tabId);
     }
+
     function switchTab(tabId) {
       tabs.forEach(tab => {
         tab.content.style.display = 'none';
@@ -633,6 +671,7 @@
         tab.content.classList.add('active');
       }
     }
+
     function closeTab(tabId) {
       const index = tabs.findIndex(t => t.id === tabId);
       if (index === -1 || tabs[index].isHome) return;
@@ -650,6 +689,7 @@
         }
       }, 800);
     }
+
     function logout() {
       // Clear all cookies related to your website domain (adjust domain as needed)
       const domain = window.location.hostname; // e.g., "yourwebsite.com"
@@ -664,6 +704,7 @@
       // Redirect to vbo.co.in in the same tab
       window.location.href = "https://vbo.co.in";
     }
+
     // Initialize tabs on load
     window.addEventListener('load', () => {
       initTabs();
