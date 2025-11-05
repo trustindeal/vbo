@@ -342,7 +342,7 @@
       opacity: 1;
       transform: translateX(0);
       position: relative;
-      height: calc(100% - 10px); /* ADDED: Match height for active tab */
+      height: calc(100% - 20px); /* ADDED: Match height for active tab */
       padding-bottom: 10px;
     }
     @media screen and (max-width: 768px) {
@@ -566,7 +566,7 @@
       const iframe = document.createElement('iframe');
       iframe.src = url;
       iframe.style.width = '100%';
-      iframe.style.height = 'calc(100% - 10px)'; /* CHANGED: Prevent bottom cutoff in iframe */
+      iframe.style.height = 'calc(100% - 20px)'; /* CHANGED: Prevent bottom cutoff in iframe */
       iframe.style.border = 'none';
       iframe.style.display = 'block'; /* ADDED: Ensures proper rendering */
       iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads allow-web-share');
