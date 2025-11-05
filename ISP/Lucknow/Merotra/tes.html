@@ -2,7 +2,7 @@
 <html>
 <head>
   <base target="_top">
-  <!-- UPDATED: Zoom in/out enable + better mobile scaling -->
+  <!-- ZOOM IN + ZOOM OUT (Pinch-to-zoom) ENABLED -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       scrollbar-width: thin;
       scrollbar-color: #bdc3c7 #f1f2f6;
-      flex-shrink: 0; /* ADDED: Prevent tab bar from shrinking */
+      flex-shrink: 0;
     }
     .tab-bar::-webkit-scrollbar {
       height: 4px;
@@ -324,7 +324,8 @@
       opacity: 1;
       color: #e74c3c;
     }
-    /* UPDATED: Fixed bottom cutoff + full height for iframe content */
+
+    /* UPDATED: Full padding + safe height for content */
     .tab-contents .tab-content {
       opacity: 0;
       transform: translateX(-100%);
@@ -333,8 +334,8 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: calc(100% - 20px); /* CHANGED: Reduced height to prevent bottom cutoff */
-      padding-bottom: 10px; /* ADDED: Extra space at bottom */
+      height: calc(100% - 30px); /* ADJUSTED: Extra space for padding */
+      padding: 20px; /* ADDED: 20px padding on all sides */
       box-sizing: border-box;
       overflow: auto;
     }
@@ -342,9 +343,10 @@
       opacity: 1;
       transform: translateX(0);
       position: relative;
-      height: calc(100% - 20px); /* ADDED: Match height for active tab */
-      padding-bottom: 10px;
+      height: calc(100% - 30px);
+      padding: 20px;
     }
+
     @media screen and (max-width: 768px) {
       .container {
         height: 100vh;
@@ -370,7 +372,7 @@
       }
       .right-button, .right-button-small, .notes-button {
         width: 100%;
-        box-sizing: borderOUNDS;
+        box-sizing: border-box;
         padding: 1.5rem 1rem;
       }
       .right-button {
@@ -398,6 +400,12 @@
       footer {
         font-size: 0.7rem;
       }
+      /* Reduce padding on mobile if needed */
+      .tab-contents .tab-content,
+      .tab-contents .tab-content.active {
+        padding: 15px;
+        height: calc(100% - 30px);
+      }
     }
     @media screen and (min-width: 769px) {
       .notes-section {
@@ -415,97 +423,101 @@
   <div class="container">
     <div class="tab-bar" id="tab-bar"></div>
     <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
-      <div id="home-content" class="tab-content active" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: auto; padding: 0;">
+      <!-- HOME TAB CONTENT -->
+      <div id="home-content" class="tab-content active">
         <div class="right-grid">
           <!-- INTERNET -->
           <div>
             <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
-              Router Internet
+              <i class="bi bi-router-fill"></i> Internet
             </div>
             <div class="dropdown-options">
               <a class="right-button btn-internet right-button-small clickable" href="#" onclick="openTab('https://virtualbackoffice2.github.io/rack/', 'Rack & PONs'); return false;">
-                Checklist Rack & PONs</a>
-                 <a class="right-button btn-internet right-button-small clickable" href="#" onclick="openTab('https://virtualbackoffice2.github.io/rack/off/', 'Complain Handle'); return false;">
-                Checklist Mark Complain</a>
-           
+                <i class="bi bi-card-checklist"></i> Rack & PONs</a>
+              <a class="right-button btn-internet right-button-small clickable" href="#" onclick="openTab('https://virtualbackoffice2.github.io/rack/off/', 'Complain Handle'); return false;">
+                <i class="bi bi-card-checklist"></i> Mark Complain</a>
               <a class="right-button btn-internet right-button-small clickable" href="https://del-desk.excitel.in/" target="_blank">
-                Person Procare Login</a>
+                <i class="bi bi-person-square"></i> Procare Login</a>
               <a class="right-button btn-internet right-button-small clickable" href="#" onclick="openTab('https://vbo.co.in/ISP/Lucknow/Merotra/tag', 'Splitter Tagging Report'); return false;">
-                Slash Splitter tagging report</a>
+                <i class="bi bi-slash-circle"></i> Splitter tagging report</a>
             </div>
           </div>
+
           <!-- CABLE -->
           <div>
             <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
-              TV Cable
+              <i class="bi bi-tv"></i> Cable
             </div>
             <div class="dropdown-options">
               <a class="right-button btn-cable right-button-small clickable" href="https://docs.google.com/spreadsheets/d/1DkIP-IHouSQjilvSs43IkMAZLMdXr3sEYeNBsCDjdOc/edit?gid=2052862460#gid=2052862460" target="_blank">
-                Table Due Payment Schedules</a>
+                <i class="bi bi-table"></i> Due Payment Schedules</a>
               <a class="right-button btn-cable right-button-small clickable" href="https://docs.google.com/spreadsheets/d/1Hp8zcOmRT0ZkFt__zXG3YSXlDiTKwOTIHdJuIRdX3uI/edit?gid=0#gid=0" target="_blank">
-                Exclamation Mark Complain</a>
+                <i class="bi bi-exclamation-circle"></i> Mark Complain</a>
               <a class="right-button btn-cable right-button-small clickable" href="https://docs.google.com/spreadsheets/d/1H0ffjhT51ES7a0jcGUUMsfUa5_fA3y1mvVjKZGVnHDc/edit?gid=216128426#gid=216128426" target="_blank">
-                Wallet Recharge Sheet</a>
+                <i class="bi bi-wallet2"></i> Recharge Sheet</a>
               <a class="right-button btn-cable right-button-small clickable" href="https://partners.denonline.in/login.aspx" target="_blank">
-                Person Den Login</a>
+                <i class="bi bi-person-square"></i> Den Login</a>
             </div>
           </div>
+
           <!-- ADMIN -->
           <div>
             <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
-              Buildings Administration
+              <i class="bi bi-buildings-fill"></i> Administration
             </div>
             <div class="dropdown-options">
-<a class="right-button btn-admin right-button-small clickable"
-   href="https://script.google.com/macros/s/AKfycbzI3zNPDSRNadTLXygYsEW7CyK3L0Wfn3x8vXiFxUrbBzoNk3E-LZwKF0nFH2WfXQsqLw/exec?page=mehrotranetwork"
-   target="_blank">
-   Badge Manager Dashboard
-</a>
-<a class="right-button btn-admin right-button-small clickable"
-   href="https://script.google.com/macros/s/AKfycbyU0-_cPkzR8o3NH7g-JiAd1ZgtGUq-kqK2i4LeIt7hEGbvPeP4xt-y41iUhmojtYSKmQ/exec"
-   target="_blank">
-   People Team Dashboard
-</a>
+              <a class="right-button btn-admin right-button-small clickable"
+                 href="https://script.google.com/macros/s/AKfycbzI3zNPDSRNadTLXygYsEW7CyK3L0Wfn3x8vXiFxUrbBzoNk3E-LZwKF0nFH2WfXQsqLw/exec?page=mehrotranetwork"
+                 target="_blank">
+                 <i class="bi bi-person-badge"></i> Manager Dashboard
+              </a>
+              <a class="right-button btn-admin right-button-small clickable"
+                 href="https://script.google.com/macros/s/AKfycbyU0-_cPkzR8o3NH7g-JiAd1ZgtGUq-kqK2i4LeIt7hEGbvPeP4xt-y41iUhmojtYSKmQ/exec"
+                 target="_blank">
+                 <i class="bi bi-people"></i> Team Dashboard
+              </a>
               <a class="right-button btn-admin right-button-small clickable" href="#" onclick="openTab('https://virtualbackoffice2.github.io/rack/atnr', 'Attendance'); return false;">
-                Journal Check attendance</a>
+                <i class="bi bi-journal-richtext"></i> Check attendance</a>
               <a class="right-button btn-admin right-button-small clickable" href="https://docs.google.com/spreadsheets/d/15k3YqOk3WuUB9jPwe86sM3B8hxY-rKJ7ryg4WstH4Z8/edit?gid=1106289681#gid=1106289681" target="_blank">
-                Journal Payroll</a>
+                <i class="bi bi-journal-richtext"></i> Payroll</a>
               <a class="right-button btn-admin right-button-small clickable" href="#" onclick="openTab('https://vbo.co.in/merotranetworks/eCommeceDataHandle/', 'eCommerce Data Handle'); return false;">
-                Journal eCommerce Data Handle</a>
+                <i class="bi bi-journal-richtext"></i> eCommerce Data Handle</a>
               <a class="right-button btn-admin right-button-small clickable" href="#" onclick="openTab('https://vbo.co.in/ISP/Lucknow/Merotra/indexOLD.html', 'Old version'); return false;">
-                 Journal Old version</a>
+                 <i class="bi bi-journal-richtext"></i> Old version</a>
               <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
-                Chart Financial Reports</div>
+                <i class="bi bi-bar-chart-line"></i> Financial Reports</div>
             </div>
           </div>
+
           <!-- STOCK -->
           <div>
             <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
-              Arrow Down Stock
+              <i class="bi bi-box-arrow-in-down"></i> Stock
             </div>
             <div class="dropdown-options">
               <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                Journals Stock Book</div>
+                <i class="bi bi-journals"></i> Stock Book</div>
               <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                Graph Up Set Stock Levels</div>
+                <i class="bi bi-graph-up"></i> Set Stock Levels</div>
             </div>
           </div>
         </div>
+
         <!-- Notes Button -->
         <div class="notes-section">
-<a class="notes-button clickable"
-   href="https://script.google.com/macros/s/AKfycby8CaCPbyewf5djwJjwhCPX94lkZrbgRHjJp5QWaF2n/dev?page=notes"
-   target="_blank">
-   Journal Text Notes
-</a>
+          <a class="notes-button clickable"
+             href="https://script.google.com/macros/s/AKfycby8CaCPbyewf5djwJjwhCPX94lkZrbgRHjJp5QWaF2n/dev?page=notes"
+             target="_blank">
+             <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
+          </a>
         </div>
       </div>
     </div>
   </div>
   <footer>Powered by: Trust In Deal Enterprises</footer>
   <div id="popupMessage">Coming soon</div>
- 
   <audio id="errorSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3" preload="auto"></audio>
+
   <script>
     function toggleOptions(clickedBtn) {
       const allDropdowns = document.querySelectorAll(".dropdown-options");
@@ -521,6 +533,7 @@
       popup.classList.add("show");
       setTimeout(() => popup.classList.remove("show"), 2000);
     }
+
     // Tab System
     let tabIdCounter = 0;
     const tabs = [];
@@ -535,6 +548,7 @@
       homeContent.classList.add('tab-content', 'active');
       tabs.push({id: homeId, btn: homeBtn, content: homeContent, isHome: true});
     }
+
     function openTab(url, title) {
       if (url.includes('docs.google.com/spreadsheets') || url.includes('del-desk.excitel.in') || url.includes('partners.denonline.in')) {
         window.open(url, '_blank');
@@ -554,6 +568,7 @@
       tabBtn.appendChild(closeSpan);
       tabBtn.onclick = () => switchTab(tabId);
       document.getElementById('tab-bar').appendChild(tabBtn);
+
       const contentDiv = document.createElement('div');
       contentDiv.className = 'tab-content';
       contentDiv.style.position = 'absolute';
@@ -563,16 +578,16 @@
       contentDiv.style.height = '100%';
       contentDiv.style.display = 'none';
       contentDiv.style.overflow = 'auto';
+
       const iframe = document.createElement('iframe');
       iframe.src = url;
       iframe.style.width = '100%';
-      iframe.style.height = 'calc(100% - 20px)'; /* CHANGED: Prevent bottom cutoff in iframe */
+      iframe.style.height = 'calc(100% - 30px)'; /* ADJUSTED: For padding */
       iframe.style.border = 'none';
-      iframe.style.display = 'block'; /* ADDED: Ensures proper rendering */
+      iframe.style.display = 'block';
       iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads allow-web-share');
-      iframe.onload = function() {
-        // Success
-      };
+
+      iframe.onload = function() {};
       iframe.onerror = function() {
         contentDiv.innerHTML = '';
         const fallbackLink = document.createElement('a');
@@ -584,11 +599,13 @@
         fallbackLink.style.textAlign = 'center';
         contentDiv.appendChild(fallbackLink);
       };
+
       contentDiv.appendChild(iframe);
       document.getElementById('tab-contents').appendChild(contentDiv);
       tabs.push({id: tabId, btn: tabBtn, content: contentDiv, isHome: false});
       switchTab(tabId);
     }
+
     function switchTab(tabId) {
       tabs.forEach(tab => {
         tab.content.style.display = 'none';
@@ -602,6 +619,7 @@
         tab.content.classList.add('active');
       }
     }
+
     function closeTab(tabId) {
       const index = tabs.findIndex(t => t.id === tabId);
       if (index === -1 || tabs[index].isHome) return;
@@ -619,6 +637,7 @@
         }
       }, 800);
     }
+
     function logout() {
       const domain = window.location.hostname;
       document.cookie.split(";").forEach(function(c) {
@@ -630,6 +649,7 @@
       sessionStorage.clear();
       window.location.href = "https://vbo.co.in";
     }
+
     window.addEventListener('load', () => {
       initTabs();
     });
