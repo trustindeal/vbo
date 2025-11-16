@@ -70,17 +70,8 @@
       overflow: auto;
     }
     .right-button, .right-button-small, .notes-button {
-      animation: fadeIn 0.5s ease forwards;
-      opacity: 0;
-      transform: translateY(20px);
       border-radius: 15px;
       padding: 2rem 1rem;
-    }
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
     .right-button {
       color: #202124;
@@ -89,30 +80,17 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 0.9rem;
+      font-size: 1.1rem;
       background: #fff;
       position: relative;
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.5s ease;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(52, 152, 219, 0.4);
-    }
-    .right-button::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transition: left 0.5s ease;
-    }
-    .right-button:hover::before {
-      left: 100%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     .right-button:hover {
       transform: translateY(-5px);
-      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25), 0 0 20px rgba(52, 152, 219, 0.6);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
     .right-button i {
       font-size: 1.8rem;
@@ -143,25 +121,12 @@
       position: relative;
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.5s ease;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15), 0 0 12px rgba(52, 152, 219, 0.3);
-    }
-    .right-button-small::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transition: left 0.5s ease;
-    }
-    .right-button-small:hover::before {
-      left: 100%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     .right-button-small:hover {
       background: #f8fafc;
       transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 18px rgba(52, 152, 219, 0.5);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
     .right-button-small i {
       font-size: 1rem;
@@ -185,9 +150,6 @@
       box-shadow: none;
       background: #eeeeee;
     }
-    .btn-disabled::before {
-      display: none;
-    }
     footer {
       margin: 10px 0;
       text-align: center;
@@ -207,7 +169,7 @@
       border-radius: 15px;
       padding: 2rem 1rem;
       font-size: 1.1rem;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), 0 0 15px rgba(52, 152, 219, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       transition: transform 0.3s ease, box-shadow 0.5s ease;
       display: flex;
       flex-direction: column;
@@ -217,22 +179,9 @@
       position: relative;
       overflow: hidden;
     }
-    .notes-button::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transition: left 0.5s ease;
-    }
-    .notes-button:hover::before {
-      left: 100%;
-    }
     .notes-button:hover {
       transform: translateY(-5px);
-      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25), 0 0 20px rgba(52, 152, 219, 0.6);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
     #popupMessage {
       display: none;
@@ -292,15 +241,6 @@
       background: transparent;
       border: 1px solid transparent;
       position: relative;
-      opacity: 0;
-      transform: translateX(-100%);
-      animation: flyInTab 1s ease forwards;
-    }
-    @keyframes flyInTab {
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
     }
     .tab-btn:hover {
       background: rgba(52, 152, 219, 0.1);
@@ -324,7 +264,6 @@
       opacity: 1;
       color: #e74c3c;
     }
-
     /* UPDATED: Full padding + safe height for content */
     .tab-contents .tab-content {
       opacity: 0;
@@ -346,7 +285,6 @@
       height: calc(100% - 30px);
       padding: 20px;
     }
-
     @media screen and (max-width: 768px) {
       .container {
         height: 100vh;
@@ -377,7 +315,7 @@
       }
       .right-button {
         padding: 1.5rem 1rem;
-        font-size: 0.85rem;
+        font-size: 1rem;
       }
       .right-button i {
         font-size: 1.5rem;
@@ -417,7 +355,7 @@
 </head>
 <body>
   <header class="header">
-   <!-- <div class="brand-title"><br>Merotra Networks</div> -->
+    <div class="brand-title">Merotra Networks</div>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </header>
   <div class="container">
@@ -442,7 +380,6 @@
                 <i class="bi bi-slash-circle"></i> Splitter tagging report</a>
             </div>
           </div>
-
           <!-- CABLE -->
           <div>
             <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
@@ -459,7 +396,6 @@
                 <i class="bi bi-person-square"></i> Den Login</a>
             </div>
           </div>
-
           <!-- ADMIN -->
           <div>
             <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
@@ -488,7 +424,6 @@
                 <i class="bi bi-bar-chart-line"></i> Financial Reports</div>
             </div>
           </div>
-
           <!-- STOCK -->
           <div>
             <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
@@ -502,7 +437,6 @@
             </div>
           </div>
         </div>
-
         <!-- Notes Button -->
         <div class="notes-section">
           <a class="notes-button clickable"
@@ -517,7 +451,6 @@
   <footer>Powered by: Trust In Deal Enterprises</footer>
   <div id="popupMessage">Coming soon</div>
   <audio id="errorSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3" preload="auto"></audio>
-
   <script>
     function toggleOptions(clickedBtn) {
       const allDropdowns = document.querySelectorAll(".dropdown-options");
@@ -533,7 +466,6 @@
       popup.classList.add("show");
       setTimeout(() => popup.classList.remove("show"), 2000);
     }
-
     // Tab System
     let tabIdCounter = 0;
     const tabs = [];
@@ -548,7 +480,6 @@
       homeContent.classList.add('tab-content', 'active');
       tabs.push({id: homeId, btn: homeBtn, content: homeContent, isHome: true});
     }
-
     function openTab(url, title) {
       if (url.includes('docs.google.com/spreadsheets') || url.includes('del-desk.excitel.in') || url.includes('partners.denonline.in')) {
         window.open(url, '_blank');
@@ -568,7 +499,6 @@
       tabBtn.appendChild(closeSpan);
       tabBtn.onclick = () => switchTab(tabId);
       document.getElementById('tab-bar').appendChild(tabBtn);
-
       const contentDiv = document.createElement('div');
       contentDiv.className = 'tab-content';
       contentDiv.style.position = 'absolute';
@@ -578,7 +508,6 @@
       contentDiv.style.height = '100%';
       contentDiv.style.display = 'none';
       contentDiv.style.overflow = 'auto';
-
       const iframe = document.createElement('iframe');
       iframe.src = url;
       iframe.style.width = '100%';
@@ -586,7 +515,6 @@
       iframe.style.border = 'none';
       iframe.style.display = 'block';
       iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads allow-web-share');
-
       iframe.onload = function() {};
       iframe.onerror = function() {
         contentDiv.innerHTML = '';
@@ -599,13 +527,11 @@
         fallbackLink.style.textAlign = 'center';
         contentDiv.appendChild(fallbackLink);
       };
-
       contentDiv.appendChild(iframe);
       document.getElementById('tab-contents').appendChild(contentDiv);
       tabs.push({id: tabId, btn: tabBtn, content: contentDiv, isHome: false});
       switchTab(tabId);
     }
-
     function switchTab(tabId) {
       tabs.forEach(tab => {
         tab.content.style.display = 'none';
@@ -619,7 +545,6 @@
         tab.content.classList.add('active');
       }
     }
-
     function closeTab(tabId) {
       const index = tabs.findIndex(t => t.id === tabId);
       if (index === -1 || tabs[index].isHome) return;
@@ -637,7 +562,6 @@
         }
       }, 800);
     }
-
     function logout() {
       const domain = window.location.hostname;
       document.cookie.split(";").forEach(function(c) {
@@ -649,7 +573,6 @@
       sessionStorage.clear();
       window.location.href = "https://vbo.co.in";
     }
-
     window.addEventListener('load', () => {
       initTabs();
     });
