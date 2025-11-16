@@ -582,7 +582,7 @@
       const iframe = document.createElement('iframe');
       iframe.src = url;
       iframe.style.width = '100%';
-      iframe.style.height = '100%'; /* changed to 100% to work with wrapper */
+      iframe.style.height = 'calc(100% - 30px)'; /* ADJUSTED: For padding */
       iframe.style.border = 'none';
       iframe.style.display = 'block';
       iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads allow-web-share');
@@ -600,12 +600,7 @@
         contentDiv.appendChild(fallbackLink);
       };
 
-      /* WRAPPER: append iframe inside wrapper so CSS scaling applies */
-      const wrapper = document.createElement('div');
-      wrapper.className = 'iframe-wrapper';
-      wrapper.appendChild(iframe);
-      contentDiv.appendChild(wrapper);
-
+      contentDiv.appendChild(iframe);
       document.getElementById('tab-contents').appendChild(contentDiv);
       tabs.push({id: tabId, btn: tabBtn, content: contentDiv, isHome: false});
       switchTab(tabId);
