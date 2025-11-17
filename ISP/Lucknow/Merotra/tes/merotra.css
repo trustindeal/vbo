@@ -23,8 +23,8 @@ a {
 }
 .logout-btn {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 15px;
+  right: 15px;
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
   color: #fff;
