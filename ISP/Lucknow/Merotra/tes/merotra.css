@@ -23,9 +23,8 @@ a {
 }
 .logout-btn {
   position: absolute;
-  top: 50%;                     /* Vertically center */
-  right: 10px;                  /* Right side me hi rahega */
-  transform: translateY(-50%);  /* Perfect middle alignment */
+  top: 20px;
+  right: 20px;
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
   color: #fff;
