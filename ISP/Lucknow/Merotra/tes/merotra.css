@@ -330,3 +330,20 @@ footer {
     justify-content: center;
   }
 }
+
+/*Bumentu animation*/
+/* --- Smooth Dropdown Animation --- */
+
+.dropdown-options {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: 
+    max-height 0.4s ease,
+    opacity 0.3s ease;
+}
+
+.dropdown-options.show {
+  max-height: 300px;   /* Enough height for menu */
+  opacity: 1;
+}
