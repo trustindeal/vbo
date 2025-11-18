@@ -299,6 +299,10 @@ footer {
   border-radius: 12px;    /* thoda kam round (optional) */
   font-size: 1rem;        /* text bhi thoda chhota */
 }
+   .btn-admin.right-button-small {
+    padding: 1.3rem 0.9rem !important;  /* height fix */
+    font-size: 1rem !important;         /* match with other buttons */
+  }
   .right-button i {
     font-size: 1.5rem;
   }
