@@ -33,6 +33,11 @@
 
             <div class="dropdown-options">
 
+              <div class="right-button btn-internet right-button-small clickable"
+                   onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
+                <i class="bi bi-hdd-rack"></i> Rack
+              </div>
+
               <a class="right-button btn-internet right-button-small clickable"
                  href="https://trustindealamanwiz-a11y.github.io/merotranetwork/vbo" target="_blank">
                 <i class="bi bi-diagram-3"></i> Line Marking
@@ -40,8 +45,9 @@
 
               <div class="right-button btn-internet right-button-small clickable"
                    onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
-                <i class="bi bi-people"></i> Check Marked Users
+                <i class="bi bi-people"></i> Complaint Management
               </div>
+
             </div>
           </div>
 
@@ -62,19 +68,38 @@
               <a class="right-button btn-cable right-button-small clickable"
                  href="https://docs.google.com/spreadsheets/d/1Hp8zcOmRT0ZkFt__zXG3YSXlDiTKwOTIHdJuIRdX3uI/edit?gid=0#gid=0"
                  target="_blank">
-                <i class="bi bi-exclamation-circle"></i> Mark Complain
+                <i class="bi bi-exclamation-circle"></i> Complaint Management
               </a>
 
             </div>
           </div>
 
-          <!-- ATTENDANCE BUTTON (INTERNAL TAB OPEN) -->
+          <!-- ADMINISTRATION BUTTON WITH SUB BUTTONS -->
           <div>
-            <div class="right-button btn-admin clickable"
-                 onclick="openTab('https://virtualbackoffice2.github.io/rack/atn', 'Attendance'); return false;">
-              <i class="bi bi-clipboard-check"></i> Attendance
+            <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
+              <i class="bi bi-buildings"></i> Administration
             </div>
-          </div>
+
+            <div class="dropdown-options">
+
+              <a class="right-button btn-admin right-button-small c<!-- STOCK -->
+          <div>
+            <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
+              <i class="bi bi-box-arrow-in-down"></i> Stock
+            </div>
+
+            <div class="dropdown-options">
+
+              <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
+                <i class="bi bi-arrow-left-right"></i> Inbound / Outbound
+              </div>
+
+              <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
+                <i class="bi bi-journal"></i> Stock Book
+              </div>
+
+            </div>
+          </div>iv>
 
           <!-- STOCK -->
           <div>
