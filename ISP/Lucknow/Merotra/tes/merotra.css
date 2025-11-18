@@ -323,6 +323,10 @@ footer {
   }
 }
 
+.right-button-small {
+  font-size: 0.80rem !important;   /* ← sub buttons k text ka size */
+}
+
 /* DESKTOP FIX */
 @media screen and (min-width: 769px) {
   .notes-section {
