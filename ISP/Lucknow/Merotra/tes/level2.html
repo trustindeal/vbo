@@ -68,12 +68,12 @@
             </div>
           </div>
 
-          <!-- ATTENDANCE BUTTON IN PLACE OF ADMIN -->
+          <!-- ATTENDANCE BUTTON (INTERNAL TAB OPEN) -->
           <div>
-            <a class="right-button btn-admin clickable"
-               href="https://virtualbackoffice2.github.io/rack/atn" target="_blank">
+            <div class="right-button btn-admin clickable"
+                 onclick="openTab('https://virtualbackoffice2.github.io/rack/atn', 'Attendance'); return false;">
               <i class="bi bi-clipboard-check"></i> Attendance
-            </a>
+            </div>
           </div>
 
           <!-- STOCK -->
@@ -97,14 +97,7 @@
 
         </div>
 
-        <!-- NOTES replaced with Attendance -->
-        <div class="notes-section">
-          <a class="notes-button clickable"
-             href="https://virtualbackoffice2.github.io/rack/atn"
-             target="_blank">
-             <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Attendance
-          </a>
-        </div>
+        <!-- Removed external Attendance button as requested -->
 
       </div>
 
