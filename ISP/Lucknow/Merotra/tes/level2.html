@@ -2,24 +2,20 @@
 <html>
 <head>
   <base target="_top">
-  <!-- ZOOM IN + ZOOM OUT ENABLED -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
 
-  <!-- ICONS & FONT -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <!-- EXTERNAL CSS -->
   <link rel="stylesheet" href="merotra.css">
 </head>
 
 <body>
 
   <header class="header"></header>
-<button class="logout-btn" onclick="logout()">Logout</button>
-  <div class="container">
-    
+  <button class="logout-btn" onclick="logout()">Logout</button>
 
+  <div class="container">
     <div class="tab-bar" id="tab-bar"></div>
 
     <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
@@ -36,28 +32,16 @@
             </div>
 
             <div class="dropdown-options">
-              <a class="right-button btn-internet right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https://virtualbackoffice2.github.io/rack/', 'Rack & PONs'); return false;">
-                <i class="bi bi-card-checklist"></i> Rack & PONs
-              </a>
 
               <a class="right-button btn-internet right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https://virtualbackoffice2.github.io/rack/off/', 'Complain Handle'); return false;">
-                <i class="bi bi-card-checklist"></i> Mark Complain
+                 href="https://trustindealamanwiz-a11y.github.io/merotranetwork/vbo" target="_blank">
+                <i class="bi bi-diagram-3"></i> Line Marking
               </a>
 
-              <a class="right-button btn-internet right-button-small clickable"
-                 href="https://del-desk.excitel.in/" target="_blank">
-                <i class="bi bi-person-square"></i> Procare Login
-              </a>
-
-              <a class="right-button btn-internet right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https://vbo.co.in/ISP/Lucknow/Merotra/tag', 'Splitter Tagging Report'); return false;">
-                <i class="bi bi-slash-circle"></i> Splitter tagging report
-              </a>
+              <div class="right-button btn-internet right-button-small clickable"
+                   onclick="showComingSoon()">
+                <i class="bi bi-people"></i> Check Marked Users
+              </div>
             </div>
           </div>
 
@@ -72,7 +56,7 @@
               <a class="right-button btn-cable right-button-small clickable"
                  href="https://docs.google.com/spreadsheets/d/1DkIP-IHouSQjilvSs43IkMAZLMdXr3sEYeNBsCDjdOc/edit?gid=2052862460#gid=2052862460"
                  target="_blank">
-                <i class="bi bi-table"></i> Due Payment Schedules
+                <i class="bi bi-table"></i> Due Payment Schedule
               </a>
 
               <a class="right-button btn-cable right-button-small clickable"
@@ -81,58 +65,15 @@
                 <i class="bi bi-exclamation-circle"></i> Mark Complain
               </a>
 
-              <a class="right-button btn-cable right-button-small clickable"
-                 href="https://docs.google.com/spreadsheets/d/1H0ffjhT51ES7a0jcGUUMsfUa5_fA3y1mvVjKZGVnHDc/edit?gid=216128426#gid=216128426"
-                 target="_blank">
-                <i class="bi bi-wallet2"></i> Recharge Sheet
-              </a>
-
-              <a class="right-button btn-cable right-button-small clickable"
-                 href="https://partners.denonline.in/login.aspx"
-                 target="_blank">
-                <i class="bi bi-person-square"></i> Den Login
-              </a>
-
             </div>
           </div>
 
-          <!-- ADMIN -->
+          <!-- ADMIN (all removed) -->
           <div>
             <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
               <i class="bi bi-buildings-fill"></i> Administration
             </div>
-
-            <div class="dropdown-options">
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="https://script.google.com/macros/s/AKfycbzI3zNPDSRNadTLXygYsEW7CyK3L0Wfn3x8vXiFxUrbBzoNk3E-LZwKF0nFH2WfXQsqLw/exec?page=mehrotranetwork"
-                 target="_blank">
-                <i class="bi bi-person-badge"></i> Manager Dashboard
-              </a>
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="https://script.google.com/macros/s/AKfycbyU0-_cPkzR8o3NH7g-JiAd1ZgtGUq-kqK2i4LeIt7hEGbvPeP4xt-y41iUhmojtYSKmQ/exec"
-                 target="_blank">
-                <i class="bi bi-people"></i> Team Dashboard
-              </a>
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https://virtualbackoffice2.github.io/rack/atnr', 'Attendance'); return false;">
-                <i class="bi bi-journal-richtext"></i> Check attendance
-              </a>
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="https://docs.google.com/spreadsheets/d/15k3YqOk3WuUB9jPwe86sM3B8hxY-rKJ7ryg4WstH4Z8/edit?gid=1106289681#gid=1106289681"
-                 target="_blank">
-                <i class="bi bi-journal-richtext"></i> Payroll
-              </a>
-
-              <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-bar-chart-line"></i> Financial Reports
-              </div>
-
-            </div>
+            <div class="dropdown-options"></div>
           </div>
 
           <!-- STOCK -->
@@ -143,12 +84,12 @@
 
             <div class="dropdown-options">
 
-              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-journals"></i> Stock Book
+              <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()">
+                <i class="bi bi-box-seam"></i> Stock In
               </div>
 
-              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-graph-up"></i> Set Stock Levels
+              <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()">
+                <i class="bi bi-box-arrow-right"></i> Stock Out
               </div>
 
             </div>
@@ -156,12 +97,12 @@
 
         </div>
 
-        <!-- NOTES -->
+        <!-- NOTES replaced with Attendance -->
         <div class="notes-section">
           <a class="notes-button clickable"
-             href="https://script.google.com/macros/s/AKfycby8CaCPbyewf5djwJjwhCPX94lkZrbgRHjJp5QWaF2n/dev?page=notes"
+             href="https://virtualbackoffice2.github.io/rack/atn"
              target="_blank">
-             <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
+             <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Attendance
           </a>
         </div>
 
@@ -177,7 +118,14 @@
          src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3"
          preload="auto"></audio>
 
-  <!-- EXTERNAL JS -->
+  <script>
+    function showComingSoon() {
+      const popup = document.getElementById('popupMessage');
+      popup.style.display = 'block';
+      setTimeout(() => { popup.style.display = 'none'; }, 1200);
+    }
+  </script>
+
   <script src="merotra.js"></script>
 
 </body>
