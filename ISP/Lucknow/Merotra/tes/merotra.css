@@ -294,11 +294,11 @@ footer {
     padding: 1.5rem 1rem;
     font-size: 1rem;
   }
-  .right-button, .right-button-small, .notes-button {
-    padding: 1.5rem 1rem;
-    width: 100%;
-    box-sizing: border-box;
-  }
+.right-button, .right-button-small, .notes-button {
+  padding: 1rem 0.7rem;   /* mobile mein chhota kar diya */
+  border-radius: 12px;    /* thoda kam round (optional) */
+  font-size: 1rem;        /* text bhi thoda chhota */
+}
   .right-button i {
     font-size: 1.5rem;
   }
