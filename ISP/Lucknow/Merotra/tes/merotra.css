@@ -324,7 +324,7 @@ footer {
 }
 
 .right-button-small {
-  font-size: 0.80rem !important;   /* ← sub buttons k text ka size */
+  font-size: 0.70rem !important;   /* ← sub buttons k text ka size */
 }
 
 /* DESKTOP FIX */
@@ -360,7 +360,7 @@ footer {
 @media screen and (max-width: 768px) {
   .tab-contents .tab-content,
   .tab-contents .tab-content.active {
-    padding: 15px 8px !important;   /* left-right space kam kiya */
+    padding: 8px 8px !important;   /* left-right space kam kiya */
     margin: 0 !important;
     left: 0 !important;
     right: 0 !important;
