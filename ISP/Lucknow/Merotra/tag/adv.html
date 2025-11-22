@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Merotra — Board Map (Window → PON → Tree)</title>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: linear-gradient(135deg,#f0f9ff,#e0f2fe);
+      --card: rgba(255,255,255,0.95);
+      --text: #1f2937;
+      --muted: #6b7280;
+    }
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto; margin:0; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
+    .header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:14px 20px; background:var(--card); box-shadow:0 4px 20px rgba(0,0,0,0.06); position:sticky; top:0; z-index:40 }
+    .title { font-weight:800; font-size:20px; display:flex; gap:12px; align-items:center }
+    .controls { display:flex; gap:8px; align-items:center }
+    .btn { background:#2563eb; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; border: none; font-weight:600 }
+    #chart { width:100%; height: calc(100vh - 76px); }
+    .tooltip { position:absolute; pointer-events:none; background:rgba(0,0,0,0.8); color:#fff; padding:8px 10px; border-radius:8px; font-size:13px; opacity:0; transition:opacity .15s; }
+    .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:80; }
+    .card { background:var(--card); border-radius:12px; padding:16px; width:420px; max-height:80vh; overflow:auto; box-shadow:0 20px 50px rgba(16,24,40,0.12) }
+    .user-item { display:flex; justify-content:space-between; gap:8px; padding:8px 6px; border-bottom:1px solid #eef2f7; }
+    .circle { width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:8px }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">
+      <div>🌐 Merotra — Board Map</div>
+      <small style="color:var(--muted);font-weight:600">Window → PON → Primary → Children</small>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="reloadBtn">Reload</button>
+      <button class="btn" id="zoomFitBtn" style="background:#10b981">Fit</button>
+      <button class="btn" id="exportBtn" style="background:#f59e0b">Export PNG</button>
+    </div>
+  </div>
+
+  <div id="chart"></div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <!-- User Modal -->
+  <div id="userModal" style="display:none" class="modal">
+    <div class="card">
+      <h3 id="userModalTitle" style="margin:0 0 8px 0"></h3>
+      <div id="userMeta" style="color:var(--muted); margin-bottom:8px"></div>
+      <div id="userList" style="max-height:48vh; overflow:auto"></div>
+      <div style="display:flex; gap:8px; margin-top:12px">
+        <button class="btn" id="closeModalBtn" style="background:#ef4444">Close</button>
+        <button class="btn" id="downloadCsvBtn" style="background:#1d4ed8">Download CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- CONFIG ----------
+    // REPLACE this with your deployed Apps Script exec URL (no query string)
+    // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+    const API_BASE = "https://script.google.com/macros/s/AKfycbyBZtPsTNzsQo5OMNE6yqGmWb12030EzpmxzOXPzNlKrvEOIunkYL-8B6pjWfYtuq9R/exec";
+
+    const boardUrl = API_BASE + (API_BASE.includes("?") ? "&mode=board" : "?mode=board");
+    const dataUrl  = API_BASE + (API_BASE.includes("?") ? "&mode=data"  : "?mode=data");
+
+    // ----------
+    const tooltip = document.getElementById('tooltip');
+    const chart = d3.select('#chart');
+    let svg, g;
+    let rootNode;
+    let zoom;
+    let currentHierarchy = null;
+    let rawBoard = {};
+    let rawData = [];
+
+    document.getElementById('reloadBtn').addEventListener('click', loadAndDraw);
+    document.getElementById('zoomFitBtn').addEventListener('click', fitToView);
+    document.getElementById('closeModalBtn').addEventListener('click', ()=> document.getElementById('userModal').style.display='none');
+    document.getElementById('downloadCsvBtn').addEventListener('click', downloadUserCsv);
+    document.getElementById('exportBtn').addEventListener('click', exportPNG);
+
+    // On load
+    loadAndDraw();
+
+    async function loadAndDraw(){
+      // fetch both board & data (data used to augment info such as location/window)
+      try {
+        showLoading(true);
+        const [bRes, dRes] = await Promise.all([fetch(boardUrl), fetch(dataUrl)]);
+        rawBoard = await bRes.json();
+        rawData = await dRes.json();
+        // rawBoard: { window1: { PON1: { levels:[ [entry,..], [entry,..] ] }, ... }, ... }
+        const hierarchy = buildHierarchy(rawBoard);
+        currentHierarchy = hierarchy;
+        draw(hierarchy);
+      } catch (err) {
+        console.error(err);
+        alert("Failed loading board/data. Check API_BASE and deployment. Error: " + err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function showLoading(flag){
+      const el = document.getElementById('reloadBtn');
+      el.textContent = flag ? 'Loading...' : 'Reload';
+      el.disabled = flag;
+    }
+
+    // Build a D3-friendly hierarchy:
+    // Root -> Window -> PON -> entries by levels (each entry is node)
+    function buildHierarchy(board) {
+      const root = { name: "Merotra Network", children: [] };
+
+      Object.entries(board).forEach(([win, pons])=>{
+        const winNode = { name: win || "NO_WINDOW", type:"window", children: [] };
+
+        Object.entries(pons).forEach(([pon, data])=>{
+          const ponNode = { name: pon, type:"pon", children: [], info: {} };
+
+          // set pon info (aggregate)
+          let total = 0, offline = 0;
+          const allUsers = [];
+          const levels = data.levels || [];
+
+          // Create level nodes: each entry becomes a separate node under parent
+          // We'll create a chain: L0 entries under ponNode, then for each L0 entry attach its children etc.
+          // Simpler: create a container node "Primary" if L0 has multiple (but design says L0 has single primary)
+          const levelNodes = []; // array of arrays of nodes per level
+
+          for (let lv = 0; lv < levels.length; lv++){
+            const arr = levels[lv] || [];
+            const nodesArr = arr.map((entry, idx) => {
+              const users = (entry.users || []).map(u => String(u));
+              total += users.length;
+              users.forEach(x => allUsers.push(x));
+              return {
+                name: `${entry.type || 'split'} (${users.length})`,
+                short: entry.type || '',
+                users: users,
+                timestamp: entry.timestamp || '',
+                typeLabel: entry.type || '',
+                depthLevel: lv,
+                children: []
+              };
+            });
+            levelNodes.push(nodesArr);
+          }
+
+          // Link nodes: every node in level k+1 will be attached to a parent in level k based on subset logic:
+          // We'll adopt a simple linking: for each child node at level L+1, find the first parent in level L whose users superset child.users.
+          for (let lv = 1; lv < levelNodes.length; lv++){
+            levelNodes[lv].forEach(childNode => {
+              let attached = false;
+              // try to find a parent among previous level nodes
+              for (let pNode of levelNodes[lv-1]){
+                if (isSuperset(pNode.users, childNode.users)) {
+                  pNode.children.push(childNode);
+                  attached = true;
+                  break;
+                }
+              }
+              // fallback: attach to first parent in previous level
+              if (!attached && levelNodes[lv-1].length) levelNodes[lv-1][0].children.push(childNode);
+            });
+          }
+
+          // Attach L0 nodes to ponNode
+          if (levelNodes.length > 0) {
+            levelNodes[0].forEach(n => ponNode.children.push(n));
+          } else {
+            // no levels? leave empty
+          }
+
+          ponNode.info = { total: total, users: Array.from(new Set(allUsers)) };
+          winNode.children.push(ponNode);
+        });
+
+        root.children.push(winNode);
+      });
+
+      return root;
+    }
+
+    // draw tree
+    function draw(dataRoot){
+      d3.select('#chart svg').remove();
+      const w = document.getElementById('chart').clientWidth;
+      const h = document.getElementById('chart').clientHeight;
+      svg = d3.select('#chart').append('svg').attr('width', w).attr('height', h);
+      zoom = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event)=>g.attr('transform', event.transform));
+      svg.call(zoom);
+
+      g = svg.append('g').attr('transform','translate(40,40)');
+
+      const tree = d3.tree().nodeSize([80, 240]);
+      const root = d3.hierarchy(dataRoot, d => d.children);
+      tree(root);
+
+      // links
+      const link = g.selectAll('.link').data(root.links()).enter()
+        .append('path')
+        .attr('class','link')
+        .attr('d', d3.linkHorizontal().x(d=>d.y).y(d=>d.x))
+        .attr('stroke','#94a3b8').attr('fill','none').attr('stroke-width',2);
+
+      // nodes
+      const node = g.selectAll('.node').data(root.descendants()).enter()
+        .append('g')
+        .attr('class','node')
+        .attr('transform', d=>`translate(${d.y},${d.x})`);
+
+      node.append('circle')
+        .attr('r', d=> d.depth===0 ? 24 : d.depth===1 ? 20 : d.depth===2 ? 16 : 12)
+        .attr('fill', d => colorForDepth(d))
+        .attr('stroke','#fff')
+        .attr('stroke-width',2)
+        .on('mousemove', (event,d)=>onNodeHover(event,d))
+        .on('mouseout', ()=> tooltip.style.opacity=0)
+        .on('click', (event,d)=>onNodeClick(event,d));
+
+      node.append('text')
+        .attr('x', d=> d.children ? -18 : 18)
+        .attr('text-anchor', d=> d.children ? 'end':'start')
+        .attr('dy','0.32em')
+        .style('font-weight', d=> d.depth<=1 ? 800:600)
+        .text(d => d.data.name);
+
+      // auto-fit
+      fitToView();
+    }
+
+    function colorForDepth(d){
+      if (d.depth === 0) return '#1e3a8a';     // root window area
+      if (d.depth === 1) return '#1e40af';     // window
+      if (d.depth === 2) return '#2563eb';     // pon
+      if (d.depth === 3) return '#10b981';     // primary
+      if (d.depth === 4) return '#f59e0b';     // child
+      return '#6b7280';
+    }
+
+    function onNodeHover(event, d){
+      if (!d.data) return;
+      const info = d.data;
+      const html = `<strong>${info.name}</strong><br/>
+        ${info.depthLevel !== undefined ? 'Level: ' + (info.depthLevel) + '<br/>' : ''}
+        ${info.users ? ('Users: ' + info.users.length) : ''}
+        ${info.timestamp ? ('<br/>TS: ' + info.timestamp) : ''}`;
+      tooltip.innerHTML = html;
+      tooltip.style.left = (event.pageX + 12) + 'px';
+      tooltip.style.top = (event.pageY + 6) + 'px';
+      tooltip.style.opacity = 1;
+    }
+
+    function onNodeClick(event, d){
+      // if node holds users, show modal
+      if (d.data && d.data.users && d.data.users.length > 0){
+        showUserModal(d);
+      }
+    }
+
+    // Modal showing users, and optionally matching Data sheet row for pics or location
+    async function showUserModal(d){
+      const md = document.getElementById('userModal');
+      const title = document.getElementById('userModalTitle');
+      const meta = document.getElementById('userMeta');
+      const list = document.getElementById('userList');
+      title.innerText = `${d.ancestors().reverse().map(x=>x.data.name).slice(1).join(' > ')}`;
+      meta.innerText = `Users: ${d.data.users.length} ${d.data.timestamp ? ' | TS: '+d.data.timestamp : ''}`;
+      list.innerHTML = '';
+
+      // For each user, show simple row (we don't have online/offline flags in Board JSON)
+      d.data.users.forEach((u, i) => {
+        const div = document.createElement('div');
+        div.className = 'user-item';
+        div.innerHTML = `<div><strong>${i+1}.</strong> ${u}</div><div style="color:var(--muted)">-</div>`;
+        list.appendChild(div);
+      });
+
+      // try to fetch the Data sheet and find matching row by timestamp if possible (best-effort)
+      try {
+        const res = await fetch(dataUrl);
+        const arr = await res.json();
+        // find row where any of the date representations contain the timestamp string (loose match)
+        let matched = null;
+        if (d.data.timestamp){
+          for (let row of arr){
+            // row.tagId is in mm/dd/yyyy HH:MM:SS (from getData); try matching date-part or ISO partial
+            if (!row.tagId) continue;
+            if (row.tagId.indexOf(d.data.timestamp.split('T')[0]) !== -1 || row.tagId.indexOf(d.data.timestamp.replace('T',' ').split('.')[0]) !== -1) {
+              matched = row; break;
+            }
+          }
+        }
+        if (matched){
+          meta.innerHTML += `<br/>Location: <a href="${matched.location}" target="_blank">Open</a>`;
+          // append pictures if any
+          if (matched.jcImage) meta.innerHTML += `<br/><a href="${matched.jcImage}" target="_blank">JC Pic</a>`;
+          if (matched.poleImage) meta.innerHTML += ` <a href="${matched.poleImage}" target="_blank">Pole Pic</a>`;
+        }
+      } catch(e){ /* ignore */ }
+
+      md.style.display = 'flex';
+    }
+
+    function isSuperset(parentUsers, childUsers){
+      const s = new Set(parentUsers);
+      for (let u of childUsers) if (!s.has(u)) return false;
+      return true;
+    }
+
+    function fitToView(){
+      if (!svg) return;
+      const bounds = g.node().getBBox();
+      const fullWidth = document.getElementById('chart').clientWidth;
+      const fullHeight = document.getElementById('chart').clientHeight;
+      const widthScale = fullWidth / (bounds.width + 160);
+      const heightScale = fullHeight / (bounds.height + 160);
+      const scale = Math.min(2, Math.max(0.5, Math.min(widthScale, heightScale)));
+      const tx = -(bounds.x) * scale + 40;
+      const ty = -(bounds.y) * scale + 40;
+      svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+    }
+
+    // Export PNG of chart container
+    function exportPNG(){
+      const node = document.getElementById('chart');
+      html2canvas(node, { backgroundColor: '#ffffff', scale: 2 }).then(canvas=>{
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url; a.download = 'merotra-board-map.png';
+        a.click();
+      });
+    }
+
+    function downloadUserCsv(){
+      const modal = document.getElementById('userModal');
+      if (modal.style.display === 'none') return;
+      const listDiv = document.getElementById('userList');
+      const rows = Array.from(listDiv.querySelectorAll('.user-item')).map((el, idx)=>{
+        const id = el.querySelector('div').innerText.trim();
+        return `${idx+1},${id}`;
+      });
+      const csv = 'Sr,User\\n' + rows.join('\\n');
+      const blob = new Blob([csv], { type:'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'users.csv'; a.click();
+    }
+
+    // small helper to load html2canvas only when needed (for export)
+    (function preloadHtml2Canvas(){
+      const s = document.createElement('script');
+      s.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
+      document.head.appendChild(s);
+    })();
+
+    window.addEventListener('resize', ()=>{
+      if (currentHierarchy) draw(currentHierarchy);
+    });
+
+  </script>
+</body>
+</html>
