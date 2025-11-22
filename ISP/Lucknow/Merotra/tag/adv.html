@@ -62,10 +62,10 @@
     // ---------- CONFIG ----------
     // REPLACE this with your deployed Apps Script exec URL (no query string)
     // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
-    const API_BASE = "https://script.google.com/macros/s/AKfycbyBZtPsTNzsQo5OMNE6yqGmWb12030EzpmxzOXPzNlKrvEOIunkYL-8B6pjWfYtuq9R/exec";
+const API_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgWoNwxGB6cZdAHMQqMmh9R-uY6NTk56cJT4JE1BQNi4u_VU4-hjmrbr1SjmTu7SY_lFxNiNETKTS5sRHKD8Hrr4Uh1GYAGlmrDRjyfoTGetW786IOjsnIqah5_cVjZEPkbGsnQjKY7GGHpErfeZpXItjvb71iz-b-cH5L7ISw_DqTfJBdn8ieDC99pCWOyZv9mzZkpzmxeJVOfxWLnwvj9QMktqCF3PG6871DG6eAotb-vcbTj5XnAw-YLofKgoccAohOSpCB_gn-XWlI1EwQDtLoohgONwIdSu50jkShz1nQ9Cx4&lib=MM9jfESS3VUQ4bogWcHsjBa_bifldmWHw";
 
-    const boardUrl = API_BASE + (API_BASE.includes("?") ? "&mode=board" : "?mode=board");
-    const dataUrl  = API_BASE + (API_BASE.includes("?") ? "&mode=data"  : "?mode=data");
+const dataUrl  = API_BASE + "&mode=data";
+const boardUrl = API_BASE + "&mode=board";
 
     // ----------
     const tooltip = document.getElementById('tooltip');
