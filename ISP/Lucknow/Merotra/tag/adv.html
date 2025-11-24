@@ -3,347 +3,576 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — Board Map (Window → PON → Tree)</title>
+  <title>Merotra — Advanced Board Map</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="adv.css">
-
 </head>
 <body>
   <div class="header">
     <div class="title">
       <div>🌐 Merotra — Board Map</div>
-      <small style="color:var(--muted);font-weight:600">Window → PON → Primary → Children</small>
+      <small style="color:var(--muted);font-weight:600">Merotra → Window → PON → Primary → Children</small>
     </div>
 
     <div class="controls">
       <button class="btn" id="reloadBtn">Reload</button>
       <button class="btn" id="zoomFitBtn" style="background:#10b981">Fit</button>
-      <button class="btn" id="exportBtn" style="background:#f59e0b">Export PNG</button>
+      <button class="btn" id="filtersBtn" style="background:#6366f1">Filters</button>
     </div>
   </div>
 
   <div id="chart"></div>
   <div class="tooltip" id="tooltip"></div>
 
-  <!-- User Modal -->
-  <div id="userModal" style="display:none" class="modal">
+  <!-- Filters Modal -->
+  <div id="filterModal" class="modal" style="display:none">
+    <div class="card filter-card">
+      <h3 style="margin:0 0 10px 0;font-weight:800;font-size:18px;">Filters</h3>
+
+      <div class="filter-section">
+        <div class="filter-heading">Windows</div>
+        <div id="windowFilters" class="checkbox-grid"></div>
+        <div class="filter-footer">
+          <button class="btn btn-small" id="winSelectAll">Select All</button>
+          <button class="btn btn-small btn-light" id="winDeselectAll">Deselect All</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-heading">PONs</div>
+        <div id="ponFilters" class="checkbox-grid"></div>
+        <div class="filter-footer">
+          <button class="btn btn-small" id="ponSelectAll">Select All</button>
+          <button class="btn btn-small btn-light" id="ponDeselectAll">Deselect All</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+        <button class="btn btn-light" id="closeFilterBtn">Close</button>
+        <button class="btn" id="applyFilterBtn">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Node / Splitter Modal -->
+  <div id="nodeModal" class="modal" style="display:none">
     <div class="card">
-      <h3 id="userModalTitle" style="margin:0 0 8px 0"></h3>
-      <div id="userMeta" style="color:var(--muted); margin-bottom:8px"></div>
-      <div id="userList" style="max-height:48vh; overflow:auto"></div>
-      <div style="display:flex; gap:8px; margin-top:12px">
-        <button class="btn" id="closeModalBtn" style="background:#ef4444">Close</button>
-        <button class="btn" id="downloadCsvBtn" style="background:#1d4ed8">Download CSV</button>
+      <h3 id="nodeModalTitle" style="margin:0 0 6px 0"></h3>
+      <div id="nodeModalMeta" style="color:var(--muted);margin-bottom:8px;font-size:13px;"></div>
+      <div id="nodeModalLinks" style="margin-bottom:8px;font-size:13px;"></div>
+      <div id="nodeUserList" style="max-height:48vh;overflow:auto;border-top:1px solid #eef2f7;padding-top:6px;"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+        <button class="btn" id="closeNodeModalBtn" style="background:#ef4444">Close</button>
       </div>
     </div>
   </div>
 
   <script>
     // ---------- CONFIG ----------
-    // REPLACE this with your deployed Apps Script exec URL (no query string)
-    // e.g. "https://script.google.com/macros/s/AKfycb.../exec"
+    // SAME API_BASE as your existing page
 const API_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgWoNwxGB6cZdAHMQqMmh9R-uY6NTk56cJT4JE1BQNi4u_VU4-hjmrbr1SjmTu7SY_lFxNiNETKTS5sRHKD8Hrr4Uh1GYAGlmrDRjyfoTGetW786IOjsnIqah5_cVjZEPkbGsnQjKY7GGHpErfeZpXItjvb71iz-b-cH5L7ISw_DqTfJBdn8ieDC99pCWOyZv9mzZkpzmxeJVOfxWLnwvj9QMktqCF3PG6871DG6eAotb-vcbTj5XnAw-YLofKgoccAohOSpCB_gn-XWlI1EwQDtLoohgONwIdSu50jkShz1nQ9Cx4&lib=MM9jfESS3VUQ4bogWcHsjBa_bifldmWHw";
 
 const dataUrl  = API_BASE + "&mode=data";
 const boardUrl = API_BASE + "&mode=board";
 
-    // ----------
-    const tooltip = document.getElementById('tooltip');
-    const chart = d3.select('#chart');
-    let svg, g;
-    let rootNode;
-    let zoom;
+    // ---------- STATE ----------
+    const tooltipEl = document.getElementById('tooltip');
+    const chartSel = d3.select('#chart');
+
+    let svg, g, zoom;
     let currentHierarchy = null;
     let rawBoard = {};
-    let rawData = [];
+    let dataRows = [];   // array of rows from Data sheet
 
+    let allWindows = [];
+    let allPons = [];
+
+    let selectedWindows = new Set();
+    let selectedPons = new Set();
+
+    // ---------- EVENT HOOKUP ----------
     document.getElementById('reloadBtn').addEventListener('click', loadAndDraw);
     document.getElementById('zoomFitBtn').addEventListener('click', fitToView);
-    document.getElementById('closeModalBtn').addEventListener('click', ()=> document.getElementById('userModal').style.display='none');
-    document.getElementById('downloadCsvBtn').addEventListener('click', downloadUserCsv);
-    document.getElementById('exportBtn').addEventListener('click', exportPNG);
+    document.getElementById('filtersBtn').addEventListener('click', () => showFilterModal(true));
+    document.getElementById('closeFilterBtn').addEventListener('click', () => showFilterModal(false));
+    document.getElementById('applyFilterBtn').addEventListener('click', applyFilters);
+
+    document.getElementById('winSelectAll').addEventListener('click', () => setAllChecks('windowFilters', true));
+    document.getElementById('winDeselectAll').addEventListener('click', () => setAllChecks('windowFilters', false));
+    document.getElementById('ponSelectAll').addEventListener('click', () => setAllChecks('ponFilters', true));
+    document.getElementById('ponDeselectAll').addEventListener('click', () => setAllChecks('ponFilters', false));
+
+    document.getElementById('closeNodeModalBtn').addEventListener('click', ()=> showNodeModal(false));
+
+    window.addEventListener('resize', () => {
+      if (currentHierarchy) draw(currentHierarchy);
+    });
 
     // On load
     loadAndDraw();
 
+    // ---------- MAIN LOAD ----------
     async function loadAndDraw(){
-      // fetch both board & data (data used to augment info such as location/window)
       try {
-        showLoading(true);
+        setLoading(true);
         const [bRes, dRes] = await Promise.all([fetch(boardUrl), fetch(dataUrl)]);
         rawBoard = await bRes.json();
-        rawData = await dRes.json();
-        // rawBoard: { window1: { PON1: { levels:[ [entry,..], [entry,..] ] }, ... }, ... }
-        const hierarchy = buildHierarchy(rawBoard);
-        currentHierarchy = hierarchy;
-        draw(hierarchy);
+        dataRows = await dRes.json();
+
+        buildFilterSets();
+        buildFilterUI();
+        const h = buildHierarchyWithFilters();
+        currentHierarchy = h;
+        draw(h);
       } catch (err) {
         console.error(err);
-        alert("Failed loading board/data. Check API_BASE and deployment. Error: " + err);
+        alert("Failed loading board/data. Check Apps Script deployment. Error: " + err);
       } finally {
-        showLoading(false);
+        setLoading(false);
       }
     }
 
-    function showLoading(flag){
+    function setLoading(flag){
       const el = document.getElementById('reloadBtn');
       el.textContent = flag ? 'Loading...' : 'Reload';
       el.disabled = flag;
     }
 
-    // Build a D3-friendly hierarchy:
-    // Root -> Window -> PON -> entries by levels (each entry is node)
-    function buildHierarchy(board) {
-      const root = { name: "Merotra Network", children: [] };
+    // ---------- FILTERS ----------
+    function buildFilterSets(){
+      const winSet = new Set();
+      const ponSet = new Set();
 
-      Object.entries(board).forEach(([win, pons])=>{
-        const winNode = { name: win || "NO_WINDOW", type:"window", children: [] };
+      Object.entries(rawBoard || {}).forEach(([win, pons])=>{
+        if (win) winSet.add(win);
+        Object.keys(pons || {}).forEach(pon => {
+          if (pon) ponSet.add(pon);
+        });
+      });
 
-        Object.entries(pons).forEach(([pon, data])=>{
-          const ponNode = { name: pon, type:"pon", children: [], info: {} };
+      allWindows = Array.from(winSet).sort();
+      allPons = Array.from(ponSet).sort();
 
-          // set pon info (aggregate)
-          let total = 0, offline = 0;
-          const allUsers = [];
-          const levels = data.levels || [];
+      selectedWindows = new Set(allWindows);
+      selectedPons = new Set(allPons);
+    }
 
-          // Create level nodes: each entry becomes a separate node under parent
-          // We'll create a chain: L0 entries under ponNode, then for each L0 entry attach its children etc.
-          // Simpler: create a container node "Primary" if L0 has multiple (but design says L0 has single primary)
-          const levelNodes = []; // array of arrays of nodes per level
+    function buildFilterUI(){
+      const winDiv = document.getElementById('windowFilters');
+      const ponDiv = document.getElementById('ponFilters');
+      winDiv.innerHTML = '';
+      ponDiv.innerHTML = '';
+
+      allWindows.forEach(w=>{
+        const id = `win_${cssSafe(w)}`;
+        winDiv.insertAdjacentHTML('beforeend',
+          `<label class="checkbox-item">
+             <input type="checkbox" id="${id}" value="${w}" checked>
+             <span>${w}</span>
+           </label>`
+        );
+      });
+
+      allPons.forEach(p=>{
+        const id = `pon_${cssSafe(p)}`;
+        ponDiv.insertAdjacentHTML('beforeend',
+          `<label class="checkbox-item">
+             <input type="checkbox" id="${id}" value="${p}" checked>
+             <span>${p}</span>
+           </label>`
+        );
+      });
+    }
+
+    function setAllChecks(containerId, value){
+      const box = document.getElementById(containerId);
+      if (!box) return;
+      box.querySelectorAll('input[type="checkbox"]').forEach(ch => ch.checked = value);
+    }
+
+    function applyFilters(){
+      selectedWindows = new Set(
+        Array.from(document.querySelectorAll('#windowFilters input:checked')).map(i=>i.value)
+      );
+      selectedPons = new Set(
+        Array.from(document.querySelectorAll('#ponFilters input:checked')).map(i=>i.value)
+      );
+      showFilterModal(false);
+
+      const h = buildHierarchyWithFilters();
+      currentHierarchy = h;
+      draw(h);
+    }
+
+    function showFilterModal(show){
+      document.getElementById('filterModal').style.display = show ? 'flex' : 'none';
+    }
+
+    function cssSafe(str){
+      return String(str).replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    // ---------- HIERARCHY BUILDER ----------
+    function buildHierarchyWithFilters(){
+      const root = {
+        name: "Merotra Network",
+        nodeType: "root",
+        children: []
+      };
+
+      const board = rawBoard || {};
+
+      Object.entries(board).forEach(([winName, ponObj])=>{
+        if (selectedWindows.size && !selectedWindows.has(winName)) return;
+
+        const winNode = {
+          name: winName || "NO_WINDOW",
+          nodeType: "window",
+          children: [],
+          windowName: winName
+        };
+
+        Object.entries(ponObj || {}).forEach(([ponName, ponData])=>{
+          if (selectedPons.size && !selectedPons.has(ponName)) return;
+
+          const ponNode = {
+            name: ponName,
+            nodeType: "pon",
+            children: [],
+            windowName: winName,
+            ponName: ponName,
+            users: []
+          };
+
+          const levels = (ponData && ponData.levels) ? ponData.levels : [];
+          const levelNodes = []; // [ [node,node], [node,node]...]
 
           for (let lv = 0; lv < levels.length; lv++){
             const arr = levels[lv] || [];
-            const nodesArr = arr.map((entry, idx) => {
-              const users = (entry.users || []).map(u => String(u));
-              total += users.length;
-              users.forEach(x => allUsers.push(x));
-              return {
-                name: `${entry.type || 'split'} (${users.length})`,
-                short: entry.type || '',
+            const thisLevel = [];
+
+            arr.forEach(entry => {
+              const users = (entry.users || entry.usersArr || []).map(u => String(u));
+              const dataKey = entry.id || entry.dataKey || entry.timestamp || entry.ts || "";
+
+              const node = {
+                name: `${entry.type || 'Split'} (${users.length})`,
+                nodeType: lv === 0 ? "primary" : "child",
+                splitterType: entry.type || "",
                 users: users,
-                timestamp: entry.timestamp || '',
-                typeLabel: entry.type || '',
+                dataKey: dataKey,
+                windowName: winName,
+                ponName: ponName,
                 depthLevel: lv,
                 children: []
               };
+              thisLevel.push(node);
+
+              // aggregate for PON
+              users.forEach(u => ponNode.users.push(u));
             });
-            levelNodes.push(nodesArr);
+
+            levelNodes[lv] = thisLevel;
           }
 
-          // Link nodes: every node in level k+1 will be attached to a parent in level k based on subset logic:
-          // We'll adopt a simple linking: for each child node at level L+1, find the first parent in level L whose users superset child.users.
+          // Link children: each child subset of parent users
           for (let lv = 1; lv < levelNodes.length; lv++){
-            levelNodes[lv].forEach(childNode => {
+            const children = levelNodes[lv] || [];
+            const parents  = levelNodes[lv-1] || [];
+            children.forEach(ch => {
               let attached = false;
-              // try to find a parent among previous level nodes
-              for (let pNode of levelNodes[lv-1]){
-                if (isSuperset(pNode.users, childNode.users)) {
-                  pNode.children.push(childNode);
+              for (let p of parents){
+                if (isSuperset(p.users, ch.users)){
+                  p.children.push(ch);
                   attached = true;
                   break;
                 }
               }
-              // fallback: attach to first parent in previous level
-              if (!attached && levelNodes[lv-1].length) levelNodes[lv-1][0].children.push(childNode);
+              if (!attached && parents.length){
+                parents[0].children.push(ch);
+              }
             });
           }
 
-          // Attach L0 nodes to ponNode
-          if (levelNodes.length > 0) {
+          // Attach level0 under PON
+          if (levelNodes.length > 0 && levelNodes[0].length > 0){
             levelNodes[0].forEach(n => ponNode.children.push(n));
-          } else {
-            // no levels? leave empty
           }
 
-          ponNode.info = { total: total, users: Array.from(new Set(allUsers)) };
-          winNode.children.push(ponNode);
+          if (ponNode.children.length > 0){
+            // unique users
+            ponNode.users = Array.from(new Set(ponNode.users));
+            winNode.children.push(ponNode);
+          }
         });
 
-        root.children.push(winNode);
+        if (winNode.children.length > 0){
+          root.children.push(winNode);
+        }
       });
 
       return root;
     }
 
-    // draw tree
+    function isSuperset(parentArr, childArr){
+      const s = new Set(parentArr);
+      for (let u of childArr){
+        if (!s.has(u)) return false;
+      }
+      return true;
+    }
+
+    // ---------- DRAW TREE ----------
     function draw(dataRoot){
       d3.select('#chart svg').remove();
+
       const w = document.getElementById('chart').clientWidth;
       const h = document.getElementById('chart').clientHeight;
-      svg = d3.select('#chart').append('svg').attr('width', w).attr('height', h);
-      zoom = d3.zoom().scaleExtent([0.3, 3]).on('zoom', (event)=>g.attr('transform', event.transform));
+
+      svg = d3.select('#chart')
+        .append('svg')
+        .attr('width', w)
+        .attr('height', h);
+
+      zoom = d3.zoom()
+        .scaleExtent([0.3, 3])
+        .on('zoom', (event)=> g.attr('transform', event.transform));
+
       svg.call(zoom);
 
       g = svg.append('g').attr('transform','translate(40,40)');
 
-      const tree = d3.tree().nodeSize([80, 240]);
+      const tree = d3.tree().nodeSize([80, 260]);
       const root = d3.hierarchy(dataRoot, d => d.children);
       tree(root);
 
       // links
-      const link = g.selectAll('.link').data(root.links()).enter()
+      g.selectAll('.link')
+        .data(root.links())
+        .enter()
         .append('path')
         .attr('class','link')
         .attr('d', d3.linkHorizontal().x(d=>d.y).y(d=>d.x))
-        .attr('stroke','#94a3b8').attr('fill','none').attr('stroke-width',2);
+        .attr('stroke','#94a3b8')
+        .attr('fill','none')
+        .attr('stroke-width',2);
 
       // nodes
-      const node = g.selectAll('.node').data(root.descendants()).enter()
+      const node = g.selectAll('.node')
+        .data(root.descendants())
+        .enter()
         .append('g')
         .attr('class','node')
-        .attr('transform', d=>`translate(${d.y},${d.x})`);
-
-      node.append('circle')
-        .attr('r', d=> d.depth===0 ? 24 : d.depth===1 ? 20 : d.depth===2 ? 16 : 12)
-        .attr('fill', d => colorForDepth(d))
-        .attr('stroke','#fff')
-        .attr('stroke-width',2)
+        .attr('transform', d=>`translate(${d.y},${d.x})`)
         .on('mousemove', (event,d)=>onNodeHover(event,d))
-        .on('mouseout', ()=> tooltip.style.opacity=0)
+        .on('mouseout', ()=> tooltipEl.style.opacity = 0)
         .on('click', (event,d)=>onNodeClick(event,d));
 
+      // shapes per nodeType
+      node.each(function(d){
+        const sel = d3.select(this);
+        const t = d.data.nodeType;
+
+        if (t === 'root'){
+          sel.append('circle')
+            .attr('r',24)
+            .attr('fill','#1e3a8a')
+            .attr('stroke','#fff')
+            .attr('stroke-width',2);
+        } else if (t === 'window'){
+          sel.append('rect')
+            .attr('x',-26).attr('y',-26)
+            .attr('width',52).attr('height',52)
+            .attr('rx',10)
+            .attr('fill','#1e40af')
+            .attr('stroke','#fff')
+            .attr('stroke-width',2);
+        } else if (t === 'pon'){
+          sel.append('rect')
+            .attr('x',-40).attr('y',-20)
+            .attr('width',80).attr('height',40)
+            .attr('rx',10)
+            .attr('fill','#2563eb')
+            .attr('stroke','#fff')
+            .attr('stroke-width',2);
+        } else if (t === 'primary'){
+          sel.append('circle')
+            .attr('r',18)
+            .attr('fill','#10b981')
+            .attr('stroke','#fff')
+            .attr('stroke-width',2);
+        } else if (t === 'child'){
+          sel.append('path')
+            .attr('d', trianglePath(18))
+            .attr('fill','#f59e0b')
+            .attr('stroke','#fff')
+            .attr('stroke-width',2);
+        } else {
+          sel.append('circle')
+            .attr('r',12)
+            .attr('fill','#6b7280')
+            .attr('stroke','#fff')
+            .attr('stroke-width',2);
+        }
+      });
+
+      // labels
       node.append('text')
         .attr('x', d=> d.children ? -18 : 18)
         .attr('text-anchor', d=> d.children ? 'end':'start')
         .attr('dy','0.32em')
         .style('font-weight', d=> d.depth<=1 ? 800:600)
+        .style('font-size', d=> d.depth===0 ? '16px' : d.depth===1 ? '14px' : '12px')
         .text(d => d.data.name);
 
-      // auto-fit
       fitToView();
     }
 
-    function colorForDepth(d){
-      if (d.depth === 0) return '#1e3a8a';     // root window area
-      if (d.depth === 1) return '#1e40af';     // window
-      if (d.depth === 2) return '#2563eb';     // pon
-      if (d.depth === 3) return '#10b981';     // primary
-      if (d.depth === 4) return '#f59e0b';     // child
-      return '#6b7280';
-    }
-
-    function onNodeHover(event, d){
-      if (!d.data) return;
-      const info = d.data;
-      const html = `<strong>${info.name}</strong><br/>
-        ${info.depthLevel !== undefined ? 'Level: ' + (info.depthLevel) + '<br/>' : ''}
-        ${info.users ? ('Users: ' + info.users.length) : ''}
-        ${info.timestamp ? ('<br/>TS: ' + info.timestamp) : ''}`;
-      tooltip.innerHTML = html;
-      tooltip.style.left = (event.pageX + 12) + 'px';
-      tooltip.style.top = (event.pageY + 6) + 'px';
-      tooltip.style.opacity = 1;
-    }
-
-    function onNodeClick(event, d){
-      // if node holds users, show modal
-      if (d.data && d.data.users && d.data.users.length > 0){
-        showUserModal(d);
-      }
-    }
-
-    // Modal showing users, and optionally matching Data sheet row for pics or location
-    async function showUserModal(d){
-      const md = document.getElementById('userModal');
-      const title = document.getElementById('userModalTitle');
-      const meta = document.getElementById('userMeta');
-      const list = document.getElementById('userList');
-      title.innerText = `${d.ancestors().reverse().map(x=>x.data.name).slice(1).join(' > ')}`;
-      meta.innerText = `Users: ${d.data.users.length} ${d.data.timestamp ? ' | TS: '+d.data.timestamp : ''}`;
-      list.innerHTML = '';
-
-      // For each user, show simple row (we don't have online/offline flags in Board JSON)
-      d.data.users.forEach((u, i) => {
-        const div = document.createElement('div');
-        div.className = 'user-item';
-        div.innerHTML = `<div><strong>${i+1}.</strong> ${u}</div><div style="color:var(--muted)">-</div>`;
-        list.appendChild(div);
-      });
-
-      // try to fetch the Data sheet and find matching row by timestamp if possible (best-effort)
-      try {
-        const res = await fetch(dataUrl);
-        const arr = await res.json();
-        // find row where any of the date representations contain the timestamp string (loose match)
-        let matched = null;
-        if (d.data.timestamp){
-          for (let row of arr){
-            // row.tagId is in mm/dd/yyyy HH:MM:SS (from getData); try matching date-part or ISO partial
-            if (!row.tagId) continue;
-            if (row.tagId.indexOf(d.data.timestamp.split('T')[0]) !== -1 || row.tagId.indexOf(d.data.timestamp.replace('T',' ').split('.')[0]) !== -1) {
-              matched = row; break;
-            }
-          }
-        }
-        if (matched){
-          meta.innerHTML += `<br/>Location: <a href="${matched.location}" target="_blank">Open</a>`;
-          // append pictures if any
-          if (matched.jcImage) meta.innerHTML += `<br/><a href="${matched.jcImage}" target="_blank">JC Pic</a>`;
-          if (matched.poleImage) meta.innerHTML += ` <a href="${matched.poleImage}" target="_blank">Pole Pic</a>`;
-        }
-      } catch(e){ /* ignore */ }
-
-      md.style.display = 'flex';
-    }
-
-    function isSuperset(parentUsers, childUsers){
-      const s = new Set(parentUsers);
-      for (let u of childUsers) if (!s.has(u)) return false;
-      return true;
+    function trianglePath(size){
+      const h = size;
+      const w = size * 1.2;
+      return `M 0 ${-h} L ${w/2} ${h/2} L ${-w/2} ${h/2} Z`;
     }
 
     function fitToView(){
-      if (!svg) return;
+      if (!svg || !g) return;
       const bounds = g.node().getBBox();
       const fullWidth = document.getElementById('chart').clientWidth;
       const fullHeight = document.getElementById('chart').clientHeight;
+
       const widthScale = fullWidth / (bounds.width + 160);
       const heightScale = fullHeight / (bounds.height + 160);
-      const scale = Math.min(2, Math.max(0.5, Math.min(widthScale, heightScale)));
+      const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
+
       const tx = -(bounds.x) * scale + 40;
       const ty = -(bounds.y) * scale + 40;
-      svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+
+      svg.transition().duration(600)
+        .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
     }
 
-    // Export PNG of chart container
-    function exportPNG(){
-      const node = document.getElementById('chart');
-      html2canvas(node, { backgroundColor: '#ffffff', scale: 2 }).then(canvas=>{
-        const url = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = url; a.download = 'merotra-board-map.png';
-        a.click();
-      });
+    // ---------- TOOLTIP / MODAL ----------
+    function onNodeHover(event, d){
+      const info = d.data;
+      let line1 = `<strong>${info.name}</strong>`;
+      let line2 = '';
+      if (info.nodeType === 'window'){
+        line2 = `Window`;
+      } else if (info.nodeType === 'pon'){
+        line2 = `PON (Window: ${info.windowName || ''})`;
+      } else if (info.nodeType === 'primary'){
+        line2 = `Primary splitter (${info.splitterType || ''})`;
+      } else if (info.nodeType === 'child'){
+        line2 = `Child splitter (${info.splitterType || ''})`;
+      }
+
+      const userCount = (info.users && info.users.length) ? info.users.length : 0;
+      const ucLine = userCount ? `<br/>Users: ${userCount}` : '';
+
+      tooltipEl.innerHTML = `${line1}<br/>${line2}${ucLine}`;
+      tooltipEl.style.left = (event.pageX + 12) + 'px';
+      tooltipEl.style.top = (event.pageY + 6) + 'px';
+      tooltipEl.style.opacity = 1;
     }
 
-    function downloadUserCsv(){
-      const modal = document.getElementById('userModal');
-      if (modal.style.display === 'none') return;
-      const listDiv = document.getElementById('userList');
-      const rows = Array.from(listDiv.querySelectorAll('.user-item')).map((el, idx)=>{
-        const id = el.querySelector('div').innerText.trim();
-        return `${idx+1},${id}`;
-      });
-      const csv = 'Sr,User\\n' + rows.join('\\n');
-      const blob = new Blob([csv], { type:'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'users.csv'; a.click();
+    function onNodeClick(event, d){
+      const info = d.data;
+      // सिर्फ splitter / PON / Window पर popup meaningful है
+      if (info.nodeType === 'primary' || info.nodeType === 'child' || info.nodeType === 'pon'){
+        openNodeModal(info);
+      }
     }
 
-    // small helper to load html2canvas only when needed (for export)
-    (function preloadHtml2Canvas(){
-      const s = document.createElement('script');
-      s.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
-      document.head.appendChild(s);
-    })();
+    function showNodeModal(flag){
+      document.getElementById('nodeModal').style.display = flag ? 'flex' : 'none';
+    }
 
-    window.addEventListener('resize', ()=>{
-      if (currentHierarchy) draw(currentHierarchy);
-    });
+    function openNodeModal(info){
+      const titleEl = document.getElementById('nodeModalTitle');
+      const metaEl = document.getElementById('nodeModalMeta');
+      const linksEl = document.getElementById('nodeModalLinks');
+      const listEl = document.getElementById('nodeUserList');
+
+      // Build path title
+      const parts = [];
+      if (info.windowName) parts.push(info.windowName);
+      if (info.ponName) parts.push(info.ponName);
+      if (info.nodeType === 'primary') parts.push(`Primary - ${info.splitterType || ''}`);
+      if (info.nodeType === 'child') parts.push(`Child - ${info.splitterType || ''}`);
+      if (info.nodeType === 'pon' && !info.splitterType) parts.push('PON');
+
+      titleEl.innerText = parts.join(' → ') || info.name || 'Details';
+
+      // Find matching Data row (best effort)
+      const row = findDataRowForNode(info);
+
+      let metaHtml = '';
+      if (row){
+        const win = row.window || row.Window || row.win || info.windowName || '';
+        const pon = row.pon || row.PON || info.ponName || '';
+        const ts  = row.timestamp || row.time || row.ts || '';
+        const by  = row.markedBy || row.marked_by || row.marked || '';
+        const st  = row.status || row.Status || '';
+
+        metaHtml += `<div>Window: <strong>${win || '-'}</strong></div>`;
+        metaHtml += `<div>PON: <strong>${pon || '-'}</strong></div>`;
+        metaHtml += `<div>Timestamp: <strong>${ts || '-'}</strong></div>`;
+        metaHtml += `<div>Marked by: <strong>${by || '-'}</strong></div>`;
+        metaHtml += `<div>Status: <strong>${st || '-'}</strong></div>`;
+      } else {
+        metaHtml += `<div>Window: <strong>${info.windowName || '-'}</strong></div>`;
+        metaHtml += `<div>PON: <strong>${info.ponName || '-'}</strong></div>`;
+        metaHtml += `<div><em>No extra metadata found for this splitter.</em></div>`;
+      }
+      metaEl.innerHTML = metaHtml;
+
+      // Links (location / JC / Pole)
+      linksEl.innerHTML = '';
+      if (row){
+        const loc  = row.location || row.loc || row.D || '';
+        const jc   = row.jcImage || row.jcPic || row.E || '';
+        const pole = row.poleImage || row.polePic || row.F || '';
+
+        let l = '';
+        if (loc)  l += `<a href="${loc}" target="_blank" class="link-pill">📍 Location</a>`;
+        if (jc)   l += `<a href="${jc}" target="_blank" class="link-pill">📸 JC Pic</a>`;
+        if (pole) l += `<a href="${pole}" target="_blank" class="link-pill">🪵 Pole Pic</a>`;
+        linksEl.innerHTML = l;
+      }
+
+      // Users
+      listEl.innerHTML = '';
+      const users = info.users || [];
+      if (users.length === 0){
+        listEl.innerHTML = `<div style="color:var(--muted);font-size:13px;">No users on this node.</div>`;
+      } else {
+        users.forEach((u,i)=>{
+          const div = document.createElement('div');
+          div.className = 'user-item';
+          div.innerHTML = `<div><strong>${i+1}.</strong> ${u}</div>`;
+          listEl.appendChild(div);
+        });
+      }
+
+      showNodeModal(true);
+    }
+
+    function findDataRowForNode(info){
+      if (!Array.isArray(dataRows) || dataRows.length === 0) return null;
+      const key = info.dataKey || info.id || info.timestamp || '';
+
+      if (!key) return null;
+
+      // कई possible field नामों पर try करो
+      return dataRows.find(row => {
+        const id1 = row.id ? String(row.id) : '';
+        const id2 = row.tagId ? String(row.tagId) : '';
+        return id1 === key || id2 === key || id1.includes(key) || id2.includes(key);
+      }) || null;
+    }
 
   </script>
 </body>
