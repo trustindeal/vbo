@@ -1,562 +1,869 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — Advanced Board Map</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌐 Merotra — PON / Splitter Tree</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="adv.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(135deg,#f0f9ff,#e0f2fe);
+      color: #111827;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+    .header-title {
+      font-weight: 800;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-sub {
+      font-size: 0.8rem;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    #chart {
+      width: 100%;
+      height: calc(100vh - 60px);
+    }
+    .btn {
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15,23,42,0.9);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity .15s;
+      z-index: 50;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+    }
+    .modal-content {
+      background: rgba(255,255,255,0.98);
+      border-radius: 14px;
+      padding: 16px 18px;
+      max-width: 520px;
+      width: 92%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(15,23,42,0.2);
+    }
+    .user-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 4px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.85rem;
+    }
+    .user-row:last-child {
+      border-bottom: none;
+    }
+    .user-row.offline {
+      background: rgba(248,113,113,0.08);
+    }
+    .controls-modal {
+      background: rgba(255,255,255,0.98);
+      border-radius: 14px;
+      padding: 16px 18px;
+      max-width: 520px;
+      width: 92%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(15,23,42,0.2);
+    }
+    .filter-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(120px,1fr));
+      gap: 4px 8px;
+      font-size: 0.85rem;
+    }
+    .checkbox-item label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+    .checkbox-item label:hover {
+      background: #e5e7eb;
+    }
+    .select-all {
+      font-size: 0.8rem;
+      color: #2563eb;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .link-btn {
+      font-size: 0.8rem;
+      color: #2563eb;
+      text-decoration: underline;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #e5f9e7;
+      font-size: 0.7rem;
+      gap: 4px;
+    }
+    .gray-pill {
+      background: #e5e7eb;
+    }
+  </style>
 </head>
 <body>
-  <div class="header">
-    <div class="title">
-      <div>🌐 Merotra — Board Map</div>
-      <small style="color:var(--muted);font-weight:600">Merotra → Window → PON → Primary → Children</small>
-    </div>
 
-    <div class="controls">
-      <button class="btn" id="reloadBtn">Reload</button>
-      <button class="btn" id="zoomFitBtn" style="background:#10b981">Fit</button>
-      <button class="btn" id="filtersBtn" style="background:#6366f1">Filters</button>
+  <div class="header">
+    <div>
+      <div class="header-title">
+        <span>🌐 Merotra Network Tree</span>
+      </div>
+      <div class="header-sub">Window → PON → Splitters → Users (+ Untagged branch)</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="controlsBtn" class="btn-secondary btn">Filters</button>
+      <button id="reloadBtn" class="btn">Reload</button>
     </div>
   </div>
 
   <div id="chart"></div>
-  <div class="tooltip" id="tooltip"></div>
+  <div id="tooltip" class="tooltip"></div>
 
-  <!-- Filters Modal -->
-  <div id="filterModal" class="modal" style="display:none">
-    <div class="card filter-card">
-      <h3 style="margin:0 0 10px 0;font-weight:800;font-size:18px;">Filters</h3>
+  <!-- POPUP: Splitter / Untagged -->
+  <div id="popupModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          <h2 id="popupTitle" class="text-lg font-bold mb-1"></h2>
+          <div id="popupPath" class="text-xs text-gray-500"></div>
+        </div>
+        <button id="popupClose" class="btn-secondary btn text-xs px-2 py-1">Close</button>
+      </div>
 
-      <div class="filter-section">
-        <div class="filter-heading">Windows</div>
+      <div class="text-xs text-gray-600 mb-2 space-y-1" id="popupMeta">
+        <!-- filled by JS -->
+      </div>
+
+      <div class="mb-2 text-xs" id="popupLinks">
+        <!-- location / pics -->
+      </div>
+
+      <h3 class="text-sm font-semibold mt-3 mb-1">Users</h3>
+      <div id="popupUsers" style="max-height: 260px; overflow-y:auto; border-radius:8px; border:1px solid #e5e7eb;"></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS MODAL -->
+  <div id="controlsModal" class="modal-backdrop">
+    <div class="controls-modal">
+      <h2 class="text-base font-bold mb-3">Filters & View</h2>
+
+      <div class="mb-3">
+        <div class="filter-title">Windows</div>
         <div id="windowFilters" class="checkbox-grid"></div>
-        <div class="filter-footer">
-          <button class="btn btn-small" id="winSelectAll">Select All</button>
-          <button class="btn btn-small btn-light" id="winDeselectAll">Deselect All</button>
+        <div class="mt-1 text-center">
+          <span class="select-all" onclick="selectAll('window')">Select All</span> |
+          <span class="select-all" onclick="deselectAll('window')">Deselect All</span>
         </div>
       </div>
 
-      <div class="filter-section">
-        <div class="filter-heading">PONs</div>
-        <div id="ponFilters" class="checkbox-grid"></div>
-        <div class="filter-footer">
-          <button class="btn btn-small" id="ponSelectAll">Select All</button>
-          <button class="btn btn-small btn-light" id="ponDeselectAll">Deselect All</button>
+      <div class="mb-3">
+        <div class="filter-title">PONs</div>
+        <div id="ponFilters" class="checkbox-grid" style="max-height:180px;overflow-y:auto;"></div>
+        <div class="mt-1 text-center">
+          <span class="select-all" onclick="selectAll('pon')">Select All</span> |
+          <span class="select-all" onclick="deselectAll('pon')">Deselect All</span>
         </div>
       </div>
 
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-        <button class="btn btn-light" id="closeFilterBtn">Close</button>
-        <button class="btn" id="applyFilterBtn">Apply</button>
-      </div>
+      <button id="applyFiltersBtn" class="btn w-full mt-1">Apply Filters</button>
+      <button id="controlsClose" class="btn-secondary btn w-full mt-2">Close</button>
     </div>
   </div>
 
-  <!-- Node / Splitter Modal -->
-  <div id="nodeModal" class="modal" style="display:none">
-    <div class="card">
-      <h3 id="nodeModalTitle" style="margin:0 0 6px 0"></h3>
-      <div id="nodeModalMeta" style="color:var(--muted);margin-bottom:8px;font-size:13px;"></div>
-      <div id="nodeModalLinks" style="margin-bottom:8px;font-size:13px;"></div>
-      <div id="nodeUserList" style="max-height:48vh;overflow:auto;border-top:1px solid #eef2f7;padding-top:6px;"></div>
-      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-        <button class="btn" id="closeNodeModalBtn" style="background:#ef4444">Close</button>
-      </div>
-    </div>
-  </div>
+  <script>
+    // -------------------- CONFIG --------------------
 
- <script>
-  // ---------- CONFIG ----------
-const API_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgWoNwxGB6cZdAHMQqMmh9R-uY6NTk56cJT4JE1BQNi4u_VU4-hjmrbr1SjmTu7SY_lFxNiNETKTS5sRHKD8Hrr4Uh1GYAGlmrDRjyfoTGetW786IOjsnIqah5_cVjZEPkbGsnQjKY7GGHpErfeZpXItjvb71iz-b-cH5L7ISw_DqTfJBdn8ieDC99pCWOyZv9mzZkpzmxeJVOfxWLnwvj9QMktqCF3PG6871DG6eAotb-vcbTj5XnAw-YLofKgoccAohOSpCB_gn-XWlI1EwQDtLoohgONwIdSu50jkShz1nQ9Cx4&lib=MM9jfESS3VUQ4bogWcHsjBa_bifldmWHw";
+    // ✅ Same API_BASE jo aap pehle use kar rahe the (board/data)
+    const API_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgWoNwxGB6cZdAHMQqMmh9R-uY6NTk56cJT4JE1BQNi4u_VU4-hjmrbr1SjmTu7SY_lFxNiNETKTS5sRHKD8Hrr4Uh1GYAGlmrDRjyfoTGetW786IOjsnIqah5_cVjZEPkbGsnQjKY7GGHpErfeZpXItjvb71iz-b-cH5L7ISw_DqTfJBdn8ieDC99pCWOyZv9mzZkpzmxeJVOfxWLnwvj9QMktqCF3PG6871DG6eAotb-vcbTj5XnAw-YLofKgoccAohOSpCB_gn-XWlI1EwQDtLoohgONwIdSu50jkShz1nQ9Cx4&lib=MM9jfESS3VUQ4bogWcHsjBa_bifldmWHw";
 
-const dataUrl  = API_BASE + "&mode=data";
-const boardUrl = API_BASE + "&mode=board";
+    const BOARD_URL = API_BASE + "&mode=board";
 
-  // ---------- STATE ----------
-  const tooltipEl = document.getElementById('tooltip');
-  const chartSel = d3.select('#chart');
+    // ✅ TheMaster DB URLs (token = abcd1234)
+    // Merotra DB (ye URL aapne diya hai)
+    const MASTER_API_MEROTRA = "https://script.google.com/macros/s/AKfycbwEjBWnBLw5S45MdR0yq4Kvuuy5uFC_8a8u0syGpW9Kyq2deGY-MdquN69uF6V51qj3Pw/exec?token=abcd1234";
 
-  let svg, g, zoom;
-  let currentHierarchy = null;
-  let rawBoard = {};
-  let dataRows = [];   // Data sheet rows (future use)
+    // Sunny DB — yaha apna Sunny वाली file ka URL daal dena (same doGet code)
+    const MASTER_API_SUNNY   = "https://script.google.com/macros/s/AKfycbymVJ8_kU4T0WEK5eSQftItoh_sHtmmutjTeuVQDhnMpPdk3dUBxDu5XiuA6tqZ64ZY/exec?token=abcd1234";
 
-  let allWindows = [];
-  let allPons = [];
+    // ⚙️ TheMaster sheet headers (AF = status, N = user id)
+    // 👉 IMPORTANT: Inko bilkul wahi text rakhna jo header row me likha hai.
+    const USER_ID_FIELD     = "Users";   // Column N ka header
+    const USER_STATUS_FIELD = "User status";   // Column AF ka header
 
-  let selectedWindows = new Set();
-  let selectedPons = new Set();
+    // --------------- GLOBAL STATE ----------------
 
-  // ---------- EVENT HOOKUP ----------
-  document.getElementById('reloadBtn').addEventListener('click', loadAndDraw);
-  document.getElementById('zoomFitBtn').addEventListener('click', fitToView);
-  document.getElementById('filtersBtn').addEventListener('click', () => showFilterModal(true));
-  document.getElementById('closeFilterBtn').addEventListener('click', () => showFilterModal(false));
-  document.getElementById('applyFilterBtn').addEventListener('click', applyFilters);
+    const tooltip = document.getElementById("tooltip");
+    const popupModal = document.getElementById("popupModal");
+    const controlsModal = document.getElementById("controlsModal");
 
-  document.getElementById('winSelectAll').addEventListener('click', () => setAllChecks('windowFilters', true));
-  document.getElementById('winDeselectAll').addEventListener('click', () => setAllChecks('windowFilters', false));
-  document.getElementById('ponSelectAll').addEventListener('click', () => setAllChecks('ponFilters', true));
-  document.getElementById('ponDeselectAll').addEventListener('click', () => setAllChecks('ponFilters', false));
+    let rawBoard = {};            // BOARD_URL se raw JSON
+    let svg, g, treeLayout, root;
+    let currentTreeData = null;
 
-  document.getElementById('closeNodeModalBtn').addEventListener('click', ()=> showNodeModal(false));
-
-  window.addEventListener('resize', () => {
-    if (currentHierarchy) draw(currentHierarchy);
-  });
-
-  // On load
-  loadAndDraw();
-
-  // ---------- MAIN LOAD ----------
-  async function loadAndDraw(){
-    try {
-      setLoading(true);
-      const [bRes, dRes] = await Promise.all([fetch(boardUrl), fetch(dataUrl)]);
-      rawBoard = await bRes.json();
-      dataRows = await dRes.json();   // abhi optional, future ke liye
-
-      buildFilterSets();
-      buildFilterUI();
-      const h = buildHierarchyWithFilters();
-      currentHierarchy = h;
-      draw(h);
-    } catch (err) {
-      console.error(err);
-      alert("Failed loading board/data. Error: " + err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function setLoading(flag){
-    const el = document.getElementById('reloadBtn');
-    el.textContent = flag ? 'Loading...' : 'Reload';
-    el.disabled = flag;
-  }
-
-  // ---------- FILTERS ----------
-  // JSON: { PON_NO: { WINDOW_NAME: { SPLITTER_NAME: info } } }
-  function buildFilterSets(){
-    const winSet = new Set();
-    const ponSet = new Set();
-
-    Object.entries(rawBoard || {}).forEach(([ponNo, windowObj])=>{
-      if (ponNo) ponSet.add(ponNo);
-      Object.keys(windowObj || {}).forEach(winName=>{
-        if (winName) winSet.add(winName);
-      });
-    });
-
-    allWindows = Array.from(winSet).sort();
-    allPons = Array.from(ponSet).sort();
-
-    selectedWindows = new Set(allWindows);
-    selectedPons = new Set(allPons);
-  }
-
-  function buildFilterUI(){
-    const winDiv = document.getElementById('windowFilters');
-    const ponDiv = document.getElementById('ponFilters');
-    winDiv.innerHTML = '';
-    ponDiv.innerHTML = '';
-
-    allWindows.forEach(w=>{
-      const id = `win_${cssSafe(w)}`;
-      winDiv.insertAdjacentHTML('beforeend',
-        `<label class="checkbox-item">
-           <input type="checkbox" id="${id}" value="${w}" checked>
-           <span>${w}</span>
-         </label>`
-      );
-    });
-
-    allPons.forEach(p=>{
-      const id = `pon_${cssSafe(p)}`;
-      ponDiv.insertAdjacentHTML('beforeend',
-        `<label class="checkbox-item">
-           <input type="checkbox" id="${id}" value="${p}" checked>
-           <span>${p}</span>
-         </label>`
-      );
-    });
-  }
-
-  function setAllChecks(containerId, value){
-    const box = document.getElementById(containerId);
-    if (!box) return;
-    box.querySelectorAll('input[type="checkbox"]').forEach(ch => ch.checked = value);
-  }
-
-  function applyFilters(){
-    selectedWindows = new Set(
-      Array.from(document.querySelectorAll('#windowFilters input:checked')).map(i=>i.value)
-    );
-    selectedPons = new Set(
-      Array.from(document.querySelectorAll('#ponFilters input:checked')).map(i=>i.value)
-    );
-    showFilterModal(false);
-
-    const h = buildHierarchyWithFilters();
-    currentHierarchy = h;
-    draw(h);
-  }
-
-  function showFilterModal(show){
-    document.getElementById('filterModal').style.display = show ? 'flex' : 'none';
-  }
-
-  function cssSafe(str){
-    return String(str).replace(/[^a-zA-Z0-9_-]/g, '_');
-  }
-
-  // ---------- HIERARCHY BUILDER ----------
-  // root -> Window -> PON -> Splitter Tree (primary + children via subset of users)
-  function buildHierarchyWithFilters(){
-    const root = {
-      name: "Merotra Network",
-      nodeType: "root",
-      children: []
+    let filters = {
+      windows: [],
+      pons: []
     };
 
-    const board = rawBoard || {};
-    const windowMap = {}; // name -> window node
+    // window name -> { userId -> statusText }
+    const statusMaps = {
+      Merotra: {},
+      Sunny: {}
+    };
 
-    Object.entries(board).forEach(([ponNo, windowObj])=>{
-      if (selectedPons.size && !selectedPons.has(ponNo)) return;
+    // click context
+    let currentClickNode = null;
 
-      Object.entries(windowObj || {}).forEach(([winName, splitterObj])=>{
-        if (selectedWindows.size && !selectedWindows.has(winName)) return;
+    // --------------- INIT ----------------
 
-        // window node ensure
-        let winNode = windowMap[winName];
-        if (!winNode){
-          winNode = {
-            name: winName,
-            nodeType: "window",
-            windowName: winName,
-            children: []
+    document.getElementById("reloadBtn").addEventListener("click", () => {
+      loadAll(true);
+    });
+    document.getElementById("controlsBtn").addEventListener("click", () => {
+      controlsModal.style.display = "flex";
+    });
+    document.getElementById("controlsClose").addEventListener("click", () => {
+      controlsModal.style.display = "none";
+    });
+    document.getElementById("popupClose").addEventListener("click", () => {
+      popupModal.style.display = "none";
+    });
+    document.getElementById("applyFiltersBtn").addEventListener("click", applyFiltersFromUI);
+
+    window.addEventListener("resize", () => {
+      if (currentTreeData) drawTree(currentTreeData);
+    });
+
+    // Page load
+    loadAll(false);
+
+    async function loadAll(showToast){
+      try {
+        setLoading(true);
+        // 1) board
+        const bRes = await fetch(BOARD_URL);
+        rawBoard = await bRes.json();
+
+        // 2) status DBs
+        await Promise.all([
+          loadStatusesForWindow("Merotra", MASTER_API_MEROTRA),
+          MASTER_API_SUNNY.startsWith("PASTE_") ? Promise.resolve() : loadStatusesForWindow("Sunny", MASTER_API_SUNNY)
+        ]);
+
+        // 3) filters setup
+        setupFiltersFromBoard();
+
+        // 4) build + draw
+        const filtered = filterBoard(rawBoard, filters);
+        const treeData = buildHierarchy(filtered);
+        currentTreeData = treeData;
+        drawTree(treeData);
+
+      } catch(e){
+        console.error(e);
+        alert("Error loading data: " + e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function setLoading(flag){
+      const btn = document.getElementById("reloadBtn");
+      btn.textContent = flag ? "Loading..." : "Reload";
+      btn.disabled = flag;
+    }
+
+    // --------------- STATUS MAP (TheMaster) ----------------
+
+    async function loadStatusesForWindow(windowName, apiUrl){
+      if (!apiUrl) return;
+      try {
+        const res = await fetch(apiUrl);
+        const json = await res.json();
+        if (!json || !Array.isArray(json.rows)) return;
+
+        const m = {};
+        json.rows.forEach(row => {
+          const id = (row[USER_ID_FIELD] ?? "").toString().trim();
+          const st = (row[USER_STATUS_FIELD] ?? "").toString().trim();
+          if (id) m[id] = st;
+        });
+        statusMaps[windowName] = m;
+      } catch(e){
+        console.error("Status load failed for", windowName, e);
+      }
+    }
+
+    // --------------- FILTER SETUP ----------------
+
+    function setupFiltersFromBoard(){
+      const windowSet = new Set();
+      const ponSet = new Set();
+
+      Object.entries(rawBoard).forEach(([pon, winObj]) => {
+        ponSet.add(pon);
+        Object.keys(winObj || {}).forEach(w => windowSet.add(w));
+      });
+
+      filters.windows = Array.from(windowSet);
+      filters.pons = Array.from(ponSet);
+
+      const winDiv = document.getElementById("windowFilters");
+      const ponDiv = document.getElementById("ponFilters");
+      winDiv.innerHTML = "";
+      ponDiv.innerHTML = "";
+
+      Array.from(windowSet).sort().forEach(w => {
+        const el = document.createElement("div");
+        el.className = "checkbox-item";
+        el.innerHTML = `
+          <label>
+            <input type="checkbox" value="${w}" checked>
+            <span>${w}</span>
+          </label>`;
+        winDiv.appendChild(el);
+      });
+
+      Array.from(ponSet).sort().forEach(p => {
+        const el = document.createElement("div");
+        el.className = "checkbox-item";
+        el.innerHTML = `
+          <label>
+            <input type="checkbox" value="${p}" checked>
+            <span>${p}</span>
+          </label>`;
+        ponDiv.appendChild(el);
+      });
+    }
+
+    function selectAll(type){
+      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`)
+        .forEach(ch => ch.checked = true);
+    }
+
+    function deselectAll(type){
+      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`)
+        .forEach(ch => ch.checked = false);
+    }
+
+    function applyFiltersFromUI(){
+      filters.windows = Array.from(document.querySelectorAll("#windowFilters input:checked")).map(i=>i.value);
+      filters.pons    = Array.from(document.querySelectorAll("#ponFilters input:checked")).map(i=>i.value);
+      controlsModal.style.display = "none";
+
+      const filtered = filterBoard(rawBoard, filters);
+      const treeData = buildHierarchy(filtered);
+      currentTreeData = treeData;
+      drawTree(treeData);
+    }
+
+    function filterBoard(board, filters){
+      const out = {};
+      Object.entries(board).forEach(([pon, winObj]) => {
+        if (!filters.pons.includes(pon)) return;
+        const newWin = {};
+        Object.entries(winObj || {}).forEach(([win, splits]) => {
+          if (!filters.windows.includes(win)) return;
+          newWin[win] = splits;
+        });
+        if (Object.keys(newWin).length) out[pon] = newWin;
+      });
+      return out;
+    }
+
+    // --------------- TREE BUILDING ----------------
+
+    function buildHierarchy(board){
+      // Root
+      const root = {
+        nodeType: "root",
+        name: "🌐 Merotra Network",
+        children: []
+      };
+
+      const windowMap = {};
+
+      Object.entries(board).forEach(([pon, winObj]) => {
+        Object.entries(winObj || {}).forEach(([winName, splitterObj]) => {
+
+          if (!windowMap[winName]){
+            const winNode = {
+              nodeType: "window",
+              name: "🪟 " + winName,
+              rawWindow: winName,
+              children: []
+            };
+            windowMap[winName] = winNode;
+            root.children.push(winNode);
+          }
+
+          const winNode = windowMap[winName];
+
+          // PON node
+          const ponNode = {
+            nodeType: "pon",
+            name: "🔌 " + pon,
+            rawPon: pon,
+            window: winName,
+            children: [],
+            total: 0,
+            online: 0,
+            offline: 0
           };
-          windowMap[winName] = winNode;
-          root.children.push(winNode);
-        }
 
-        // create PON node under this window
-        const ponNode = {
-          name: ponNo,
-          nodeType: "pon",
-          windowName: winName,
-          ponName: ponNo,
-          children: [],
-          users: []
-        };
+          // collect splitter entries
+          const entries = [];
+          Object.entries(splitterObj || {}).forEach(([splitName, info]) => {
+            const users = Array.isArray(info.users) ? info.users : [];
+            const userIds = users.map(u => String(u.id));
+            const set = new Set(userIds);
+            entries.push({
+              splitterName: splitName,
+              info,
+              users,
+              userIds,
+              userSet: set
+            });
 
-        // collect all splitter entries for this PON+window
-        const splitEntries = [];
-
-        Object.entries(splitterObj || {}).forEach(([splitName, info])=>{
-          const usersArr = Array.isArray(info.users) ? info.users : [];
-          const userIds  = usersArr.map(u => String(u.id));
-
-          splitEntries.push({
-            splitterName: splitName,
-            typeLabel: splitName,
-            total: info.total || usersArr.length,
-            offline: info.offline || 0,
-            online: info.online || 0,
-            tag: info.tag || "",
-            location: info.location || "",
-            jcPic: info.jcPic || "",
-            polePic: info.polePic || "",
-            users: usersArr,
-            userIds: userIds
+            ponNode.total  += info.total || users.length || 0;
+            ponNode.online += info.online || 0;
+            ponNode.offline+= info.offline || 0;
           });
 
-          usersArr.forEach(u => ponNode.users.push(u.id));
+          if (entries.length === 0){
+            winNode.children.push(ponNode);
+            return;
+          }
+
+          // Sort by user-count desc → primary first
+          entries.sort((a,b)=> b.userIds.length - a.userIds.length);
+
+          // create node for each
+          const nodeEntries = entries.map(e => ({
+            entry: e,
+            node: makeSplitterNode(e, pon, winName)
+          }));
+
+          const primaryNode = nodeEntries[0].node;
+          ponNode.children.push(primaryNode);
+
+          // link children using subset logic
+          for (let i=1; i<nodeEntries.length; i++){
+            const child = nodeEntries[i];
+            const childSet = child.entry.userSet;
+            let parentNode = null;
+
+            for (let j=i-1; j>=0; j--){
+              const parentEntry = nodeEntries[j];
+              if (isSubset(childSet, parentEntry.entry.userSet)){
+                parentNode = parentEntry.node;
+                break;
+              }
+            }
+
+            if (!parentNode) parentNode = primaryNode;
+            parentNode.children.push(child.node);
+          }
+
+          // untagged branch per node (non-leaf)
+          const allNodes = nodeEntries.map(n => n.node);
+          allNodes.forEach(node => {
+            if (!node.children || node.children.length === 0) return;
+
+            const parentSet = new Set(node.userIds);
+            const childUnion = new Set();
+            node.children.forEach(ch => {
+              (ch.userIds || []).forEach(id => childUnion.add(id));
+            });
+
+            const leftover = [];
+            parentSet.forEach(id => {
+              if (!childUnion.has(id)) leftover.push(id);
+            });
+
+            if (leftover.length > 0){
+              const users = leftover.map(id => ({ id, offline: false }));
+              const otherNode = {
+                nodeType: "untagged",
+                name: "⬜ Other ("+leftover.length+")",
+                rawSplitter: "Other",
+                pon: pon,
+                window: winName,
+                users,
+                userIds: leftover,
+                total: leftover.length,
+                online: leftover.length,
+                offline: 0,
+                tag: "",
+                location: node.location,
+                jcPic: node.jcPic,
+                polePic: node.polePic,
+                children: []
+              };
+              node.children.push(otherNode);
+            }
+          });
+
+          winNode.children.push(ponNode);
         });
+      });
 
-        if (splitEntries.length === 0) return;
+      return root;
+    }
 
-        // unique users at PON level
-        ponNode.users = Array.from(new Set(ponNode.users));
+    function makeSplitterNode(entry, pon, windowName){
+      const info = entry.info || {};
+      const users = entry.users || [];
+      const userIds = entry.userIds || [];
+      const total = info.total ?? users.length ?? 0;
+      const online = info.online ?? (users.filter(u=>!u.offline).length);
+      const offline= info.offline?? (users.filter(u=> u.offline).length);
 
-        // Tree among splitters: primary = max users; children based on subset
-        splitEntries.sort((a,b)=> b.userIds.length - a.userIds.length);
+      const emoji = emojiForSplitter(entry.splitterName);
+      const label = `${emoji} ${entry.splitterName} (${total})`;
 
-        const placedNodes = [];
-        const topLevelSplitters = [];
+      return {
+        nodeType: "splitter",
+        name: label,
+        rawSplitter: entry.splitterName,
+        pon,
+        window: windowName,
+        users,
+        userIds,
+        total,
+        online,
+        offline,
+        tag: info.tag || "",
+        location: info.location || "",
+        jcPic: info.jcPic || "",
+        polePic: info.polePic || "",
+        children: []
+      };
+    }
 
-        const makeNode = (entry, nodeType) => ({
-          name: `${entry.splitterName} (${entry.userIds.length})`,
-          nodeType: nodeType,     // 'primary' or 'child'
-          splitterType: entry.splitterName,
-          windowName: winName,
-          ponName: ponNo,
-          users: entry.users,     // [{id,offline},...]
-          userIds: entry.userIds, // pure IDs
-          total: entry.total,
-          offline: entry.offline,
-          online: entry.online,
-          tag: entry.tag,
-          location: entry.location,
-          jcPic: entry.jcPic,
-          polePic: entry.polePic,
-          children: []
-        });
+    function emojiForSplitter(splitName){
+      const s = (splitName || "").toLowerCase();
+      if (s.includes("link")) return "🔗";
+      if (s.includes("pending")) return "⏳";
+      if (s.includes("16")) return "🔺";
+      if (s.includes("8"))  return "🔵";
+      if (s.includes("4"))  return "🟥";
+      if (s.includes("2"))  return "🟩";
+      return "⬜";
+    }
 
-        const primaryEntry = splitEntries[0];
-        const primaryNode = makeNode(primaryEntry, 'primary');
-        placedNodes.push(primaryNode);
-        topLevelSplitters.push(primaryNode);
+    function isSubset(aSet, bSet){
+      for (let v of aSet) if (!bSet.has(v)) return false;
+      return true;
+    }
 
-        for (let i=1; i<splitEntries.length; i++){
-          const entry = splitEntries[i];
-          const childNode = makeNode(entry, 'child');
+    // --------------- DRAW TREE ----------------
 
-          // find parent whose userIds is superset of child.userIds
-          let parent = placedNodes.find(p => isSuperset(p.userIds, childNode.userIds));
-          if (!parent) parent = primaryNode;
+    function drawTree(data){
+      d3.select("#chart").select("svg").remove();
 
-          parent.children.push(childNode);
-          placedNodes.push(childNode);
+      const width = document.getElementById("chart").clientWidth;
+      const height = document.getElementById("chart").clientHeight;
+
+      const dx = 80;
+      const dy = width > 900 ? 260 : 200;
+
+      treeLayout = d3.tree().nodeSize([dx, dy]);
+
+      root = d3.hierarchy(data, d => d.children || []);
+      treeLayout(root);
+
+      const svgRoot = d3.select("#chart").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      const zoom = d3.zoom().scaleExtent([0.4, 3])
+        .on("zoom", (event) => g.attr("transform", event.transform));
+
+      svgRoot.call(zoom);
+
+      g = svgRoot.append("g").attr("transform", "translate(80,60)");
+
+      const links = root.links();
+      const nodes = root.descendants();
+
+      // links
+      g.selectAll(".link")
+        .data(links)
+        .enter()
+        .append("path")
+        .attr("class","link")
+        .attr("d", d3.linkHorizontal().x(d=>d.y).y(d=>d.x))
+        .attr("fill","none")
+        .attr("stroke","#94a3b8")
+        .attr("stroke-width",2);
+
+      // nodes
+      const node = g.selectAll(".node")
+        .data(nodes)
+        .enter()
+        .append("g")
+        .attr("class","node")
+        .attr("transform", d=>`translate(${d.y},${d.x})`);
+
+      // root icon
+      node.filter(d => d.data.nodeType === "root")
+        .append("circle")
+        .attr("r",24)
+        .attr("fill","#1e3a8a")
+        .attr("stroke","#fff")
+        .attr("stroke-width",3);
+
+      // window nodes
+      node.filter(d => d.data.nodeType === "window")
+        .append("circle")
+        .attr("r",20)
+        .attr("fill","#1d4ed8")
+        .attr("stroke","#fff")
+        .attr("stroke-width",3);
+
+      // PON nodes
+      node.filter(d => d.data.nodeType === "pon")
+        .append("circle")
+        .attr("r",18)
+        .attr("fill","#0f766e")
+        .attr("stroke","#fff")
+        .attr("stroke-width",3);
+
+      // splitter + untagged
+      node.filter(d => d.data.nodeType === "splitter" || d.data.nodeType === "untagged")
+        .append("circle")
+        .attr("r", d => d.data.nodeType === "splitter" ? 14 : 10)
+        .attr("fill", d => d.data.nodeType === "untagged" ? "#6b7280" : colorForSplitter(d.data))
+        .attr("stroke","#fff")
+        .attr("stroke-width",2)
+        .on("mousemove", handleMouseOver)
+        .on("mouseout", () => tooltip.style.opacity = 0)
+        .on("click", handleNodeClick);
+
+      // text labels
+      node.append("text")
+        .attr("dy","0.32em")
+        .attr("x", d => d.children && d.depth > 0 ? -20 : 20)
+        .attr("text-anchor", d => d.children && d.depth > 0 ? "end" : "start")
+        .style("font-size", d => {
+          if (d.data.nodeType === "root") return "14px";
+          if (d.data.nodeType === "window") return "13px";
+          if (d.data.nodeType === "pon") return "12px";
+          return "11px";
+        })
+        .style("font-weight", d => d.data.nodeType === "root" || d.data.nodeType === "window" ? 700 : 500)
+        .text(d => d.data.name);
+
+      // PON + WINDOW hover (only tooltip, no popup)
+      node.filter(d => d.data.nodeType === "pon" || d.data.nodeType === "window")
+        .on("mousemove", handleMouseOver)
+        .on("mouseout", () => tooltip.style.opacity = 0)
+        .on("click", () => {}); // disable popup
+
+      // auto-fit
+      fitToView(svgRoot, g, zoom);
+    }
+
+    function colorForSplitter(data){
+      // offline ratio se color (green/orange/red/gray)
+      const total = data.total || 0;
+      const offline = data.offline || 0;
+      if (total === 0) return "#6b7280";
+      const r = offline / total;
+      if (r >= 1) return "#ef4444";
+      if (r >= 0.5) return "#f59e0b";
+      return "#10b981";
+    }
+
+    function fitToView(svgRoot, g, zoom){
+      const chart = document.getElementById("chart");
+      const bounds = g.node().getBBox();
+      const fullWidth = chart.clientWidth;
+      const fullHeight = chart.clientHeight;
+      const widthScale = fullWidth / (bounds.width + 160);
+      const heightScale = fullHeight / (bounds.height + 160);
+      const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
+      const tx = -(bounds.x)*scale + 40;
+      const ty = -(bounds.y)*scale + 40;
+      svgRoot.transition().duration(600).call(
+        zoom.transform,
+        d3.zoomIdentity.translate(tx,ty).scale(scale)
+      );
+    }
+
+    // --------------- TOOLTIP ----------------
+
+    function handleMouseOver(event, d){
+      const data = d.data;
+      let html = `<strong>${data.name}</strong><br/>`;
+
+      if (data.nodeType === "window"){
+        html += `Window`;
+      } else if (data.nodeType === "pon"){
+        html += `PON: ${data.rawPon}<br/>Total: ${data.total || 0}`;
+      } else if (data.nodeType === "splitter" || data.nodeType === "untagged"){
+        html += `Window: ${data.window}<br/>PON: ${data.pon}<br/>`;
+        html += `Users: <strong>${data.total || (data.users ? data.users.length : 0)}</strong>`;
+        if (typeof data.online === "number" && typeof data.offline === "number"){
+          html += `<br/>Online: <span style="color:#22c55e">${data.online}</span>`;
+          html += `<br/>Offline: <span style="color:#ef4444">${data.offline}</span>`;
         }
-
-        ponNode.children = topLevelSplitters;
-        winNode.children.push(ponNode);
-      });
-    });
-
-    return root;
-  }
-
-  function isSuperset(parentIds, childIds){
-    const s = new Set(parentIds);
-    for (let u of childIds){
-      if (!s.has(u)) return false;
-    }
-    return true;
-  }
-
-  // ---------- DRAW TREE ----------
-  function draw(dataRoot){
-    d3.select('#chart svg').remove();
-
-    const w = document.getElementById('chart').clientWidth;
-    const h = document.getElementById('chart').clientHeight;
-
-    svg = d3.select('#chart')
-      .append('svg')
-      .attr('width', w)
-      .attr('height', h);
-
-    zoom = d3.zoom()
-      .scaleExtent([0.3, 3])
-      .on('zoom', (event)=> g.attr('transform', event.transform));
-
-    svg.call(zoom);
-
-    g = svg.append('g').attr('transform','translate(40,40)');
-
-    const tree = d3.tree().nodeSize([80, 260]);
-    const root = d3.hierarchy(dataRoot, d => d.children);
-    tree(root);
-
-    // links
-    g.selectAll('.link')
-      .data(root.links())
-      .enter()
-      .append('path')
-      .attr('class','link')
-      .attr('d', d3.linkHorizontal().x(d=>d.y).y(d=>d.x))
-      .attr('stroke','#94a3b8')
-      .attr('fill','none')
-      .attr('stroke-width',2);
-
-    // nodes
-    const node = g.selectAll('.node')
-      .data(root.descendants())
-      .enter()
-      .append('g')
-      .attr('class','node')
-      .attr('transform', d=>`translate(${d.y},${d.x})`)
-      .on('mousemove', (event,d)=>onNodeHover(event,d))
-      .on('mouseout', ()=> tooltipEl.style.opacity = 0)
-      .on('click', (event,d)=>onNodeClick(event,d));
-
-    // shapes based on nodeType
-    node.each(function(d){
-      const sel = d3.select(this);
-      const t = d.data.nodeType;
-
-      if (t === 'root'){
-        sel.append('circle')
-          .attr('r',24)
-          .attr('fill','#1e3a8a')
-          .attr('stroke','#fff')
-          .attr('stroke-width',2);
-      } else if (t === 'window'){
-        sel.append('rect')
-          .attr('x',-26).attr('y',-26)
-          .attr('width',52).attr('height',52)
-          .attr('rx',10)
-          .attr('fill','#1e40af')
-          .attr('stroke','#fff')
-          .attr('stroke-width',2);
-      } else if (t === 'pon'){
-        sel.append('rect')
-          .attr('x',-40).attr('y',-20)
-          .attr('width',80).attr('height',40)
-          .attr('rx',10)
-          .attr('fill','#2563eb')
-          .attr('stroke','#fff')
-          .attr('stroke-width',2);
-      } else if (t === 'primary'){
-        sel.append('circle')
-          .attr('r',18)
-          .attr('fill','#10b981')
-          .attr('stroke','#fff')
-          .attr('stroke-width',2);
-      } else if (t === 'child'){
-        sel.append('path')
-          .attr('d', trianglePath(18))
-          .attr('fill','#f59e0b')
-          .attr('stroke','#fff')
-          .attr('stroke-width',2);
-      } else {
-        sel.append('circle')
-          .attr('r',12)
-          .attr('fill','#6b7280')
-          .attr('stroke','#fff')
-          .attr('stroke-width',2);
+        if (data.tag){
+          html += `<br/>Tag: ${data.tag}`;
+        }
       }
-    });
 
-    // labels
-    node.append('text')
-      .attr('x', d=> d.children ? -18 : 18)
-      .attr('text-anchor', d=> d.children ? 'end':'start')
-      .attr('dy','0.32em')
-      .style('font-weight', d=> d.depth<=1 ? 800:600)
-      .style('font-size', d=> d.depth===0 ? '16px' : d.depth===1 ? '14px' : '12px')
-      .text(d => d.data.name);
-
-    fitToView();
-  }
-
-  function trianglePath(size){
-    const h = size;
-    const w = size * 1.2;
-    return `M 0 ${-h} L ${w/2} ${h/2} L ${-w/2} ${h/2} Z`;
-  }
-
-  function fitToView(){
-    if (!svg || !g) return;
-    const bounds = g.node().getBBox();
-    const fullWidth = document.getElementById('chart').clientWidth;
-    const fullHeight = document.getElementById('chart').clientHeight;
-
-    const widthScale = fullWidth / (bounds.width + 160);
-    const heightScale = fullHeight / (bounds.height + 160);
-    const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
-
-    const tx = -(bounds.x) * scale + 40;
-    const ty = -(bounds.y) * scale + 40;
-
-    svg.transition().duration(600)
-      .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
-  }
-
-  // ---------- TOOLTIP / MODAL ----------
-  function onNodeHover(event, d){
-    const info = d.data;
-    let line1 = `<strong>${info.name}</strong>`;
-    let line2 = '';
-    if (info.nodeType === 'window'){
-      line2 = `Window`;
-    } else if (info.nodeType === 'pon'){
-      line2 = `PON (Window: ${info.windowName || ''})`;
-    } else if (info.nodeType === 'primary'){
-      line2 = `Primary splitter`;
-    } else if (info.nodeType === 'child'){
-      line2 = `Child splitter`;
+      tooltip.innerHTML = html;
+      tooltip.style.left = (event.pageX + 14) + "px";
+      tooltip.style.top  = (event.pageY + 8) + "px";
+      tooltip.style.opacity = 1;
     }
 
-    const userCount = (info.users && info.users.length) ? info.users.length : 0;
-    const ucLine = userCount ? `<br/>Users: ${userCount}` : '';
+    // --------------- POPUP ----------------
 
-    tooltipEl.innerHTML = `${line1}<br/>${line2}${ucLine}`;
-    tooltipEl.style.left = (event.pageX + 12) + 'px';
-    tooltipEl.style.top = (event.pageY + 6) + 'px';
-    tooltipEl.style.opacity = 1;
-  }
+    function handleNodeClick(event, d){
+      const data = d.data;
+      if (!(data.nodeType === "splitter" || data.nodeType === "untagged")) return;
 
-  function onNodeClick(event, d){
-    const info = d.data;
-    if (info.nodeType === 'primary' || info.nodeType === 'child' || info.nodeType === 'pon'){
-      openNodeModal(info);
-    }
-  }
+      currentClickNode = data;
 
-  function showNodeModal(flag){
-    document.getElementById('nodeModal').style.display = flag ? 'flex' : 'none';
-  }
+      const titleEl = document.getElementById("popupTitle");
+      const pathEl  = document.getElementById("popupPath");
+      const metaEl  = document.getElementById("popupMeta");
+      const linksEl = document.getElementById("popupLinks");
+      const listEl  = document.getElementById("popupUsers");
 
-  function openNodeModal(info){
-    const titleEl = document.getElementById('nodeModalTitle');
-    const metaEl = document.getElementById('nodeModalMeta');
-    const linksEl = document.getElementById('nodeModalLinks');
-    const listEl = document.getElementById('nodeUserList');
+      titleEl.textContent = data.nodeType === "untagged"
+        ? `⬜ Untagged users (${data.total || data.userIds.length})`
+        : `${data.rawSplitter} — Users`;
 
-    const parts = [];
-    if (info.windowName) parts.push(info.windowName);
-    if (info.ponName) parts.push(info.ponName);
-    if (info.nodeType === 'primary') parts.push('Primary');
-    if (info.nodeType === 'child') parts.push('Child');
+      pathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter}`;
 
-    titleEl.innerText = parts.join(' → ') || info.name || 'Details';
+      const total = data.total || (data.users ? data.users.length : 0);
+      const online = data.online ?? (data.users ? data.users.filter(u=>!u.offline).length : 0);
+      const offline= data.offline?? (data.users ? data.users.filter(u=> u.offline).length : 0);
 
-    // Simple meta from board JSON (later we can blend Data sheet too)
-    let metaHtml = '';
-    metaHtml += `<div>Window: <strong>${info.windowName || '-'}</strong></div>`;
-    metaHtml += `<div>PON: <strong>${info.ponName || '-'}</strong></div>`;
-    if (typeof info.total !== 'undefined'){
-      metaHtml += `<div>Total: <strong>${info.total}</strong> | Online: <strong>${info.online}</strong> | Offline: <strong>${info.offline}</strong></div>`;
-    }
-    if (info.tag){
-      metaHtml += `<div>Status Tag: <strong>${info.tag}</strong></div>`;
-    }
-    metaEl.innerHTML = metaHtml;
+      metaEl.innerHTML = `
+        <div><span class="font-semibold">Window:</span> ${data.window}</div>
+        <div><span class="font-semibold">PON:</span> ${data.pon}</div>
+        <div><span class="font-semibold">Splitter:</span> ${data.rawSplitter || "-"}</div>
+        <div><span class="font-semibold">Total users:</span> ${total}</div>
+        <div><span class="font-semibold">Online:</span> ${online} &nbsp; | &nbsp;
+             <span class="font-semibold">Offline:</span> ${offline}</div>
+        <div><span class="font-semibold">Tag:</span> ${data.tag || "-"}</div>
+      `;
 
-    // Links
-    let l = '';
-    if (info.location) l += `<a href="${info.location}" target="_blank" class="link-pill">📍 Location</a>`;
-    if (info.jcPic)    l += `<a href="${info.jcPic}" target="_blank" class="link-pill">📸 JC Pic</a>`;
-    if (info.polePic)  l += `<a href="${info.polePic}" target="_blank" class="link-pill">🪵 Pole Pic</a>`;
-    linksEl.innerHTML = l;
+      let linksHtml = "";
+      if (data.location){
+        linksHtml += `<span class="link-btn" onclick="openLink('${data.location}')">📍 Location</span>`;
+      }
+      if (data.jcPic){
+        linksHtml += `<span class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</span>`;
+      }
+      if (data.polePic){
+        linksHtml += `<span class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</span>`;
+      }
+      linksEl.innerHTML = linksHtml || "";
 
-    // Users
-    listEl.innerHTML = '';
-    const users = info.users || [];
-    if (users.length === 0){
-      listEl.innerHTML = `<div style="color:var(--muted);font-size:13px;">No users on this node.</div>`;
-    } else {
-      users.forEach((u,i)=>{
-        const div = document.createElement('div');
-        div.className = 'user-item';
-        const offlineLabel = u.offline ? '<span style="color:#ef4444;">Offline</span>' : '<span style="color:#10b981;">Online</span>';
-        div.innerHTML = `<div><strong>${i+1}.</strong> ${u.id}</div><div>${offlineLabel}</div>`;
-        listEl.appendChild(div);
+      // user list with status from TheMaster (column AF)
+      listEl.innerHTML = "";
+      const users = data.users || [];
+      const statusMap = statusMaps[data.window] || {};
+
+      users.forEach((u, idx) => {
+        const id = (u.id ?? "").toString();
+        const offlineFlag = !!u.offline;
+        const statusTextFromDB = statusMap[id] || "";
+        const shownStatus = statusTextFromDB || (offlineFlag ? "Offline" : "Online");
+
+        const row = document.createElement("div");
+        row.className = "user-row" + (offlineFlag ? " offline" : "");
+
+        row.innerHTML = `
+          <div><span class="text-xs text-gray-500 mr-1">${idx+1}.</span> <span class="font-semibold">${id}</span></div>
+          <div class="text-xs text-right">${shownStatus}</div>
+        `;
+        listEl.appendChild(row);
       });
+
+      popupModal.style.display = "flex";
     }
 
-    showNodeModal(true);
-  }
-</script>
+    function openLink(url){
+      if (url) window.open(url, "_blank");
+    }
+
+    // make openLink visible on window for inline onclick
+    window.openLink = openLink;
+    window.selectAll = selectAll;
+    window.deselectAll = deselectAll;
+  </script>
 
 </body>
 </html>
