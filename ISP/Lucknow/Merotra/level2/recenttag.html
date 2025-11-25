@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VBO Sheet Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+
+    #refreshBtn {
+      background: #007bff;
+      color: #fff;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: block;
+      margin: 0 auto 20px auto;
+      font-size: 16px;
+    }
+
+    #refreshBtn:hover {
+      background: #0056b3;
+    }
+
+    .card {
+      background: white;
+      padding: 16px;
+      margin: 14px auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .value {
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .section-title {
+      margin-top: 25px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .user-card {
+      background: #ffffff;
+      padding: 12px;
+      margin: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h2>VBO Sheet Data</h2>
+  <button id="refreshBtn" onclick="loadData()">REFRESH</button>
+
+  <div id="mainCards"></div>
+
+  <h3 class="section-title">User List</h3>
+  <div id="userList"></div>
+
+  <script>
+    const sheetCSV = "https://docs.google.com/spreadsheets/d/1WzR7qR-AAJup_hzNCHIC1fxYsVR_RSxR2mAZ7FcMWcM/export?format=csv&gid=0";
+
+    async function loadData() {
+      document.getElementById("mainCards").innerHTML = "Loading...";
+      document.getElementById("userList").innerHTML = "";
+
+      const res = await fetch(sheetCSV);
+      const data = await res.text();
+      const rows = data.split("\n").map(r => r.split(","));
+
+      let cardsHTML = "";
+      let userHTML = "";
+
+      rows.forEach((r, i) => {
+        if (i === 0) return;
+
+        const A = r[0]; // Time
+        const C = r[2]; // Tag By
+        const D = r[3]; // Location
+        const E = r[4]; // JC Pic
+        const F = r[5]; // Pole Pic
+        const G = r[6]; // Lin name
+        const H = r[7]; // Splitter
+        const I = r[8]; // Fiber
+        const O = r[14]; // Window
+        const P = r[15]; // Tag ID
+        const EY = r[28]; // Total users
+        const EZ = r[29]; // Offline users
+        const FA = r[30]; // Online users
+        const FB = r[31]; // Splitter Status
+
+        cardsHTML += `
+          <div class="card">
+            <span class="label">Time:</span> <span class="value">${A}</span>
+            <span class="label">Tag By:</span> <span class="value">${C}</span>
+            <span class="label">Location:</span> <span class="value">${D}</span>
+            <span class="label">JC Pic:</span> <span class="value"><a href="${E}" target="_blank">Open</a></span>
+            <span class="label">Pole Pic:</span> <span class="value"><a href="${F}" target="_blank">Open</a></span>
+            <span class="label">Line Name:</span> <span class="value">${G}</span>
+            <span class="label">Splitter:</span> <span class="value">${H}</span>
+            <span class="label">Fiber:</span> <span class="value">${I}</span>
+            <span class="label">Window:</span> <span class="value">${O}</span>
+            <span class="label">Tag ID:</span> <span class="value">${P}</span>
+            <span class="label">Total Users:</span> <span class="value">${EY}</span>
+            <span class="label">Offline Users:</span> <span class="value">${EZ}</span>
+            <span class="label">Online Users:</span> <span class="value">${FA}</span>
+            <span class="label">Splitter Status:</span> <span class="value">${FB}</span>
+          </div>`;
+
+        let userData = r.slice(24, 28).join(" | ");
+        if (userData.trim() !== "") {
+          userHTML += `<div class="user-card">${userData}</div>`;
+        }
+      });
+
+      document.getElementById("mainCards").innerHTML = cardsHTML;
+      document.getElementById("userList").innerHTML = userHTML;
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
