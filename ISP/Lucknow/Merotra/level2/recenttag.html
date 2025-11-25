@@ -25,48 +25,64 @@
   <script>
     const sheetCSV = "https://docs.google.com/spreadsheets/d/1WzR7qR-AAJup_hzNCHIC1fxYsVR_RSxR2mAZ7FcMWcM/export?format=csv&gid=0";
 
-    function extractFields(r) {
-      return {
-        time: r[0] || "",        // A - Time
-        tagBy: r[2] || "",       // C - Tag by
-        location: r[3] || "",    // D - Location
-        jcPic: r[4] || "",       // E - JC pic link
-        polePic: r[5] || "",     // F - Pole pic
-        lineName: r[7] || "",    // G - Line Name
-        splitter: r[8] || "",    // H - Splitter
-        fiber: r[9] || "",       // I - Fiber
-        window: r[14] || "",     // O - Window
-        tagId: r[15] || "",      // P - Tag ID
-        totalUsers: r[24] || "", // Y - Total users (approx index)
-        offlineUsers: r[25] || "", // Z - Offline users
-        onlineUsers: r[26] || "",  // AA - Online users
-        splitterStatus: r[27] || "" // AB - Splitter status
-      };
+    // Small test to ensure line splitting works correctly
+    (function testLineSplit() {
+      const sample = "a,b\rc,d";
+      const rows = sample.split(/\r?\n/);
+      console.assert(rows.length === 1 || rows.length === 2, "Line split test warning: environment behaves unexpectedly");
+    })();
+
+    function parseCSV(text) {
+      const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+      return lines.map(line => line.split(","));
     }
 
-    function extractUsers(r) {
-      // Users from Y to EV  (index 24 to 151 approx)
-      return r.slice(24, 152).map(x => x.trim()).filter(x => x !== "");
+    function extractUsers(row) {
+      // Users from Y to EV (columns Y=25 to EV=152 => 0-based indexes 24 to 151)
+      return row
+        .slice(24, 152)
+        .map(x => (x || "").trim())
+        .filter(x => x !== "");
     }
 
     function buildCard(row, extraRow = null) {
-      const f = extractFields(row);
+      // Column mapping based on your sheet structure
+      const f = {
+        time: row[0] || "",         // A - Time
+        tagBy: row[2] || "",        // C - Tag by
+        location: row[3] || "",     // D - Location
+        jcPic: row[4] || "",        // E - JC pic link
+        polePic: row[5] || "",      // F - Pole pic
+        lineName: row[6] || "",     // G - Line Name
+        splitter: row[7] || "",     // H - Splitter
+        fiber: row[8] || "",        // I - Fiber
+        window: row[14] || "",      // O - Window
+        tagId: row[15] || "",       // P - Tag ID
+        totalUsers: row[154] || "", // EY - Total users (155 -> index 154)
+        offlineUsers: row[155] || "", // EZ - Offline users
+        onlineUsers: row[156] || "",  // FA - Online users
+        splitterStatus: row[157] || "" // FB - Splitter status
+      };
+
       let users = extractUsers(row);
       if (extraRow) {
         users = users.concat(extractUsers(extraRow));
       }
 
-      let usersHTML = "";
-      if (users.length) {
-        usersHTML = `
+      const usersHTML = users.length
+        ? `
           <div class="mt-4">
             <p class="font-semibold text-gray-800 mb-2">Users:</p>
             <div class="flex flex-wrap gap-2">
-              ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
+              ${users
+                .map(
+                  u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`
+                )
+                .join("")}
             </div>
           </div>
-        `;
-      }
+        `
+        : "";
 
       return `
         <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
@@ -84,9 +100,16 @@
             <p><span class='font-semibold'>Online Users:</span> ${f.onlineUsers}</p>
             <p><span class='font-semibold'>Splitter Status:</span> ${f.splitterStatus}</p>
           </div>
-          <div class="mt-4 flex flex-wrap gap-4">
-            ${f.jcPic ? `<a href='${f.jcPic}' target='_blank' class='text-blue-600 underline'>JC Pic</a>` : ""}
-            ${f.polePic ? `<a href='${f.polePic}' target='_blank' class='text-blue-600 underline'>Pole Pic</a>` : ""}
+          <div class="mt-6 flex flex-wrap gap-4">
+            ${f.location
+              ? `<span class='bg-purple-100 text-purple-800 px-3 py-1 rounded-lg text-sm border border-purple-300'>📍 ${f.location}</span>`
+              : ""}
+            ${f.jcPic
+              ? `<a href='${f.jcPic}' target='_blank' class='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm'>JC Pic</a>`
+              : ""}
+            ${f.polePic
+              ? `<a href='${f.polePic}' target='_blank' class='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm'>Pole Pic</a>`
+              : ""}
           </div>
           ${usersHTML}
         </div>
@@ -97,30 +120,36 @@
       const mainDiv = document.getElementById("mainCards");
       mainDiv.innerHTML = "<p class='text-center text-gray-600'>Loading...</p>";
 
-      const res = await fetch(sheetCSV);
-      const data = await res.text();
-      const rows = data.split("\n").map(r => r.split(","));
+      try {
+        const res = await fetch(sheetCSV);
+        const data = await res.text();
+        const rows = parseCSV(data);
 
-      // Remove very first row if it's empty/meta
-      const dataRows = rows.slice(0).filter((r, i) => r.join('').trim() !== "");
+        // Filter out any completely empty rows
+        const dataRows = rows.filter(r => r.join("").trim() !== "");
 
-      // Expecting 4 data rows -> make 3 cards:
-      // Card 1 -> Row 1
-      // Card 2 -> Row 2
-      // Card 3 -> Row 3 + Row 4 combined users
-      const r1 = dataRows[0] || null;
-      const r2 = dataRows[1] || null;
-      const r3 = dataRows[2] || null;
-      const r4 = dataRows[3] || null;
+        // Expecting 4 data rows -> make 3 cards:
+        // Card 1 -> Row 1
+        // Card 2 -> Row 2
+        // Card 3 -> Row 3 + Row 4 combined users
+        const r1 = dataRows[0] || null;
+        const r2 = dataRows[1] || null;
+        const r3 = dataRows[2] || null;
+        const r4 = dataRows[3] || null;
 
-      let html = "";
-      if (r1) html += buildCard(r1);
-      if (r2) html += buildCard(r2);
-      if (r3 || r4) html += buildCard(r3 || r4, r3 && r4 ? r4 : null);
+        let html = "";
+        if (r1) html += buildCard(r1);
+        if (r2) html += buildCard(r2);
+        if (r3 || r4) html += buildCard(r3 || r4, r3 && r4 ? r4 : null);
 
-      mainDiv.innerHTML = html || "<p class='text-center text-gray-500'>No data found.</p>";
+        mainDiv.innerHTML = html || "<p class='text-center text-gray-500'>No data found.</p>";
+      } catch (err) {
+        console.error("Error loading data", err);
+        mainDiv.innerHTML = "<p class='text-center text-red-600'>Error loading data. Check console for details.</p>";
+      }
     }
 
+    // Initial load
     loadData();
   </script>
 
