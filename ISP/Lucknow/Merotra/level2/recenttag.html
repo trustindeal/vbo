@@ -63,7 +63,8 @@
         totalUsers: row[154] || "",
         offlineUsers: row[155] || "",
         onlineUsers: row[156] || "",
-        splitterStatus: row[157] || ""
+        splitterStatus: row[157] || "",
+        pon: row[21] || ""
       };
     }
 
@@ -117,7 +118,8 @@
       html += "<p><span class='font-semibold'>Total Users:</span> " + f.totalUsers + "</p>";
       html += "<p><span class='font-semibold'>Offline Users:</span> " + f.offlineUsers + "</p>";
       html += "<p><span class='font-semibold'>Online Users:</span> " + f.onlineUsers + "</p>";
-      html += "<p><span class='font-semibold'>Splitter Status:</span> " + f.splitterStatus + "</p>";
+      html += "<p><span class='font-semibold'>Splitter Status:</span> ${f.splitterStatus}</p>
+      <p><span class='font-semibold'>PON No:</span> ${f.pon}</p>";
       html += "</div>";
 
       html += "<div class='mt-6 flex flex-wrap gap-4'>";
