@@ -30,8 +30,8 @@
         lineName: row[6] || "",
         splitter: row[7] || "",
         fiber: row[8] || "",
-        window: row[10] || "",
-        tagId: row[15] || "",
+        window: row[22] || "",   // Column W
+        tagId: row[15] || "",    // Column P
         totalUsers: row[154] || "",
         offlineUsers: row[155] || "",
         onlineUsers: row[156] || "",
@@ -80,12 +80,7 @@
       html += "<div class='grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base'>";
       html += "<p><span class='font-semibold'>Time:</span> " + timeText + "</p>";
       html += "<p><span class='font-semibold'>Tag By:</span> " + f.tagBy + "</p>";
-      html += "<p><span class='font-semibold'>Location:</span></p>";
-      if (f.location) {
-        html += "<a href='" + f.location + "' target='_blank' class='bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded-lg text-sm'>Open Map</a>";
-      } else {
-        html += "<span class='text-gray-500'>N/A</span>";
-      }
+      // Location label removed from grid, only button below
       html += "<p><span class='font-semibold'>Line Name:</span> " + f.lineName + "</p>";
       html += "<p><span class='font-semibold'>Splitter:</span> " + f.splitter + "</p>";
       html += "<p><span class='font-semibold'>Fiber:</span> " + f.fiber + "</p>";
@@ -98,6 +93,9 @@
       html += "</div>";
 
       html += "<div class='mt-6 flex flex-wrap gap-4'>";
+      if (f.location) {
+        html += "<a href='" + f.location + "' target='_blank' class='bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow text-sm'>Splitter Location</a>";
+      }
       if (f.jcPic) {
         html += "<a href='" + f.jcPic + "' target='_blank' class='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm'>JC Pic</a>";
       }
@@ -182,7 +180,7 @@
         "4 way", // splitter
         "6 Core", // fiber
         "Black",
-        "Dudha office to sundar vihar colony ", // window
+        "Dudha office to sundar vihar colony ", // (old window, but we now map window from index 22)
         122,
         "0",
         1,
