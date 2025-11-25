@@ -202,14 +202,28 @@
 
         const map = {};
         json.rows.forEach(row => {
-          const id = (row[USER_ID_FIELD] ?? "").toString().trim();
-          if (!id) return;
-          map[id] = {
-            status:   (row[USER_STATUS_FIELD]   ?? "").toString().trim(),
-            name:     (row[USER_NAME_FIELD]     ?? "").toString().trim(),
-            number:   (row[USER_NUMBER_FIELD]   ?? "").toString().trim(),
-            location: (row[USER_LOCATION_FIELD] ?? "").toString().trim()
-          };
+function cleanID(v) {
+  if (!v) return "";
+  return String(v)
+    .trim()
+    .replace(/\s+/g, "")       // remove spaces
+    .replace(/^0+/, "")        // remove leading zeros
+    .toLowerCase();            // normalize
+}
+
+json.rows.forEach(row => {
+  const idRaw = row[USER_ID_FIELD];
+  const id = cleanID(idRaw);
+  if (!id) return;
+
+  map[id] = {
+    status:   (row[USER_STATUS_FIELD]   ?? "").toString().trim(),
+    name:     (row[USER_NAME_FIELD]     ?? "").toString().trim(),
+    number:   (row[USER_NUMBER_FIELD]   ?? "").toString().trim(),
+    location: (row[USER_LOCATION_FIELD] ?? "").toString().trim()
+  };
+});
+
         });
         statusMaps[windowName] = map;
       } catch (e) {
@@ -707,8 +721,9 @@
       const statusMap = statusMaps[data.window] || {};
 
       users.forEach((u, idx) => {
-        const id = (u.id ?? "").toString();
-        const info = statusMap[id] || {};
+const id = cleanID(u.id);
+const info = statusMap[id] || {};
+
         const row = document.createElement("div");
         row.className = "user-row";
 
@@ -762,8 +777,9 @@
 
       const rows = [["Sr", "User ID", "Status", "Name", "Number", "Location"]];
       users.forEach((u, idx) => {
-        const id = (u.id ?? "").toString();
-        const info = statusMap[id] || {};
+const id = cleanID(u.id);
+const info = statusMap[id] || {};
+
         rows.push([
           String(idx + 1),
           id,
