@@ -48,20 +48,20 @@
     function buildCard(row, extraRow = null) {
       // Column mapping based on your sheet structure
       const f = {
-        time: row[0] || "",         // A - Time
-        tagBy: row[2] || "",        // C - Tag by
-        location: row[3] || "",     // D - Location
-        jcPic: row[4] || "",        // E - JC pic link
-        polePic: row[5] || "",      // F - Pole pic
-        lineName: row[6] || "",     // G - Line Name
-        splitter: row[7] || "",     // H - Splitter
-        fiber: row[8] || "",        // I - Fiber
-        window: row[14] || "",      // O - Window
-        tagId: row[15] || "",       // P - Tag ID
-        totalUsers: row[154] || "", // EY - Total users (155 -> index 154)
-        offlineUsers: row[155] || "", // EZ - Offline users
-        onlineUsers: row[156] || "",  // FA - Online users
-        splitterStatus: row[157] || "" // FB - Splitter status
+        time: row[0] || "",          // A
+        tagBy: row[2] || "",         // C
+        location: row[3] || "",      // D
+        jcPic: row[4] || "",         // E
+        polePic: row[5] || "",       // F
+        lineName: row[6] || "",      // G
+        splitter: row[7] || "",      // H
+        fiber: row[8] || "",         // I
+        window: row[14] || "",       // O
+        tagId: row[15] || "",        // P
+        totalUsers: row[154] || "",  // EY
+        offlineUsers: row[155] || "",// EZ
+        onlineUsers: row[156] || "", // FA
+        splitterStatus: row[157] || "" // FB
       };
 
       let users = extractUsers(row);
