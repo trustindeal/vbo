@@ -33,8 +33,8 @@
         lineName: row[6] || "",
         splitter: row[7] || "",
         fiber: row[8] || "",
-        window: row[14] || "",
-        tagId: row[15] || "",
+        window: row[10] || "",
+        tagId: row[23] || "",
         totalUsers: row[154] || "",
         offlineUsers: row[155] || "",
         onlineUsers: row[156] || "",
@@ -55,10 +55,10 @@
       return `
         <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
           <div class="grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base">
-            <p><span class='font-semibold'>Time:</span> ${f.time}</p>
+            <p><span class='font-semibold'>Time:</span> ${f.time ? new Date(f.time).toLocaleString() : ""}</p>
             <p><span class='font-semibold'>Tag By:</span> ${f.tagBy}</p>
             <p><span class='font-semibold'>Location:</span></p>
-            <a href='${f.location}' target='_blank' class='bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded-lg text-sm'>Open Map</a>
+            ${f.location ? `<a href='${f.location}' target='_blank' class='bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded-lg text-sm'>Open Map</a>` : ""}
             <p><span class='font-semibold'>Line Name:</span> ${f.lineName}</p>
             <p><span class='font-semibold'>Splitter:</span> ${f.splitter}</p>
             <p><span class='font-semibold'>Fiber:</span> ${f.fiber}</p>
