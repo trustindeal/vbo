@@ -7,6 +7,7 @@
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -60,6 +61,24 @@
       background: #e5e7eb;
       color: #111827;
     }
+    .btn-small {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #e5e7eb;
+      color: #111827;
+      font-weight: 500;
+    }
+    .btn-small-primary {
+      background: #16a34a;
+      color: #fff;
+    }
+    .btn-small-warning {
+      background: #f59e0b;
+      color: #111827;
+    }
     .tooltip {
       position: absolute;
       pointer-events: none;
@@ -104,6 +123,14 @@
     }
     .user-row.offline {
       background: rgba(248,113,113,0.08);
+    }
+    .user-main {
+      font-size: 0.85rem;
+    }
+    .user-meta {
+      font-size: 0.7rem;
+      color: #6b7280;
+      margin-top: 2px;
     }
     .controls-modal {
       background: rgba(255,255,255,0.98);
@@ -163,6 +190,13 @@
     .gray-pill {
       background: #e5e7eb;
     }
+    .blink-red {
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
   </style>
 </head>
 <body>
@@ -185,7 +219,7 @@
 
   <!-- POPUP: Splitter / Untagged -->
   <div id="popupModal" class="modal-backdrop">
-    <div class="modal-content">
+    <div class="modal-content" id="popupContent">
       <div class="flex justify-between items-start mb-2">
         <div>
           <h2 id="popupTitle" class="text-lg font-bold mb-1"></h2>
@@ -202,7 +236,12 @@
         <!-- location / pics -->
       </div>
 
-      <h3 class="text-sm font-semibold mt-3 mb-1">Users</h3>
+      <div class="flex gap-2 mb-2 text-xs">
+        <button id="popupScreenshot" class="btn-small btn-small-primary">📸 Screenshot</button>
+        <button id="popupCsv" class="btn-small btn-small-warning">📊 CSV</button>
+      </div>
+
+      <h3 class="text-sm font-semibold mt-2 mb-1">Users</h3>
       <div id="popupUsers" style="max-height: 260px; overflow-y:auto; border-radius:8px; border:1px solid #e5e7eb;"></div>
     </div>
   </div>
@@ -238,22 +277,21 @@
   <script>
     // -------------------- CONFIG --------------------
 
-    // ✅ Same API_BASE jo aap pehle use kar rahe the (board/data)
+    // Same API_BASE jo aap pehle use kar rahe the (board/data)
     const API_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgWoNwxGB6cZdAHMQqMmh9R-uY6NTk56cJT4JE1BQNi4u_VU4-hjmrbr1SjmTu7SY_lFxNiNETKTS5sRHKD8Hrr4Uh1GYAGlmrDRjyfoTGetW786IOjsnIqah5_cVjZEPkbGsnQjKY7GGHpErfeZpXItjvb71iz-b-cH5L7ISw_DqTfJBdn8ieDC99pCWOyZv9mzZkpzmxeJVOfxWLnwvj9QMktqCF3PG6871DG6eAotb-vcbTj5XnAw-YLofKgoccAohOSpCB_gn-XWlI1EwQDtLoohgONwIdSu50jkShz1nQ9Cx4&lib=MM9jfESS3VUQ4bogWcHsjBa_bifldmWHw";
 
     const BOARD_URL = API_BASE + "&mode=board";
 
-    // ✅ TheMaster DB URLs (token = abcd1234)
-    // Merotra DB (ye URL aapne diya hai)
+    // TheMaster DB URLs (token = abcd1234)
     const MASTER_API_MEROTRA = "https://script.google.com/macros/s/AKfycbwEjBWnBLw5S45MdR0yq4Kvuuy5uFC_8a8u0syGpW9Kyq2deGY-MdquN69uF6V51qj3Pw/exec?token=abcd1234";
-
-    // Sunny DB — yaha apna Sunny वाली file ka URL daal dena (same doGet code)
     const MASTER_API_SUNNY   = "https://script.google.com/macros/s/AKfycbymVJ8_kU4T0WEK5eSQftItoh_sHtmmutjTeuVQDhnMpPdk3dUBxDu5XiuA6tqZ64ZY/exec?token=abcd1234";
 
-    // ⚙️ TheMaster sheet headers (AF = status, N = user id)
-    // 👉 IMPORTANT: Inko bilkul wahi text rakhna jo header row me likha hai.
-    const USER_ID_FIELD     = "Users";   // Column N ka header
-    const USER_STATUS_FIELD = "User status";   // Column AF ka header
+    // TheMaster headers (row 1 text)
+    const USER_ID_FIELD      = "Users";        // Column N
+    const USER_NAME_FIELD    = "Name";         // Column O
+    const USER_NUMBER_FIELD  = "Number";       // Column P
+    const USER_LOC_FIELD     = "Location";     // Column Q
+    const USER_STATUS_FIELD  = "User status";  // Column AF
 
     // --------------- GLOBAL STATE ----------------
 
@@ -270,13 +308,12 @@
       pons: []
     };
 
-    // window name -> { userId -> statusText }
+    // window name -> { userId -> { status,name,number,location } }
     const statusMaps = {
       Merotra: {},
       Sunny: {}
     };
 
-    // click context
     let currentClickNode = null;
 
     // --------------- INIT ----------------
@@ -295,6 +332,9 @@
     });
     document.getElementById("applyFiltersBtn").addEventListener("click", applyFiltersFromUI);
 
+    document.getElementById("popupScreenshot").addEventListener("click", downloadPopupScreenshot);
+    document.getElementById("popupCsv").addEventListener("click", downloadPopupCsv);
+
     window.addEventListener("resize", () => {
       if (currentTreeData) drawTree(currentTreeData);
     });
@@ -312,7 +352,7 @@
         // 2) status DBs
         await Promise.all([
           loadStatusesForWindow("Merotra", MASTER_API_MEROTRA),
-          MASTER_API_SUNNY.startsWith("PASTE_") ? Promise.resolve() : loadStatusesForWindow("Sunny", MASTER_API_SUNNY)
+          MASTER_API_SUNNY ? loadStatusesForWindow("Sunny", MASTER_API_SUNNY) : Promise.resolve()
         ]);
 
         // 3) filters setup
@@ -350,8 +390,13 @@
         const m = {};
         json.rows.forEach(row => {
           const id = (row[USER_ID_FIELD] ?? "").toString().trim();
-          const st = (row[USER_STATUS_FIELD] ?? "").toString().trim();
-          if (id) m[id] = st;
+          if (!id) return;
+          m[id] = {
+            status:   (row[USER_STATUS_FIELD] ?? "").toString().trim(),
+            name:     (row[USER_NAME_FIELD] ?? "").toString().trim(),
+            number:   (row[USER_NUMBER_FIELD] ?? "").toString().trim(),
+            location: (row[USER_LOC_FIELD] ?? "").toString().trim()
+          };
         });
         statusMaps[windowName] = m;
       } catch(e){
@@ -706,6 +751,12 @@
         .on("mouseout", () => tooltip.style.opacity = 0)
         .on("click", handleNodeClick);
 
+      // Tag 🔴❌ → blink red
+      node.filter(d => d.data.nodeType === "splitter" && d.data.tag === "🔴❌")
+        .select("circle")
+        .classed("blink-red", true)
+        .attr("fill", "#ef4444");
+
       // text labels
       node.append("text")
         .attr("dy","0.32em")
@@ -731,7 +782,9 @@
     }
 
     function colorForSplitter(data){
-      // offline ratio se color (green/orange/red/gray)
+      // Tag 🔴❌ priority
+      if (data.tag === "🔴❌") return "#ef4444";
+
       const total = data.total || 0;
       const offline = data.offline || 0;
       if (total === 0) return "#6b7280";
@@ -803,19 +856,14 @@
         ? `⬜ Untagged users (${data.total || data.userIds.length})`
         : `${data.rawSplitter} — Users`;
 
+      // Path e.g. "Merotra → O2I6P2 → Link JC"
       pathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter}`;
 
       const total = data.total || (data.users ? data.users.length : 0);
-      const online = data.online ?? (data.users ? data.users.filter(u=>!u.offline).length : 0);
-      const offline= data.offline?? (data.users ? data.users.filter(u=> u.offline).length : 0);
 
+      // Popup meta — NO Window/PON/Splitter repeat, NO Online/Offline count
       metaEl.innerHTML = `
-        <div><span class="font-semibold">Window:</span> ${data.window}</div>
-        <div><span class="font-semibold">PON:</span> ${data.pon}</div>
-        <div><span class="font-semibold">Splitter:</span> ${data.rawSplitter || "-"}</div>
         <div><span class="font-semibold">Total users:</span> ${total}</div>
-        <div><span class="font-semibold">Online:</span> ${online} &nbsp; | &nbsp;
-             <span class="font-semibold">Offline:</span> ${offline}</div>
         <div><span class="font-semibold">Tag:</span> ${data.tag || "-"}</div>
       `;
 
@@ -831,7 +879,7 @@
       }
       linksEl.innerHTML = linksHtml || "";
 
-      // user list with status from TheMaster (column AF)
+      // user list with TheMaster data
       listEl.innerHTML = "";
       const users = data.users || [];
       const statusMap = statusMaps[data.window] || {};
@@ -839,15 +887,30 @@
       users.forEach((u, idx) => {
         const id = (u.id ?? "").toString();
         const offlineFlag = !!u.offline;
-        const statusTextFromDB = statusMap[id] || "";
-        const shownStatus = statusTextFromDB || (offlineFlag ? "Offline" : "Online");
+        const info = statusMap[id] || {};
+        const shownStatus = info.status || "";
+        const name = info.name || "";
+        const number = info.number || "";
+        const addr = info.location || "";
 
         const row = document.createElement("div");
         row.className = "user-row" + (offlineFlag ? " offline" : "");
 
+        let metaLineParts = [];
+        if (name)   metaLineParts.push(name);
+        if (number) metaLineParts.push(number);
+        if (addr)   metaLineParts.push(addr);
+        const metaText = metaLineParts.join(" • ");
+
         row.innerHTML = `
-          <div><span class="text-xs text-gray-500 mr-1">${idx+1}.</span> <span class="font-semibold">${id}</span></div>
-          <div class="text-xs text-right">${shownStatus}</div>
+          <div>
+            <div class="user-main">
+              <span class="text-xs text-gray-500 mr-1">${idx+1}.</span>
+              <span class="font-semibold">${id}</span>
+            </div>
+            <div class="user-meta">${metaText || "&nbsp;"}</div>
+          </div>
+          <div class="text-xs text-right" style="min-width:70px;">${shownStatus || ""}</div>
         `;
         listEl.appendChild(row);
       });
@@ -859,7 +922,55 @@
       if (url) window.open(url, "_blank");
     }
 
-    // make openLink visible on window for inline onclick
+    // --------------- POPUP DOWNLOADS ----------------
+
+    function downloadPopupScreenshot(){
+      const modalContent = document.getElementById("popupContent");
+      if (!modalContent) return;
+      html2canvas(modalContent, { backgroundColor: "#ffffff", scale: 2 }).then(canvas => {
+        const link = document.createElement("a");
+        const ts = new Date().toISOString().split("T")[0];
+        link.download = `merotra-users-${ts}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+
+    function downloadPopupCsv(){
+      if (!currentClickNode) return;
+      const data = currentClickNode;
+      const users = data.users || [];
+      const statusMap = statusMaps[data.window] || {};
+
+      const header = ["Sr","User ID","Status","Name","Number","Location"];
+      const rows = [header.join(",")];
+
+      users.forEach((u, idx) => {
+        const id = (u.id ?? "").toString();
+        const info = statusMap[id] || {};
+        const line = [
+          idx+1,
+          `"${id.replace(/"/g,'""')}"`,
+          `"${(info.status || "").replace(/"/g,'""')}"`,
+          `"${(info.name || "").replace(/"/g,'""')}"`,
+          `"${(info.number || "").replace(/"/g,'""')}"`,
+          `"${(info.location || "").replace(/"/g,'""')}"`
+        ].join(",");
+        rows.push(line);
+      });
+
+      const csv = rows.join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const ts = new Date().toISOString().split("T")[0];
+      a.href = url;
+      a.download = `merotra-users-${ts}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // expose helpers for inline onclick
     window.openLink = openLink;
     window.selectAll = selectAll;
     window.deselectAll = deselectAll;
