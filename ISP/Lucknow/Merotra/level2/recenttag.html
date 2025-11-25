@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VBO Sheet Viewer (API Version)</title>
+  <title>VBO Sheet Viewer — FINAL FIXED</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -19,11 +19,46 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyfwYPZq_e4TItpYAQKtnVvi4q9U6UKQN6m1jZ6Utc7KAk4cjNLYdY-lWFd44SE_mC0/exec";
 
-    function extractUsers(row) {
-      return row.slice(24, 152).filter(x => x && x.trim() !== "");
+    async function loadData() {
+      const main = document.getElementById("mainCards");
+      main.innerHTML = "<p class='text-center text-gray-600'>Loading...</p>";
+
+      try {
+        const res = await fetch(API_URL, { method: "GET" });
+        const text = await res.text();
+
+        // FIX: Extract pure JSON if wrapped in HTML
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (e) {
+          const clean = text.match(/\{[\s\S]*\}/);
+          if (!clean) throw new Error("Invalid JSON from API");
+          json = JSON.parse(clean[0]);
+        }
+
+        if (!json.rows) throw new Error("JSON missing rows");
+
+        const rows = json.rows.filter(r => r.join("").trim() !== "");
+        const cards = [];
+
+        if (rows[0]) cards.push(buildCard(rows[0]));
+        if (rows[1]) cards.push(buildCard(rows[1]));
+        if (rows[2] || rows[3]) cards.push(buildCard(rows[2] || rows[3], rows[3]));
+
+        main.innerHTML = cards.join("");
+
+      } catch (err) {
+        console.error(err);
+        main.innerHTML = "<p class='text-center text-red-600'>Failed to load API data</p>";
+      }
     }
 
-    function buildCard(row, extraRow = null) {
+    function extractUsers(r) {
+      return r.slice(24, 152).filter(x => x && x.trim());
+    }
+
+    function buildCard(row, extra = null) {
       const f = {
         time: row[0] || "",
         tagBy: row[2] || "",
@@ -42,19 +77,11 @@
       };
 
       let users = extractUsers(row);
-      if (extraRow) users = users.concat(extractUsers(extraRow));
-
-      const usersHTML = users.length ? `
-        <div class="mt-4">
-          <p class="font-semibold text-gray-800 mb-2">Users:</p>
-          <div class="flex flex-wrap gap-2">
-            ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
-          </div>
-        </div>` : "";
+      if (extra) users = users.concat(extractUsers(extra));
 
       return `
-        <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
-          <div class="grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base">
+        <div class='bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200'>
+          <div class='grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base'>
             <p><span class='font-semibold'>Time:</span> ${f.time ? new Date(f.time).toLocaleString() : ""}</p>
             <p><span class='font-semibold'>Tag By:</span> ${f.tagBy}</p>
             <p><span class='font-semibold'>Location:</span></p>
@@ -70,40 +97,19 @@
             <p><span class='font-semibold'>Splitter Status:</span> ${f.splitterStatus}</p>
           </div>
 
-          <div class="mt-6 flex flex-wrap gap-4">
+          <div class='mt-6 flex flex-wrap gap-4'>
             ${f.jcPic ? `<a href='${f.jcPic}' target='_blank' class='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm'>JC Pic</a>` : ""}
             ${f.polePic ? `<a href='${f.polePic}' target='_blank' class='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm'>Pole Pic</a>` : ""}
           </div>
 
-          ${usersHTML}
+          ${users.length ? `
+            <div class='mt-4'>
+              <p class='font-semibold text-gray-800 mb-2'>Users:</p>
+              <div class='flex flex-wrap gap-2'>
+                ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
+              </div>
+            </div>` : ""}
         </div>`;
-    }
-
-    async function loadData() {
-      const mainDiv = document.getElementById("mainCards");
-      mainDiv.innerHTML = "<p class='text-center text-gray-600'>Loading...</p>";
-
-      try {
-        const res = await fetch(API_URL);
-        const json = await res.json();
-
-        const rows = json.rows.filter(r => r.join("").trim() !== "");
-
-        const r1 = rows[0];
-        const r2 = rows[1];
-        const r3 = rows[2];
-        const r4 = rows[3];
-
-        let html = "";
-        if (r1) html += buildCard(r1);
-        if (r2) html += buildCard(r2);
-        if (r3 || r4) html += buildCard(r3 || r4, r3 && r4 ? r4 : null);
-
-        mainDiv.innerHTML = html;
-
-      } catch (e) {
-        mainDiv.innerHTML = "<p class='text-center text-red-600'>Failed to load API data</p>";
-      }
     }
 
     loadData();
