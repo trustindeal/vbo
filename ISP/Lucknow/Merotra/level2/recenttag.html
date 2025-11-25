@@ -4,82 +4,31 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VBO Sheet Viewer</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-    }
-    h2 {
-      text-align: center;
-    }
 
-    #refreshBtn {
-      background: #007bff;
-      color: #fff;
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      display: block;
-      margin: 0 auto 20px auto;
-      font-size: 16px;
-    }
-
-    #refreshBtn:hover {
-      background: #0056b3;
-    }
-
-    .card {
-      background: white;
-      padding: 16px;
-      margin: 14px auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      max-width: 600px;
-    }
-
-    .label {
-      font-weight: bold;
-      color: #333;
-    }
-
-    .value {
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .section-title {
-      margin-top: 25px;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .user-card {
-      background: #ffffff;
-      padding: 12px;
-      margin: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-  </style>
+  <!-- Modern Clean UI Using Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h2>VBO Sheet Data</h2>
-  <button id="refreshBtn" onclick="loadData()">REFRESH</button>
+<body class="bg-gray-100 p-4">
 
-  <div id="mainCards"></div>
+  <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">VBO Sheet Data</h2>
 
-  <h3 class="section-title">User List</h3>
-  <div id="userList"></div>
+  <div class="text-center mb-4">
+    <button id="refreshBtn" onclick="loadData()"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md text-lg">
+      REFRESH
+    </button>
+  </div>
+
+  <div id="mainCards" class="space-y-6"></div>
+
+  <h3 class="text-2xl font-semibold text-center mt-10 mb-3 text-gray-700">User List</h3>
+  <div id="userList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
   <script>
     const sheetCSV = "https://docs.google.com/spreadsheets/d/1WzR7qR-AAJup_hzNCHIC1fxYsVR_RSxR2mAZ7FcMWcM/export?format=csv&gid=0";
 
     async function loadData() {
-      document.getElementById("mainCards").innerHTML = "Loading...";
+      document.getElementById("mainCards").innerHTML = "<p class='text-center text-gray-600'>Loading...</p>";
       document.getElementById("userList").innerHTML = "";
 
       const res = await fetch(sheetCSV);
@@ -90,44 +39,55 @@
       let userHTML = "";
 
       rows.forEach((r, i) => {
-        if (i === 0) return;
+        if (i === 0) return; // No header, but still skip first blank/format row
 
-        const A = r[0]; // Time
-        const C = r[2]; // Tag By
-        const D = r[3]; // Location
-        const E = r[4]; // JC Pic
-        const F = r[5]; // Pole Pic
-        const G = r[6]; // Lin name
-        const H = r[7]; // Splitter
-        const I = r[8]; // Fiber
-        const O = r[14]; // Window
-        const P = r[15]; // Tag ID
-        const EY = r[28]; // Total users
-        const EZ = r[29]; // Offline users
-        const FA = r[30]; // Online users
-        const FB = r[31]; // Splitter Status
+        // MAIN CARD FIELDS BASED ON PROVIDED COLUMNS
+        const A = r[0] || "";   // Time
+        const C = r[2] || "";   // Tag by
+        const D = r[3] || "";   // Location
+        const E = r[4] || "";   // JC pic link
+        const F = r[5] || "";   // Pole pic
+        const G = r[6] || "";   // Line Name
+        const H = r[7] || "";   // Splitter
+        const I = r[8] || "";   // Fiber
+        const O = r[14] || "";  // Window
+        const P = r[15] || "";  // Tag ID
+        const EY = r[24] || ""; // Total users (Y index = 24)
+        const EZ = r[25] || ""; // Offline users
+        const FA = r[26] || ""; // Online users
+        const FB = r[27] || ""; // Splitter status
 
+        // CARD UI
         cardsHTML += `
-          <div class="card">
-            <span class="label">Time:</span> <span class="value">${A}</span>
-            <span class="label">Tag By:</span> <span class="value">${C}</span>
-            <span class="label">Location:</span> <span class="value">${D}</span>
-            <span class="label">JC Pic:</span> <span class="value"><a href="${E}" target="_blank">Open</a></span>
-            <span class="label">Pole Pic:</span> <span class="value"><a href="${F}" target="_blank">Open</a></span>
-            <span class="label">Line Name:</span> <span class="value">${G}</span>
-            <span class="label">Splitter:</span> <span class="value">${H}</span>
-            <span class="label">Fiber:</span> <span class="value">${I}</span>
-            <span class="label">Window:</span> <span class="value">${O}</span>
-            <span class="label">Tag ID:</span> <span class="value">${P}</span>
-            <span class="label">Total Users:</span> <span class="value">${EY}</span>
-            <span class="label">Offline Users:</span> <span class="value">${EZ}</span>
-            <span class="label">Online Users:</span> <span class="value">${FA}</span>
-            <span class="label">Splitter Status:</span> <span class="value">${FB}</span>
+          <div class="bg-white p-6 rounded-2xl shadow-md max-w-2xl mx-auto border border-gray-200">
+            <div class="grid grid-cols-2 gap-3 text-gray-800 text-base">
+              <p><span class='font-semibold'>Time:</span> ${A}</p>
+              <p><span class='font-semibold'>Tag By:</span> ${C}</p>
+              <p><span class='font-semibold'>Location:</span> ${D}</p>
+              <p><span class='font-semibold'>Line Name:</span> ${G}</p>
+              <p><span class='font-semibold'>Splitter:</span> ${H}</p>
+              <p><span class='font-semibold'>Fiber:</span> ${I}</p>
+              <p><span class='font-semibold'>Window:</span> ${O}</p>
+              <p><span class='font-semibold'>Tag ID:</span> ${P}</p>
+              <p><span class='font-semibold'>Total Users:</span> ${EY}</p>
+              <p><span class='font-semibold'>Offline Users:</span> ${EZ}</p>
+              <p><span class='font-semibold'>Online Users:</span> ${FA}</p>
+              <p><span class='font-semibold'>Splitter Status:</span> ${FB}</p>
+            </div>
+            <div class="mt-4 flex gap-4">
+              <a href="${E}" target="_blank" class="text-blue-600 underline">JC Pic</a>
+              <a href="${F}" target="_blank" class="text-blue-600 underline">Pole Pic</a>
+            </div>
           </div>`;
 
-        let userData = r.slice(24, 28).join(" | ");
-        if (userData.trim() !== "") {
-          userHTML += `<div class="user-card">${userData}</div>`;
+        // USER LIST (Y to EV = 24 to 80 approx)
+        let users = r.slice(24, 80).filter(x => x.trim() !== "");
+        if (users.length > 0) {
+          users.forEach(u => {
+            userHTML += `
+              <div class="bg-white p-4 rounded-xl shadow border border-gray-200">${u}</div>
+            `;
+          });
         }
       });
 
@@ -137,5 +97,6 @@
 
     loadData();
   </script>
+
 </body>
 </html>
