@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VBO Sheet Viewer</title>
-
-  <!-- Modern Clean UI Using Tailwind CDN -->
+  <title>VBO Sheet Viewer (API Version)</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
@@ -13,83 +11,54 @@
   <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">VBO Sheet Data</h2>
 
   <div class="text-center mb-6">
-    <button id="refreshBtn" onclick="loadData()"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md text-lg">
-      REFRESH
-    </button>
+    <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md text-lg">REFRESH</button>
   </div>
 
-  <!-- All cards (Row 1, Row 2, and combined Row 3+4) -->
   <div id="mainCards" class="space-y-6"></div>
 
   <script>
-    const sheetCSV = "https://docs.google.com/spreadsheets/d/1WzR7qR-AAJup_hzNCHIC1fxYsVR_RSxR2mAZ7FcMWcM/export?format=csv&gid=0";
-
-    // Small test to ensure line splitting works correctly
-    (function testLineSplit() {
-      const sample = "a,b\rc,d";
-      const rows = sample.split(/\r?\n/);
-      console.assert(rows.length === 1 || rows.length === 2, "Line split test warning: environment behaves unexpectedly");
-    })();
-
-    function parseCSV(text) {
-      const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-      return lines.map(line => line.split(","));
-    }
+    const API_URL = "https://script.google.com/macros/s/AKfycbyfwYPZq_e4TItpYAQKtnVvi4q9U6UKQN6m1jZ6Utc7KAk4cjNLYdY-lWFd44SE_mC0/exec";
 
     function extractUsers(row) {
-      // Users from Y to EV (columns Y=25 to EV=152 => 0-based indexes 24 to 151)
-      return row
-        .slice(24, 152)
-        .map(x => (x || "").trim())
-        .filter(x => x !== "");
+      return row.slice(24, 152).filter(x => x && x.trim() !== "");
     }
 
     function buildCard(row, extraRow = null) {
-      // Column mapping based on your sheet structure
       const f = {
-        time: row[0] || "",          // A
-        tagBy: row[2] || "",         // C
-        location: row[3] || "",      // D
-        jcPic: row[4] || "",         // E
-        polePic: row[5] || "",       // F
-        lineName: row[6] || "",      // G
-        splitter: row[7] || "",      // H
-        fiber: row[8] || "",         // I
-        window: row[14] || "",       // O
-        tagId: row[15] || "",        // P
-        totalUsers: row[154] || "",  // EY
-        offlineUsers: row[155] || "",// EZ
-        onlineUsers: row[156] || "", // FA
-        splitterStatus: row[157] || "" // FB
+        time: row[0] || "",
+        tagBy: row[2] || "",
+        location: row[3] || "",
+        jcPic: row[4] || "",
+        polePic: row[5] || "",
+        lineName: row[6] || "",
+        splitter: row[7] || "",
+        fiber: row[8] || "",
+        window: row[14] || "",
+        tagId: row[15] || "",
+        totalUsers: row[154] || "",
+        offlineUsers: row[155] || "",
+        onlineUsers: row[156] || "",
+        splitterStatus: row[157] || ""
       };
 
       let users = extractUsers(row);
-      if (extraRow) {
-        users = users.concat(extractUsers(extraRow));
-      }
+      if (extraRow) users = users.concat(extractUsers(extraRow));
 
-      const usersHTML = users.length
-        ? `
-          <div class="mt-4">
-            <p class="font-semibold text-gray-800 mb-2">Users:</p>
-            <div class="flex flex-wrap gap-2">
-              ${users
-                .map(
-                  u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`
-                )
-                .join("")}
-            </div>
+      const usersHTML = users.length ? `
+        <div class="mt-4">
+          <p class="font-semibold text-gray-800 mb-2">Users:</p>
+          <div class="flex flex-wrap gap-2">
+            ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
           </div>
-        `
-        : "";
+        </div>` : "";
 
       return `
         <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
           <div class="grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base">
             <p><span class='font-semibold'>Time:</span> ${f.time}</p>
             <p><span class='font-semibold'>Tag By:</span> ${f.tagBy}</p>
-            <p><span class='font-semibold'>Location:</span> ${f.location}</p>
+            <p><span class='font-semibold'>Location:</span></p>
+            <a href='${f.location}' target='_blank' class='bg-purple-600 hover:bg-purple-700 text-white px-4 py-1 rounded-lg text-sm'>Open Map</a>
             <p><span class='font-semibold'>Line Name:</span> ${f.lineName}</p>
             <p><span class='font-semibold'>Splitter:</span> ${f.splitter}</p>
             <p><span class='font-semibold'>Fiber:</span> ${f.fiber}</p>
@@ -100,20 +69,14 @@
             <p><span class='font-semibold'>Online Users:</span> ${f.onlineUsers}</p>
             <p><span class='font-semibold'>Splitter Status:</span> ${f.splitterStatus}</p>
           </div>
+
           <div class="mt-6 flex flex-wrap gap-4">
-            ${f.location
-              ? `<span class='bg-purple-100 text-purple-800 px-3 py-1 rounded-lg text-sm border border-purple-300'>📍 ${f.location}</span>`
-              : ""}
-            ${f.jcPic
-              ? `<a href='${f.jcPic}' target='_blank' class='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm'>JC Pic</a>`
-              : ""}
-            ${f.polePic
-              ? `<a href='${f.polePic}' target='_blank' class='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm'>Pole Pic</a>`
-              : ""}
+            ${f.jcPic ? `<a href='${f.jcPic}' target='_blank' class='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm'>JC Pic</a>` : ""}
+            ${f.polePic ? `<a href='${f.polePic}' target='_blank' class='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm'>Pole Pic</a>` : ""}
           </div>
+
           ${usersHTML}
-        </div>
-      `;
+        </div>`;
     }
 
     async function loadData() {
@@ -121,35 +84,28 @@
       mainDiv.innerHTML = "<p class='text-center text-gray-600'>Loading...</p>";
 
       try {
-        const res = await fetch(sheetCSV);
-        const data = await res.text();
-        const rows = parseCSV(data);
+        const res = await fetch(API_URL);
+        const json = await res.json();
 
-        // Filter out any completely empty rows
-        const dataRows = rows.filter(r => r.join("").trim() !== "");
+        const rows = json.rows.filter(r => r.join("").trim() !== "");
 
-        // Expecting 4 data rows -> make 3 cards:
-        // Card 1 -> Row 1
-        // Card 2 -> Row 2
-        // Card 3 -> Row 3 + Row 4 combined users
-        const r1 = dataRows[0] || null;
-        const r2 = dataRows[1] || null;
-        const r3 = dataRows[2] || null;
-        const r4 = dataRows[3] || null;
+        const r1 = rows[0];
+        const r2 = rows[1];
+        const r3 = rows[2];
+        const r4 = rows[3];
 
         let html = "";
         if (r1) html += buildCard(r1);
         if (r2) html += buildCard(r2);
         if (r3 || r4) html += buildCard(r3 || r4, r3 && r4 ? r4 : null);
 
-        mainDiv.innerHTML = html || "<p class='text-center text-gray-500'>No data found.</p>";
-      } catch (err) {
-        console.error("Error loading data", err);
-        mainDiv.innerHTML = "<p class='text-center text-red-600'>Error loading data. Check console for details.</p>";
+        mainDiv.innerHTML = html;
+
+      } catch (e) {
+        mainDiv.innerHTML = "<p class='text-center text-red-600'>Failed to load API data</p>";
       }
     }
 
-    // Initial load
     loadData();
   </script>
 
