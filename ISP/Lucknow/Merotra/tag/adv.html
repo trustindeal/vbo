@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🌐 Merotra — PON / Splitter Tree</title>
 
-  <!-- Libraries -->
+  <!-- D3 & Tailwind -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- External CSS -->
+  <!-- Screenshot lib -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+  <!-- Fonts + CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="adv.css">
 </head>
 <body>
@@ -22,162 +24,174 @@
       <div class="header-title">
         <span>🌐 Merotra Network Tree</span>
       </div>
-      <div class="header-sub">
-        Window → PON → Splitters → Users (+ Untagged branch)
-      </div>
+      <div class="header-sub">Window → PON → Splitters → Users (+ Untagged branch)</div>
     </div>
-    <div class="header-actions">
+    <div class="flex items-center gap-2">
       <button id="controlsBtn" class="btn btn-secondary">Filters</button>
       <button id="reloadBtn" class="btn">Reload</button>
     </div>
   </div>
 
-  <!-- CHART AREA -->
   <div id="chart"></div>
   <div id="tooltip" class="tooltip"></div>
 
   <!-- POPUP: Splitter / Untagged -->
-  <div id="popupModal" class="modal-backdrop">
-    <div id="popupContent" class="modal-content">
-      <div class="popup-header">
+  <div id="popupModal" class="popup-backdrop">
+    <div class="modal-content">
+      <div class="flex justify-between items-start mb-2">
         <div>
-          <h2 id="popupTitle" class="popup-title"></h2>
-          <div id="popupPath" class="popup-path"></div>
+          <h2 id="popupTitle" class="text-lg font-bold mb-1"></h2>
+          <div id="popupPath" class="text-xs text-gray-500"></div>
         </div>
-        <button id="popupClose" class="btn btn-secondary btn-xs">Close</button>
+        <button id="popupClose" class="btn btn-secondary text-xs px-2 py-1">Close</button>
       </div>
 
-      <div id="popupMeta" class="popup-meta"></div>
-
-      <div id="popupLinks" class="popup-links"></div>
-
-      <div class="popup-users-header">
-        <h3 class="popup-users-title">Users</h3>
-        <div class="popup-users-actions">
-          <button id="popupScreenshotBtn" class="btn btn-xs">📸 Screenshot</button>
-          <button id="popupCsvBtn" class="btn btn-secondary btn-xs">📊 CSV</button>
-        </div>
+      <div class="text-xs text-gray-600 mb-2 space-y-1" id="popupMeta">
+        <!-- Filled by JS -->
       </div>
 
-      <div id="popupUsers" class="popup-users"></div>
+      <div class="mb-2 text-xs" id="popupLinks">
+        <!-- location / JC / pole -->
+      </div>
+
+      <h3 class="text-sm font-semibold mt-3 mb-1">Users</h3>
+      <div class="user-table-container">
+        <table id="popupUsersTable" class="user-table">
+          <!-- Filled by JS -->
+        </table>
+      </div>
+
+      <div class="download-btns">
+        <button id="btnShot" class="download-btn btn-shot">📸 Screenshot</button>
+        <button id="btnCsv" class="download-btn btn-csv">📊 CSV</button>
+      </div>
     </div>
   </div>
 
   <!-- CONTROLS MODAL -->
-  <div id="controlsModal" class="modal-backdrop">
+  <div id="controlsModal" class="controls-backdrop">
     <div class="controls-modal">
-      <h2 class="controls-title">Filters &amp; View</h2>
+      <h2 class="text-base font-bold mb-3">Filters & View</h2>
 
-      <div class="controls-section">
+      <div class="mb-3">
         <div class="filter-title">Windows</div>
         <div id="windowFilters" class="checkbox-grid"></div>
-        <div class="select-row">
+        <div class="mt-1 text-center">
           <span class="select-all" onclick="selectAll('window')">Select All</span> |
           <span class="select-all" onclick="deselectAll('window')">Deselect All</span>
         </div>
       </div>
 
-      <div class="controls-section">
+      <div class="mb-3">
         <div class="filter-title">PONs</div>
-        <div id="ponFilters" class="checkbox-grid checkbox-scroll"></div>
-        <div class="select-row">
+        <div id="ponFilters" class="checkbox-grid pon-grid"></div>
+        <div class="mt-1 text-center">
           <span class="select-all" onclick="selectAll('pon')">Select All</span> |
           <span class="select-all" onclick="deselectAll('pon')">Deselect All</span>
         </div>
       </div>
 
-      <button id="applyFiltersBtn" class="btn controls-btn">Apply Filters</button>
-      <button id="controlsClose" class="btn btn-secondary controls-btn">Close</button>
+      <button id="applyFiltersBtn" class="btn w-full mt-1">Apply Filters</button>
+      <button id="controlsClose" class="btn btn-secondary w-full mt-2">Close</button>
     </div>
   </div>
 
-  <!-- SCRIPT -->
   <script>
     // -------------------- CONFIG --------------------
 
-    // Same BOARD API_BASE (board/data)
+    // Same API_BASE (board/data) jo aap pehle use kar rahe the
     const API_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgWoNwxGB6cZdAHMQqMmh9R-uY6NTk56cJT4JE1BQNi4u_VU4-hjmrbr1SjmTu7SY_lFxNiNETKTS5sRHKD8Hrr4Uh1GYAGlmrDRjyfoTGetW786IOjsnIqah5_cVjZEPkbGsnQjKY7GGHpErfeZpXItjvb71iz-b-cH5L7ISw_DqTfJBdn8ieDC99pCWOyZv9mzZkpzmxeJVOfxWLnwvj9QMktqCF3PG6871DG6eAotb-vcbTj5XnAw-YLofKgoccAohOSpCB_gn-XWlI1EwQDtLoohgONwIdSu50jkShz1nQ9Cx4&lib=MM9jfESS3VUQ4bogWcHsjBa_bifldmWHw";
+
     const BOARD_URL = API_BASE + "&mode=board";
 
     // TheMaster DB URLs (token = abcd1234)
     const MASTER_API_MEROTRA = "https://script.google.com/macros/s/AKfycbwEjBWnBLw5S45MdR0yq4Kvuuy5uFC_8a8u0syGpW9Kyq2deGY-MdquN69uF6V51qj3Pw/exec?token=abcd1234";
     const MASTER_API_SUNNY   = "https://script.google.com/macros/s/AKfycbymVJ8_kU4T0WEK5eSQftItoh_sHtmmutjTeuVQDhnMpPdk3dUBxDu5XiuA6tqZ64ZY/exec?token=abcd1234";
 
-    // TheMaster headers (must match header text in row 1)
-    const USER_ID_FIELD       = "Users";       // N
-    const USER_NAME_FIELD     = "Name";        // O
-    const USER_NUMBER_FIELD   = "Number";      // P
-    const USER_LOCATION_FIELD = "Location";    // Q
-    const USER_STATUS_FIELD   = "User status"; // AF
+    // TheMaster headers
+    const USER_ID_FIELD      = "Users";       // Col N
+    const USER_NAME_FIELD    = "Name";        // Col O
+    const USER_NUMBER_FIELD  = "Number";      // Col P
+    const USER_LOCATION_FIELD= "Location";    // Col Q
+    const USER_STATUS_FIELD  = "User status"; // Col AF
 
-    // -------------------- GLOBAL STATE --------------------
+    // --------------- GLOBAL STATE ----------------
 
-    const tooltip      = document.getElementById("tooltip");
-    const popupModal   = document.getElementById("popupModal");
-    const controlsModal= document.getElementById("controlsModal");
+    const tooltip       = document.getElementById("tooltip");
+    const popupModal    = document.getElementById("popupModal");
+    const controlsModal = document.getElementById("controlsModal");
+    const popupTitleEl  = document.getElementById("popupTitle");
+    const popupPathEl   = document.getElementById("popupPath");
+    const popupMetaEl   = document.getElementById("popupMeta");
+    const popupLinksEl  = document.getElementById("popupLinks");
+    const popupUsersTbl = document.getElementById("popupUsersTable");
 
     let rawBoard = {};
-    let svgRoot, g, treeLayout, root;
+    let svg, g, treeLayout, root;
     let currentTreeData = null;
 
     let filters = { windows: [], pons: [] };
 
-    // windowName -> { userId -> {status,name,number,location} }
+    // window name => normalizedID => { id, name, number, location, status }
     const statusMaps = {
       Merotra: {},
       Sunny: {}
     };
 
-    // current clicked node data
-    let currentClickNode = null;
+    // popup csv data
+    let currentPopupRows = [];
 
-    // -------------------- INIT --------------------
+    // --------------- HELPERS ----------------
 
-    document.getElementById("reloadBtn").addEventListener("click", () => loadAll(true));
-    document.getElementById("controlsBtn").addEventListener("click", () => { controlsModal.style.display = "flex"; });
-    document.getElementById("controlsClose").addEventListener("click", () => { controlsModal.style.display = "none"; });
-    document.getElementById("popupClose").addEventListener("click", () => { popupModal.style.display = "none"; });
+    function normalizeId(v){
+      return (v ?? "").toString().trim().replace(/\s+/g,"").toLowerCase();
+    }
+
+    // --------------- INIT ----------------
+
+    document.getElementById("reloadBtn").addEventListener("click", () => {
+      loadAll(true);
+    });
+    document.getElementById("controlsBtn").addEventListener("click", () => {
+      controlsModal.style.display = "flex";
+    });
+    document.getElementById("controlsClose").addEventListener("click", () => {
+      controlsModal.style.display = "none";
+    });
+    document.getElementById("popupClose").addEventListener("click", () => {
+      popupModal.style.display = "none";
+    });
     document.getElementById("applyFiltersBtn").addEventListener("click", applyFiltersFromUI);
 
-    document.getElementById("popupScreenshotBtn").addEventListener("click", downloadPopupScreenshot);
-    document.getElementById("popupCsvBtn").addEventListener("click", downloadPopupCSV);
+    document.getElementById("btnShot").addEventListener("click", downloadScreenshot);
+    document.getElementById("btnCsv").addEventListener("click", downloadCSV);
 
     window.addEventListener("resize", () => {
       if (currentTreeData) drawTree(currentTreeData);
     });
 
-    // Expose some helpers for inline onclick
-    window.selectAll   = selectAll;
-    window.deselectAll = deselectAll;
-
-    // First load
+    // page load
     loadAll(false);
 
-    // -------------------- LOADING --------------------
-
-    async function loadAll() {
+    async function loadAll(){
       try {
         setLoading(true);
 
-        // 1) Board JSON
         const bRes = await fetch(BOARD_URL);
         rawBoard = await bRes.json();
 
-        // 2) TheMaster DBs
         await Promise.all([
           loadStatusesForWindow("Merotra", MASTER_API_MEROTRA),
           loadStatusesForWindow("Sunny", MASTER_API_SUNNY)
         ]);
 
-        // 3) Filters
         setupFiltersFromBoard();
 
-        // 4) Build + Draw
         const filtered = filterBoard(rawBoard, filters);
         const treeData = buildHierarchy(filtered);
         currentTreeData = treeData;
         drawTree(treeData);
-      } catch (e) {
+      } catch(e){
         console.error(e);
         alert("Error loading data: " + e);
       } finally {
@@ -185,57 +199,45 @@
       }
     }
 
-    function setLoading(flag) {
+    function setLoading(flag){
       const btn = document.getElementById("reloadBtn");
       btn.textContent = flag ? "Loading..." : "Reload";
       btn.disabled = flag;
     }
 
-    // -------------------- STATUS MAPS (TheMaster) --------------------
+    // --------------- STATUS MAP (TheMaster) ----------------
 
-    async function loadStatusesForWindow(windowName, apiUrl) {
+    async function loadStatusesForWindow(windowName, apiUrl){
       if (!apiUrl) return;
       try {
         const res = await fetch(apiUrl);
         const json = await res.json();
         if (!json || !Array.isArray(json.rows)) return;
 
-        const map = {};
+        const m = {};
         json.rows.forEach(row => {
-function cleanID(v) {
-  if (!v) return "";
-  return String(v)
-    .trim()
-    .replace(/\s+/g, "")       // remove spaces
-    .replace(/^0+/, "")        // remove leading zeros
-    .toLowerCase();            // normalize
-}
-
-json.rows.forEach(row => {
-  const idRaw = row[USER_ID_FIELD];
-  const id = cleanID(idRaw);
-  if (!id) return;
-
-  map[id] = {
-    status:   (row[USER_STATUS_FIELD]   ?? "").toString().trim(),
-    name:     (row[USER_NAME_FIELD]     ?? "").toString().trim(),
-    number:   (row[USER_NUMBER_FIELD]   ?? "").toString().trim(),
-    location: (row[USER_LOCATION_FIELD] ?? "").toString().trim()
-  };
-});
-
+          const rawId = row[USER_ID_FIELD];
+          const norm  = normalizeId(rawId);
+          if (!norm) return;
+          m[norm] = {
+            id: rawId != null ? rawId.toString().trim() : "",
+            name: row[USER_NAME_FIELD] ?? "",
+            number: row[USER_NUMBER_FIELD] ?? "",
+            location: row[USER_LOCATION_FIELD] ?? "",
+            status: row[USER_STATUS_FIELD] ?? ""
+          };
         });
-        statusMaps[windowName] = map;
-      } catch (e) {
+        statusMaps[windowName] = m;
+      } catch(e){
         console.error("Status load failed for", windowName, e);
       }
     }
 
-    // -------------------- FILTERS --------------------
+    // --------------- FILTERS ----------------
 
-    function setupFiltersFromBoard() {
+    function setupFiltersFromBoard(){
       const windowSet = new Set();
-      const ponSet    = new Set();
+      const ponSet = new Set();
 
       Object.entries(rawBoard).forEach(([pon, winObj]) => {
         ponSet.add(pon);
@@ -273,26 +275,19 @@ json.rows.forEach(row => {
       });
     }
 
-    function selectAll(type) {
-      document
-        .querySelectorAll(`#${type}Filters input[type="checkbox"]`)
+    function selectAll(type){
+      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`)
         .forEach(ch => ch.checked = true);
     }
 
-    function deselectAll(type) {
-      document
-        .querySelectorAll(`#${type}Filters input[type="checkbox"]`)
+    function deselectAll(type){
+      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`)
         .forEach(ch => ch.checked = false);
     }
 
-    function applyFiltersFromUI() {
-      filters.windows = Array.from(
-        document.querySelectorAll("#windowFilters input:checked")
-      ).map(i => i.value);
-
-      filters.pons = Array.from(
-        document.querySelectorAll("#ponFilters input:checked")
-      ).map(i => i.value);
+    function applyFiltersFromUI(){
+      filters.windows = Array.from(document.querySelectorAll("#windowFilters input:checked")).map(i => i.value);
+      filters.pons    = Array.from(document.querySelectorAll("#ponFilters input:checked")).map(i => i.value);
 
       controlsModal.style.display = "none";
 
@@ -302,7 +297,7 @@ json.rows.forEach(row => {
       drawTree(treeData);
     }
 
-    function filterBoard(board, filters) {
+    function filterBoard(board, filters){
       const out = {};
       Object.entries(board).forEach(([pon, winObj]) => {
         if (!filters.pons.includes(pon)) return;
@@ -316,9 +311,9 @@ json.rows.forEach(row => {
       return out;
     }
 
-    // -------------------- HIERARCHY BUILDING --------------------
+    // --------------- TREE BUILDING ----------------
 
-    function buildHierarchy(board) {
+    function buildHierarchy(board){
       const root = {
         nodeType: "root",
         name: "🌐 Merotra Network",
@@ -330,7 +325,7 @@ json.rows.forEach(row => {
       Object.entries(board).forEach(([pon, winObj]) => {
         Object.entries(winObj || {}).forEach(([winName, splitterObj]) => {
 
-          if (!windowMap[winName]) {
+          if (!windowMap[winName]){
             const winNode = {
               nodeType: "window",
               name: "🪟 " + winName,
@@ -349,36 +344,30 @@ json.rows.forEach(row => {
             rawPon: pon,
             window: winName,
             children: [],
-            total: 0,
-            online: 0,
-            offline: 0
+            total: 0
           };
 
           const entries = [];
           Object.entries(splitterObj || {}).forEach(([splitName, info]) => {
-            const users    = Array.isArray(info.users) ? info.users : [];
-            const userIds  = users.map(u => String(u.id));
-            const userSet  = new Set(userIds);
+            const users = Array.isArray(info.users) ? info.users : [];
+            const userIds = users.map(u => String(u.id));
+            const set = new Set(userIds);
             entries.push({
               splitterName: splitName,
               info,
               users,
               userIds,
-              userSet
+              userSet: set
             });
-
-            ponNode.total   += info.total   || users.length || 0;
-            ponNode.online  += info.online  || 0;
-            ponNode.offline += info.offline || 0;
+            ponNode.total += info.total || users.length || 0;
           });
 
-          if (entries.length === 0) {
+          if (entries.length === 0){
             winNode.children.push(ponNode);
             return;
           }
 
-          // sort by user count desc = primary first
-          entries.sort((a, b) => b.userIds.length - a.userIds.length);
+          entries.sort((a,b) => b.userIds.length - a.userIds.length);
 
           const nodeEntries = entries.map(e => ({
             entry: e,
@@ -388,25 +377,22 @@ json.rows.forEach(row => {
           const primaryNode = nodeEntries[0].node;
           ponNode.children.push(primaryNode);
 
-          // link chain with subset logic
-          for (let i = 1; i < nodeEntries.length; i++) {
+          for (let i=1; i<nodeEntries.length; i++){
             const child = nodeEntries[i];
             const childSet = child.entry.userSet;
             let parentNode = null;
 
-            for (let j = i - 1; j >= 0; j--) {
+            for (let j=i-1; j>=0; j--){
               const parentEntry = nodeEntries[j];
-              if (isSubset(childSet, parentEntry.entry.userSet)) {
+              if (isSubset(childSet, parentEntry.entry.userSet)){
                 parentNode = parentEntry.node;
                 break;
               }
             }
-
             if (!parentNode) parentNode = primaryNode;
             parentNode.children.push(child.node);
           }
 
-          // untagged branch on non-leaf nodes
           const allNodes = nodeEntries.map(n => n.node);
           allNodes.forEach(node => {
             if (!node.children || node.children.length === 0) return;
@@ -422,19 +408,17 @@ json.rows.forEach(row => {
               if (!childUnion.has(id)) leftover.push(id);
             });
 
-            if (leftover.length > 0) {
+            if (leftover.length > 0){
               const users = leftover.map(id => ({ id, offline: false }));
               const otherNode = {
                 nodeType: "untagged",
                 name: "⬜ Other (" + leftover.length + ")",
                 rawSplitter: "Other",
-                pon: pon,
+                pon,
                 window: winName,
                 users,
                 userIds: leftover,
                 total: leftover.length,
-                online: leftover.length,
-                offline: 0,
                 tag: "",
                 location: node.location,
                 jcPic: node.jcPic,
@@ -452,13 +436,11 @@ json.rows.forEach(row => {
       return root;
     }
 
-    function makeSplitterNode(entry, pon, windowName) {
-      const info    = entry.info  || {};
-      const users   = entry.users || [];
+    function makeSplitterNode(entry, pon, windowName){
+      const info = entry.info || {};
+      const users = entry.users || [];
       const userIds = entry.userIds || [];
-      const total   = info.total   ?? users.length ?? 0;
-      const online  = info.online  ?? users.filter(u => !u.offline).length;
-      const offline = info.offline ?? users.filter(u =>  u.offline).length;
+      const total = info.total ?? users.length ?? 0;
 
       const emoji = emojiForSplitter(entry.splitterName);
       const label = `${emoji} ${entry.splitterName} (${total})`;
@@ -472,8 +454,6 @@ json.rows.forEach(row => {
         users,
         userIds,
         total,
-        online,
-        offline,
         tag: info.tag || "",
         location: info.location || "",
         jcPic: info.jcPic || "",
@@ -482,28 +462,28 @@ json.rows.forEach(row => {
       };
     }
 
-    function emojiForSplitter(splitName) {
+    function emojiForSplitter(splitName){
       const s = (splitName || "").toLowerCase();
-      if (s.includes("link"))    return "🔗";
+      if (s.includes("link")) return "🔗";
       if (s.includes("pending")) return "⏳";
-      if (s.includes("16"))      return "🔺";
-      if (s.includes("8"))       return "🔵";
-      if (s.includes("4"))       return "🟥";
-      if (s.includes("2"))       return "🟩";
+      if (s.includes("16")) return "🔺";
+      if (s.includes("8"))  return "🔵";
+      if (s.includes("4"))  return "🟥";
+      if (s.includes("2"))  return "🟩";
       return "⬜";
     }
 
-    function isSubset(aSet, bSet) {
+    function isSubset(aSet, bSet){
       for (let v of aSet) if (!bSet.has(v)) return false;
       return true;
     }
 
-    // -------------------- DRAW TREE --------------------
+    // --------------- DRAW TREE ----------------
 
-    function drawTree(data) {
+    function drawTree(data){
       d3.select("#chart").select("svg").remove();
 
-      const width  = document.getElementById("chart").clientWidth;
+      const width = document.getElementById("chart").clientWidth;
       const height = document.getElementById("chart").clientHeight;
 
       const dx = 80;
@@ -513,12 +493,12 @@ json.rows.forEach(row => {
       root = d3.hierarchy(data, d => d.children || []);
       treeLayout(root);
 
-      svgRoot = d3.select("#chart").append("svg")
+      const svgRoot = d3.select("#chart").append("svg")
         .attr("width", width)
         .attr("height", height);
 
       const zoom = d3.zoom().scaleExtent([0.4, 3])
-        .on("zoom", event => g.attr("transform", event.transform));
+        .on("zoom", (event) => g.attr("transform", event.transform));
 
       svgRoot.call(zoom);
 
@@ -527,79 +507,65 @@ json.rows.forEach(row => {
       const links = root.links();
       const nodes = root.descendants();
 
-      // links
       g.selectAll(".link")
         .data(links)
         .enter()
         .append("path")
-        .attr("class", "link")
+        .attr("class","link")
         .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
-        .attr("fill", "none")
-        .attr("stroke", "#94a3b8")
-        .attr("stroke-width", 2);
+        .attr("fill","none")
+        .attr("stroke","#94a3b8")
+        .attr("stroke-width",2);
 
       const node = g.selectAll(".node")
         .data(nodes)
         .enter()
         .append("g")
-        .attr("class", "node")
+        .attr("class","node")
         .attr("transform", d => `translate(${d.y},${d.x})`);
 
       // root
       node.filter(d => d.data.nodeType === "root")
         .append("circle")
-        .attr("r", 24)
-        .attr("fill", "#1e3a8a")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 3);
+        .attr("r",24)
+        .attr("fill","#1e3a8a")
+        .attr("stroke","#fff")
+        .attr("stroke-width",3);
 
       // window
       node.filter(d => d.data.nodeType === "window")
         .append("circle")
-        .attr("r", 20)
-        .attr("fill", "#1d4ed8")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 3);
+        .attr("r",20)
+        .attr("fill","#1d4ed8")
+        .attr("stroke","#fff")
+        .attr("stroke-width",3);
 
-      // pon
+      // PON
       node.filter(d => d.data.nodeType === "pon")
         .append("circle")
-        .attr("r", 18)
-        .attr("fill", "#0f766e")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 3);
+        .attr("r",18)
+        .attr("fill","#0f766e")
+        .attr("stroke","#fff")
+        .attr("stroke-width",3);
 
-      // splitter / untagged
+      // splitter + untagged
       node.filter(d => d.data.nodeType === "splitter" || d.data.nodeType === "untagged")
         .append("circle")
         .attr("r", d => d.data.nodeType === "splitter" ? 14 : 10)
-        .attr("fill", d =>
-          d.data.nodeType === "untagged" ? "#6b7280" : colorForSplitter(d.data)
-        )
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 2)
-        .on("mousemove", handleMouseOver)
-        .on("mouseout", () => tooltip.style.opacity = 0)
-        .on("click", handleNodeClick);
+        .attr("fill", d => d.data.nodeType === "untagged" ? "#6b7280" : colorForSplitter(d.data))
+        .attr("stroke","#fff")
+        .attr("stroke-width",2)
+        .classed("blink-red", d => d.data.tag && d.data.tag.includes("🔴❌"));
 
-      // blink if Tag = 🔴❌
-      node.filter(d =>
-        d.data.nodeType === "splitter" &&
-        typeof d.data.tag === "string" &&
-        d.data.tag.includes("🔴❌")
-      )
-      .select("circle")
-      .classed("blink-red", true);
-
-      // labels
+      // TEXT
       node.append("text")
-        .attr("dy", "0.32em")
+        .attr("dy","0.32em")
         .attr("x", d => d.children && d.depth > 0 ? -20 : 20)
         .attr("text-anchor", d => d.children && d.depth > 0 ? "end" : "start")
         .style("font-size", d => {
-          if (d.data.nodeType === "root")   return "14px";
+          if (d.data.nodeType === "root") return "14px";
           if (d.data.nodeType === "window") return "13px";
-          if (d.data.nodeType === "pon")    return "12px";
+          if (d.data.nodeType === "pon") return "12px";
           return "11px";
         })
         .style("font-weight", d =>
@@ -607,59 +573,51 @@ json.rows.forEach(row => {
         )
         .text(d => d.data.name);
 
-      // tooltip only for window + pon (no popup)
-      node.filter(d => d.data.nodeType === "window" || d.data.nodeType === "pon")
+      // HOVER + CLICK bindings on entire node group
+      node
         .on("mousemove", handleMouseOver)
         .on("mouseout", () => tooltip.style.opacity = 0)
-        .on("click", () => {}); // disable popup
+        .on("click", handleNodeClick);
 
-      // auto fit
       fitToView(svgRoot, g, zoom);
     }
 
-    function colorForSplitter(data) {
-      const total   = data.total   || 0;
-      const offline = data.offline || 0;
+    function colorForSplitter(data){
+      const total = data.total || 0;
       if (total === 0) return "#6b7280";
-      const r = offline / total;
-      if (r >= 1)   return "#ef4444";
-      if (r >= 0.5) return "#f59e0b";
+      // default all active as green; tag-based blink-chek already above
       return "#10b981";
     }
 
-    function fitToView(svgRoot, g, zoom) {
+    function fitToView(svgRoot, g, zoom){
       const chart = document.getElementById("chart");
       const bounds = g.node().getBBox();
-      const fullWidth  = chart.clientWidth;
+      const fullWidth = chart.clientWidth;
       const fullHeight = chart.clientHeight;
-      const widthScale  = fullWidth  / (bounds.width  + 160);
+      const widthScale = fullWidth / (bounds.width + 160);
       const heightScale = fullHeight / (bounds.height + 160);
       const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
-      const tx = -(bounds.x) * scale + 40;
-      const ty = -(bounds.y) * scale + 40;
-
-      svgRoot.transition()
-        .duration(600)
-        .call(zoom.transform,
-          d3.zoomIdentity.translate(tx, ty).scale(scale)
-        );
+      const tx = -(bounds.x)*scale + 40;
+      const ty = -(bounds.y)*scale + 40;
+      svgRoot.transition().duration(600).call(
+        zoom.transform,
+        d3.zoomIdentity.translate(tx,ty).scale(scale)
+      );
     }
 
-    // -------------------- TOOLTIP --------------------
+    // --------------- TOOLTIP ----------------
 
-    function handleMouseOver(event, d) {
+    function handleMouseOver(event, d){
       const data = d.data;
       let html = `<strong>${data.name}</strong><br/>`;
 
-      if (data.nodeType === "window") {
+      if (data.nodeType === "window"){
         html += `Window`;
-      } else if (data.nodeType === "pon") {
-        html += `PON: ${data.rawPon}<br/>Total: ${data.total || 0}`;
-      } else if (data.nodeType === "splitter" || data.nodeType === "untagged") {
-        html += `Window: ${data.window}<br/>PON: ${data.pon}<br/>`;
-        const total = data.total || (data.users ? data.users.length : 0);
-        html += `Users: <strong>${total}</strong>`;
-        if (data.tag) {
+      } else if (data.nodeType === "pon"){
+        html += `PON: ${data.rawPon}<br/>Total users: ${data.total || 0}`;
+      } else if (data.nodeType === "splitter" || data.nodeType === "untagged"){
+        html += `Window: ${data.window}<br/>PON: ${data.pon}<br/>Users: <strong>${data.total || (data.users ? data.users.length : 0)}</strong>`;
+        if (data.tag){
           html += `<br/>Tag: ${data.tag}`;
         }
       }
@@ -670,137 +628,152 @@ json.rows.forEach(row => {
       tooltip.style.opacity = 1;
     }
 
-    // -------------------- POPUP --------------------
+    // --------------- POPUP ----------------
 
-    function handleNodeClick(event, d) {
+    function handleNodeClick(event, d){
       const data = d.data;
+
+      // PON / window pe popup disable
       if (!(data.nodeType === "splitter" || data.nodeType === "untagged")) return;
-
-      currentClickNode = data;
-
-      const titleEl = document.getElementById("popupTitle");
-      const pathEl  = document.getElementById("popupPath");
-      const metaEl  = document.getElementById("popupMeta");
-      const linksEl = document.getElementById("popupLinks");
-      const listEl  = document.getElementById("popupUsers");
-
-      // Title = Splitter name only (Option A)
-      titleEl.textContent = data.nodeType === "untagged"
-        ? `⬜ Untagged users`
-        : `${data.rawSplitter} — Users`;
-
-      pathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter}`;
 
       const total = data.total || (data.users ? data.users.length : 0);
 
-      // No online/offline counts here
-      metaEl.innerHTML = `
-        <div><span class="meta-label">Window:</span> ${data.window}</div>
-        <div><span class="meta-label">PON:</span> ${data.pon}</div>
-        <div><span class="meta-label">Splitter:</span> ${data.rawSplitter || "-"}</div>
-        <div><span class="meta-label">Total users:</span> ${total}</div>
-        <div><span class="meta-label">Tag:</span> ${data.tag || "-"}</div>
+      popupTitleEl.textContent = data.nodeType === "untagged"
+        ? `⬜ Untagged users (${total})`
+        : `${data.rawSplitter} — Users`;
+
+      popupPathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter}`;
+
+      // Meta: Window / PON / Splitter repeat nahi; sirf totals + tag
+      popupMetaEl.innerHTML = `
+        <div><span class="font-semibold">Total users:</span> ${total}</div>
+        <div><span class="font-semibold">Tag:</span> ${data.tag || "-"}</div>
       `;
 
-      // Links
       let linksHtml = "";
-      if (data.location) {
-        linksHtml += `<button class="link-btn" onclick="openLink('${data.location}')">📍 Location</button>`;
+      if (data.location){
+        linksHtml += `<span class="link-btn" onclick="openLink('${data.location}')">📍 Location</span>`;
       }
-      if (data.jcPic) {
-        linksHtml += `<button class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</button>`;
+      if (data.jcPic){
+        linksHtml += `<span class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</span>`;
       }
-      if (data.polePic) {
-        linksHtml += `<button class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</button>`;
+      if (data.polePic){
+        linksHtml += `<span class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</span>`;
       }
-      linksEl.innerHTML = linksHtml;
+      popupLinksEl.innerHTML = linksHtml || "";
 
-      // User list
-      listEl.innerHTML = "";
-      const users = data.users || [];
-      const statusMap = statusMaps[data.window] || {};
-
-      users.forEach((u, idx) => {
-const id = cleanID(u.id);
-const info = statusMap[id] || {};
-
-        const row = document.createElement("div");
-        row.className = "user-row";
-
-        const extraParts = [];
-        if (info.name)     extraParts.push(info.name);
-        if (info.number)   extraParts.push("📞 " + info.number);
-        if (info.location) extraParts.push("📍 " + info.location);
-
-        row.innerHTML = `
-          <div class="user-main">
-            <span class="user-index">${idx + 1}.</span>
-            <span class="user-id">${id}</span>
-          </div>
-          <div class="user-details">
-            <div class="user-status">${info.status || ""}</div>
-            ${extraParts.length ? `<div class="user-extra">${extraParts.join(" · ")}</div>` : ""}
-          </div>
-        `;
-        listEl.appendChild(row);
-      });
-
+      buildUserTable(data);
       popupModal.style.display = "flex";
     }
 
-    function openLink(url) {
+    function buildUserTable(data){
+      const users = data.users || [];
+      const statusMap = statusMaps[data.window] || {};
+
+      currentPopupRows = [];
+
+      // table header
+      popupUsersTbl.innerHTML = `
+        <thead>
+          <tr>
+            <th style="width:32px;">Sr</th>
+            <th>User ID</th>
+            <th>Name</th>
+            <th>Number</th>
+            <th>Location</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      const tbody = popupUsersTbl.querySelector("tbody");
+
+      users.forEach((u, idx) => {
+        const rawId = (u.id ?? "").toString();
+        const normId = normalizeId(rawId);
+        const dbRow = statusMap[normId];
+
+        const name = dbRow?.name ?? "";
+        const number = dbRow?.number ?? "";
+        const loc = dbRow?.location ?? "";
+        const status = dbRow?.status ?? "";
+
+        const tr = document.createElement("tr");
+        tr.className = "user-row";
+
+        tr.innerHTML = `
+          <td>${idx+1}</td>
+          <td>${rawId}</td>
+          <td>${name}</td>
+          <td>${number}</td>
+          <td>${loc}</td>
+          <td>${status}</td>
+        `;
+
+        tbody.appendChild(tr);
+
+        currentPopupRows.push({
+          sr: idx+1,
+          id: rawId,
+          name,
+          number,
+          location: loc,
+          status
+        });
+      });
+    }
+
+    function openLink(url){
       if (url) window.open(url, "_blank");
     }
-    window.openLink = openLink;
 
-    // Screenshot of popup
-    function downloadPopupScreenshot() {
-      const modalContent = document.getElementById("popupContent");
+    // --------------- DOWNLOADS ----------------
+
+    function downloadScreenshot(){
+      const modalContent = document.querySelector("#popupModal .modal-content");
       if (!modalContent) return;
-      html2canvas(modalContent, {
-        backgroundColor: "#ffffff",
-        scale: 2
-      }).then(canvas => {
+      html2canvas(modalContent).then(canvas => {
         const link = document.createElement("a");
-        const date = new Date().toISOString().slice(0, 10);
-        link.download = `merotra-popup-${date}.png`;
+        const today = new Date().toISOString().slice(0,10);
+        link.download = `merotra-users-${today}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
       });
     }
 
-    // CSV of popup users
-    function downloadPopupCSV() {
-      if (!currentClickNode) return;
-      const users = currentClickNode.users || [];
-      const statusMap = statusMaps[currentClickNode.window] || {};
+    function downloadCSV(){
+      if (!currentPopupRows.length) return;
 
-      const rows = [["Sr", "User ID", "Status", "Name", "Number", "Location"]];
-      users.forEach((u, idx) => {
-const id = cleanID(u.id);
-const info = statusMap[id] || {};
+      const header = ["Sr","User ID","Name","Number","Location","Status"];
+      const lines = [header.join(",")];
 
-        rows.push([
-          String(idx + 1),
-          id,
-          info.status   || "",
-          info.name     || "",
-          info.number   || "",
-          info.location || ""
-        ]);
+      currentPopupRows.forEach(r => {
+        const row = [
+          r.sr,
+          `"${r.id}"`,
+          `"${(r.name||"").replace(/"/g,'""')}"`,
+          `"${(r.number||"").replace(/"/g,'""')}"`,
+          `"${(r.location||"").replace(/"/g,'""')}"`,
+          `"${(r.status||"").replace(/"/g,'""')}"`
+        ];
+        lines.push(row.join(","));
       });
 
-      const csv = rows
-        .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
-        .join("\n");
-
-      const blob = new Blob([csv], { type: "text/csv" });
-      const a = document.createElement("a");
-      const date = new Date().toISOString().slice(0, 10);
-      a.href = URL.createObjectURL(blob);
-      a.download = `merotra-users-${date}.csv`;
-      a.click();
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const today = new Date().toISOString().slice(0,10);
+      link.href = url;
+      link.download = `merotra-users-${today}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
     }
+
+    // expose needed functions
+    window.openLink   = openLink;
+    window.selectAll  = selectAll;
+    window.deselectAll= deselectAll;
   </script>
 
 </body>
