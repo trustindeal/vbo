@@ -325,126 +325,150 @@
     // --------------- TREE BUILDING ----------------
 
 
-function buildHierarchy(board){
+function buildHierarchy(board) {
   const root = {
     nodeType: "root",
-    name: "🌐 Merotra Network",
+    name: "Merotra Network",
     children: []
   };
 
   const windowMap = {};
 
-  const sortedPons = Object.entries(board).sort(([a],[b])=>{
+  const sortedPons = Object.entries(board).sort(([a], [b]) => {
     const A = parsePon(a), B = parsePon(b);
     if (A.olt !== B.olt) return A.olt - B.olt;
-    if (A.ip  !== B.ip)  return A.ip  - B.ip;
+    if (A.ip !== B.ip) return A.ip - B.ip;
     return A.port - B.port;
   });
 
-  sortedPons.forEach(([pon,winObj])=>{
-    Object.entries(winObj || {}).forEach(([winName,splitters])=>{
-
-      if(!windowMap[winName]){
+  sortedPons.forEach(([pon, winObj]) => {
+    Object.entries(winObj || {}).forEach(([winName, splitters]) => {
+      if (!windowMap[winName]) {
         windowMap[winName] = {
-          nodeType:"window",
-          name:"🪟 "+winName,
-          rawWindow:winName,
-          children:[]
+          nodeType: "window",
+          name: "Window " + winName,
+          rawWindow: winName,
+          children: []
         };
         root.children.push(windowMap[winName]);
       }
-
       const winNode = windowMap[winName];
 
       const ponNode = {
-        nodeType:"pon",
-        name:"🔌 "+pon,
-        rawPon:pon,
-        window:winName,
-        children:[],
-        total:0
+        nodeType: "pon",
+        name: "PON " + pon,
+        rawPon: pon,
+        window: winName,
+        children: [],
+        total: 0
       };
 
       const entries = [];
-
-      Object.entries(splitters || {}).forEach(([splitName,info])=>{
-
-        const users = Array.isArray(info.users) ? info.users : [];
-        const userIds = [...new Set(users.map(u=>String(u.id).trim()))];
+      Object.entries(splitters).forEach(([splitName, info]) => {
+        const userIds = info.users.map(u => normalizeId(u.id)).filter(Boolean);
         const userSet = new Set(userIds);
-
-        const count = userSet.size;
-
         entries.push({
-          splitterName:splitName,
+          splitterName: splitName,
           info,
-          userIds,
-          users:userIds.map(id=>({id})),
           userSet,
-          userCount:count
+          userIds,
+          userCount: userSet.size
         });
-
-        ponNode.total += count;
       });
 
-      if(entries.length===0){
+      if (entries.length === 0) {
         winNode.children.push(ponNode);
         return;
       }
 
-      // 🔥 FIX: real unique count से sort
-      entries.sort((a,b)=>b.userCount - a.userCount);
+      // Rule-6: Sort by user count descending → biggest = primary
+      entries.sort((a, b) => b.userCount - a.userCount);
 
-      const nodeEntries = entries.map(e=>({
-        entry:e,
-        node:makeSplitterNodeFixed(e,pon,winName)
+      // Create splitter nodes
+      const splitterNodes = entries.map(e => ({
+        node: {
+          nodeType: "splitter",
+          name: emojiForSplitter(e.splitterName) + " " + e.splitterName + " (" + e.userCount + ")",
+          rawSplitter: e.splitterName,
+          pon, window: winName,
+          users: e.info.users,
+          userIds: e.userIds,
+          total: e.userCount,
+          tag: e.info.tag || "",
+          location: e.info.location || "",
+          jcPic: e.info.jcPic || "",
+          polePic: e.info.polePic || "",
+          userSet: e.userSet,  // important for untagged calc
+          children: []
+        },
+        userSet: e.userSet
       }));
 
-      const primary = nodeEntries[0].node;
+      const primary = splitterNodes[0].node;
       ponNode.children.push(primary);
 
-      // subset logic
-      for(let i=1;i<nodeEntries.length;i++){
-        const child = nodeEntries[i];
-        const childSet = child.entry.userSet;
+      // Track which users are already covered under primary (and its future children)
+      const coveredUnderPrimary = new Set();
 
-        let matchedParent = null;
-        let overlapFound = false;
+      // First pass: attach children (subset / overlap)
+      for (let i = 1; i < splitterNodes.length; i++) {
+        const curr = splitterNodes[i];
+        const currSet = curr.userSet;
 
-        for(let j=0;j<i;j++){
-          const parent = nodeEntries[j];
-          const parentSet = parent.entry.userSet;
+        let attached = false;
 
-          const overlap = [...childSet].filter(x=>parentSet.has(x));
-
-          if(overlap.length>0){
-            overlapFound = true;
-
-            if(isSubset(childSet,parentSet)){
-              matchedParent = parent.node;
-              break;
-            }
+        // Check if subset of any previous (including primary)
+        for (let j = 0; j < i; j++) {
+          const parent = splitterNodes[j];
+          if (isSubset(currSet, parent.userSet)) {
+            parent.node.children.push(curr.node);
+            // Mark these users as covered
+            currSet.forEach(id => coveredUnderPrimary.add(id));
+            attached = true;
+            break;
           }
         }
 
-        if(!matchedParent && !overlapFound){
-          ponNode.children.push(child.node);
+        // Rule-8: Partial overlap → attach to primary
+        if (!attached) {
+          const hasOverlapWithPrimary = [...currSet].some(id => primary.userSet.has(id));
+          if (hasOverlapWithPrimary) {
+            primary.children.push(curr.node);
+            currSet.forEach(id => coveredUnderPrimary.add(id));
+            attached = true;
+          }
         }
-        else if(!matchedParent && overlapFound){
-          primary.children.push(child.node);
+
+        // Rule-9: No overlap → sibling
+        if (!attached) {
+          ponNode.children.push(curr.node);
         }
-        else{
-          matchedParent.children.push(child.node);
-        }
+
+        // Always mark covered (even siblings don't affect primary untagged)
+        currSet.forEach(id => coveredUnderPrimary.add(id));
       }
 
+      // Rule-10: Untagged / Other branch
+      const primaryOwnUsers = [...primary.userSet].filter(id => !coveredUnderPrimary.has(id));
+      if (primaryOwnUsers.length > 0) {
+        const untaggedNode = {
+          nodeType: "untagged",
+          name: "Other / Untagged (" + primaryOwnUsers.length + ")",
+          pon, window: winName,
+          users: primary.info.users.filter(u => primaryOwnUsers.includes(normalizeId(u.id))),
+          total: primaryOwnUsers.length,
+          children: []
+        };
+        primary.children.push(untaggedNode);
+      }
+
+      ponNode.total = primary.total; // or calculate properly if needed
       winNode.children.push(ponNode);
     });
   });
 
   return root;
 }
-
 // -------- FIXED NODE BUILDER (accurate count) --------
 function makeSplitterNodeFixed(entry, pon, windowName){
   const total = entry.userCount;
