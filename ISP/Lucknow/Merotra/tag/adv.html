@@ -324,210 +324,88 @@
     // --------------- TREE BUILDING ----------------
     // --------------- TREE BUILDING ----------------
 
-    function buildHierarchy(board){
-      const root = {
-        nodeType: "root",
-        name: "🌐 Merotra Network",
-        children: []
+function buildHierarchy(board){
+  const root = {
+    nodeType: "root",
+    name: "🌐 Merotra Network",
+    children: []
+  };
+
+  const windowMap = {};
+
+  // ----------- SORT PONs (numeric O#,I#,P#) -----------
+  const sortedPons = Object.entries(board).sort(([a],[b]) => {
+    const A = parsePon(a);
+    const B = parsePon(b);
+    if (A.olt !== B.olt) return A.olt - B.olt;
+    if (A.ip  !== B.ip)  return A.ip  - B.ip;
+    return A.port - B.port;
+  });
+
+  // ---------- MAIN BUILD ----------
+  sortedPons.forEach(([pon, winObj]) => {
+
+    Object.entries(winObj || {}).forEach(([winName, splitterObj]) => {
+
+      // ----------- Window node (create once) -----------
+      if (!windowMap[winName]) {
+        windowMap[winName] = {
+          nodeType: "window",
+          name: "🪟 " + winName,
+          rawWindow: winName,
+          children: []
+        };
+        root.children.push(windowMap[winName]);
+      }
+
+      const winNode = windowMap[winName];
+
+      // ----------- PON node -----------
+      const ponNode = {
+        nodeType: "pon",
+        name: "🔌 " + pon,
+        rawPon: pon,
+        window: winName,
+        children: [],
+        total: 0
       };
 
-      const windowMap = {};
+      // ----------- SPLITTERS -----------
+      Object.entries(splitterObj).forEach(([splitName, info]) => {
 
-      // ----------- PON SORTING (O#, I#, P#) -----------
-      const sortedPons = Object.entries(board).sort(([a], [b]) => {
-        const A = parsePon(a);
-        const B = parsePon(b);
-        if (A.olt !== B.olt) return A.olt - B.olt;
-        if (A.ip  !== B.ip)  return A.ip  - B.ip;
-        return A.port - B.port;
-      });
+        // users array (ensure safe)
+        const users = Array.isArray(info.users) ? info.users : [];
+        const userIds = users.map(u => String(u.id).trim());
 
-      // ---------- MAIN BUILD LOOP ----------
-      sortedPons.forEach(([pon, winObj]) => {
-        Object.entries(winObj || {}).forEach(([winName, splitterObj]) => {
+        const total = userIds.length;
+        ponNode.total += total;
 
-          // create window node once
-          if (!windowMap[winName]){
-            const winNode = {
-              nodeType: "window",
-              name: "🪟 " + winName,
-              rawWindow: winName,
-              children: []
-            };
-            windowMap[winName] = winNode;
-            root.children.push(winNode);
-          }
-
-          const winNode = windowMap[winName];
-
-          // PON node
-          const ponNode = {
-            nodeType: "pon",
-            name: "🔌 " + pon,
-            rawPon: pon,
-            window: winName,
-            children: [],
-            total: 0
-          };
-
-          // ----------- PROCESS SPLITTER ENTRIES ----------
-          const entries = [];
-
-          Object.entries(splitterObj || {}).forEach(([splitName, info]) => {
-
-            // ------------------ RETAG / FRESH FILTER ------------------
-            const tagText = (info.tag || "").trim();
-
-            // A) blank → skip
-            if (tagText === "") return;
-
-            // B) FRESH → always keep
-            if (tagText === "Fresh") {
-              // keep as is
-            }
-
-            // C) Retag{..rows:6,9...} → only keep LATEST row
-            else if (tagText.startsWith("Retag")) {
-              const m = tagText.match(/rows\s*:\s*([0-9,\s]+)/i);
-              if (!m) return;
-
-              const rows = m[1].split(",").map(x => parseInt(x.trim(),10)).filter(n => !isNaN(n));
-              if (!rows.length) return;
-
-              const lastRow = Math.max(...rows);
-              // GAS data me rowNum nahi, to info.row se match:
-              if (info.row !== lastRow) return;
-            }
-
-            // users
-            const users = Array.isArray(info.users) ? info.users : [];
-            const userIds = users.map(u => String(u.id).trim());
-            const userSet = new Set(userIds);
-
-            entries.push({
-              splitterName: splitName,
-              info,
-              users,
-              userIds,
-              userSet
-            });
-
-            ponNode.total += info.total || users.length || 0;
-          });
-
-          // No entries after filter ⇒ still show PON node
-          if (entries.length === 0){
-            winNode.children.push(ponNode);
-            return;
-          }
-
-          // ---------- SORT SPLITTERS (big → small) ----------
-          entries.sort((a,b) => b.userIds.length - a.userIds.length);
-
-          // ---------- MAKE NODES ----------
-          const nodeEntries = entries.map(e => ({
-            entry: e,
-            node: makeSplitterNode(e, pon, winName)
-          }));
-
-          // ---------- PRIMARY NODE ----------
-          const primary = nodeEntries[0].node;
-          ponNode.children.push(primary);
-
-          // ---------- CHILD LOGIC ----------
-          for (let i = 1; i < nodeEntries.length; i++) {
-
-            const child = nodeEntries[i];
-            const childSet = child.entry.userSet;
-
-            let matchedParent = null;
-            let overlapFound = false;
-
-            // try matching with previous parents
-            for (let j = 0; j < i; j++) {
-              const parent = nodeEntries[j];
-              const parentSet = parent.entry.userSet;
-
-              // find common users
-              const overlap = [...childSet].filter(x => parentSet.has(x));
-              if (overlap.length > 0) {
-                overlapFound = true;
-
-                // if pure subset → perfect child
-                if (isSubset(childSet, parentSet)) {
-                  matchedParent = parent.node;
-
-                  // propagate overlap upward
-                  overlap.forEach(uid => {
-                    if (!parent.node.userIds.includes(uid)) {
-                      parent.node.userIds.push(uid);
-                    }
-                  });
-
-                  break;
-                }
-              }
-            }
-
-            // ZERO COMMON USERS → new branch
-            if (!matchedParent && !overlapFound) {
-              ponNode.children.push(child.node);
-            }
-            // PARTIAL overlap but not subset → attach under primary
-            else if (!matchedParent && overlapFound) {
-              primary.children.push(child.node);
-            }
-            // Perfect parent
-            else {
-              matchedParent.children.push(child.node);
-            }
-          }
-
-          // ---------- OTHER (untagged leftover) ----------
-          const allNodes = nodeEntries.map(n => n.node);
-
-          allNodes.forEach(node => {
-            if (!node.children || node.children.length === 0) return;
-
-            const parentSet = new Set(node.userIds);
-            const childUnion = new Set();
-
-            node.children.forEach(ch => {
-              (ch.userIds || []).forEach(id => childUnion.add(id));
-            });
-
-            const leftover = [];
-            parentSet.forEach(id => {
-              if (!childUnion.has(id)) leftover.push(id);
-            });
-
-            if (leftover.length > 0){
-              const users = leftover.map(id => ({ id }));
-              const otherNode = {
-                nodeType: "untagged",
-                name: "⬜ Other (" + leftover.length + ")",
-                rawSplitter: "Other",
-                pon,
-                window: winName,
-                users,
-                userIds: leftover,
-                total: leftover.length,
-                tag: "",
-                location: node.location,
-                jcPic: node.jcPic,
-                polePic: node.polePic,
-                children: []
-              };
-              node.children.push(otherNode);
-            }
-          });
-
-          winNode.children.push(ponNode);
+        // splitter node
+        ponNode.children.push({
+          nodeType: "splitter",
+          name: `${emojiForSplitter(splitName)} ${splitName} (${total})`,
+          rawSplitter: splitName,
+          pon,
+          window: winName,
+          users,
+          userIds,
+          total,
+          tag: info.tag || "",
+          location: info.location || "",
+          jcPic: info.jcPic || "",
+          polePic: info.polePic || "",
+          children: []
         });
       });
 
-      return root;
-    }
+      // attach into window
+      winNode.children.push(ponNode);
+    });
+  });
+
+  return root;
+}
+
 
     // --------- HELPER NODE BUILDER ----------
     function makeSplitterNode(entry, pon, windowName){
