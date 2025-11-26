@@ -334,7 +334,7 @@ function buildHierarchy(board){
 
   const windowMap = {};
 
-  // ----------- SORT PONs (O#, I#, P#) -----------
+  // ----------- SORT PONs -----------
   const sortedPons = Object.entries(board).sort(([a], [b]) => {
     const A = parsePon(a);
     const B = parsePon(b);
@@ -343,11 +343,10 @@ function buildHierarchy(board){
     return A.port - B.port;
   });
 
-  // ------------- MAIN LOOP -------------
+  // ---------- MAIN LOOP ----------
   sortedPons.forEach(([pon, winObj]) => {
     Object.entries(winObj || {}).forEach(([winName, splitterObj]) => {
 
-      // WINDOW node create once
       if (!windowMap[winName]) {
         windowMap[winName] = {
           nodeType: "window",
@@ -360,7 +359,6 @@ function buildHierarchy(board){
 
       const winNode = windowMap[winName];
 
-      // PON node
       const ponNode = {
         nodeType: "pon",
         name: "🔌 " + pon,
@@ -370,8 +368,8 @@ function buildHierarchy(board){
         total: 0
       };
 
-      // ----------- STEP 1: COLLECT ALL SPLITTER ROWS -----------
-      const grouped = {};  // key = splitterName → all rows
+      // -------- COLLECT + RETAG FILTER --------
+      const grouped = {};
 
       Object.entries(splitterObj || {}).forEach(([splitName, info]) => {
         if (!grouped[splitName]) grouped[splitName] = [];
@@ -380,81 +378,70 @@ function buildHierarchy(board){
 
       const finalSplitters = [];
 
-      // ----------- STEP 2: APPLY SIMPLE RETAG/FRESH LOGIC -----------
       Object.entries(grouped).forEach(([splitName, rows]) => {
-
-        // Find all Retag rows
         const retags = rows.filter(r => String(r.tag || "").startsWith("Retag"));
 
         if (retags.length > 0) {
-          // → Only last row mentioned inside Retag{rows:...}
-          let all = [];
+          // pick last row inside Retag
+          let allRows = [];
 
           retags.forEach(r => {
             const m = r.tag.match(/rows\s*[:=]\s*([0-9,\s]+)/i);
             if (m) {
               m[1].split(",").forEach(n => {
                 const rn = parseInt(n.trim(), 10);
-                if (!isNaN(rn)) all.push(rn);
+                if (!isNaN(rn)) allRows.push(rn);
               });
             }
           });
 
-          if (all.length > 0) {
-            const last = Math.max(...all);
-            const chosen = rows.find(r => r.row === last);
-
-            if (chosen) finalSplitters.push({ splitName, info: chosen });
-            return;
-          }
-
-          // fallback: pick last physical row
-          const fallback = rows.reduce((a,b) => a.row > b.row ? a : b);
-          finalSplitters.push({ splitName, info: fallback });
+          const last = Math.max(...allRows);
+          const chosen = rows.find(r => r.row === last);
+          if (chosen) finalSplitters.push({ splitName, info: chosen });
           return;
         }
 
-        // NO Retag → all Fresh are valid (normally only one)
+        // Fresh case → all rows are fresh (usually single)
         rows.forEach(r => finalSplitters.push({ splitName, info: r }));
       });
 
-      // ---------- STEP 3: MAKE TREE NODES ----------
+      // -------- BUILD ENTRY OBJECTS --------
       const entries = [];
 
       finalSplitters.forEach(({ splitName, info }) => {
         const users = Array.isArray(info.users) ? info.users : [];
-        const userIds = users.map(u => String(u.id).trim());
+        const userIds = [...new Set(users.map(u => String(u.id).trim()))];
         const userSet = new Set(userIds);
 
         entries.push({
           splitterName: splitName,
           info,
-          users,
+          users: userIds.map(id => ({id})),
           userIds,
-          userSet
+          userSet,
+          userCount: userSet.size   // REAL UNIQUE COUNT
         });
 
-        ponNode.total += userIds.length;
+        ponNode.total += userSet.size;
       });
 
-      // no splitter → attach pon
       if (entries.length === 0) {
         winNode.children.push(ponNode);
         return;
       }
 
-      // ---------- SORT SPLITTERS: biggest → smallest ----------
-      entries.sort((a,b) => b.userIds.length - a.userIds.length);
+      // --- FIX #1: SORT USING REAL UNIQUE USERS ---
+      entries.sort((a,b) => b.userCount - a.userCount);
 
       const nodeEntries = entries.map(e => ({
         entry: e,
-        node: makeSplitterNode(e, pon, winName)
+        node: makeSplitterNodeFixed(e, pon, winName)
       }));
 
       const primary = nodeEntries[0].node;
       ponNode.children.push(primary);
 
-      // ---------- CHILD LOGIC ----------
+      // --- CHILD RELATION LOGIC (unchanged) ---
       for (let i = 1; i < nodeEntries.length; i++) {
 
         const childObj = nodeEntries[i];
@@ -475,67 +462,46 @@ function buildHierarchy(board){
             if (isSubset(childSet, parentSet)) {
               matchedParent = parentObj.node;
 
-              // propagate overlap
-              overlap.forEach(uid => {
-                if (!parentObj.node.userIds.includes(uid))
-                  parentObj.node.userIds.push(uid);
-              });
-
               break;
             }
           }
         }
 
-        if (!matchedParent && !overlapFound) {
+        if (!matchedParent && !overlapFound)
           ponNode.children.push(childObj.node);
-        }
-        else if (!matchedParent && overlapFound) {
+        else if (!matchedParent && overlapFound)
           primary.children.push(childObj.node);
-        }
-        else {
+        else
           matchedParent.children.push(childObj.node);
-        }
       }
-
-      // ---------- UNTAgGED ----------
-      const allNodes = nodeEntries.map(n => n.node);
-
-      allNodes.forEach(node => {
-        if (!node.children || node.children.length === 0) return;
-
-        const parentSet = new Set(node.userIds);
-        const childUnion = new Set();
-
-        node.children.forEach(ch => {
-          (ch.userIds || []).forEach(id => childUnion.add(id));
-        });
-
-        const leftover = [];
-        parentSet.forEach(id => {
-          if (!childUnion.has(id)) leftover.push(id);
-        });
-
-        if (leftover.length > 0) {
-          node.children.push({
-            nodeType: "untagged",
-            name: "⬜ Other (" + leftover.length + ")",
-            rawSplitter: "Other",
-            pon,
-            window: winName,
-            users: leftover.map(id => ({ id })),
-            userIds: leftover,
-            total: leftover.length,
-            tag: "",
-            children: []
-          });
-        }
-      });
 
       winNode.children.push(ponNode);
     });
   });
 
   return root;
+}
+
+// -------- FIXED NODE BUILDER (accurate count) --------
+function makeSplitterNodeFixed(entry, pon, windowName){
+  const total = entry.userCount;
+  const emoji = emojiForSplitter(entry.splitterName);
+
+  return {
+    nodeType: "splitter",
+    name: `${emoji} ${entry.splitterName} (${total})`,
+    rawSplitter: entry.splitterName,
+    pon,
+    window: windowName,
+    users: entry.users,
+    userIds: entry.userIds,
+    total,
+    tag: entry.info.tag || "",
+    location: entry.info.location || "",
+    jcPic: entry.info.jcPic || "",
+    polePic: entry.info.polePic || "",
+    children: []
+  };
 }
 
 
