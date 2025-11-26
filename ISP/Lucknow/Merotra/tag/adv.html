@@ -146,7 +146,6 @@
     function normalizeId(v){
       return (v ?? "").toString().trim().replace(/\s+/g,"").toLowerCase();
     }
-
     // --------------- INIT ----------------
 
     document.getElementById("reloadBtn").addEventListener("click", () => {
@@ -311,6 +310,18 @@
       return out;
     }
 
+    // ----------------- PON PARSER FOR SORTING -----------------
+    function parsePon(pon) {
+      const m = pon.match(/O(\d+)I(\d+)P(\d+)/i);
+      if (!m) return { olt: 9999, ip: 9999, port: 9999 };
+      return {
+        olt: parseInt(m[1],10),
+        ip:  parseInt(m[2],10),
+        port:parseInt(m[3],10)
+      };
+    }
+
+    // --------------- TREE BUILDING ----------------
     // --------------- TREE BUILDING ----------------
 
     function buildHierarchy(board){
@@ -322,9 +333,20 @@
 
       const windowMap = {};
 
-      Object.entries(board).forEach(([pon, winObj]) => {
+      // ----------- PON SORTING (O#, I#, P#) -----------
+      const sortedPons = Object.entries(board).sort(([a], [b]) => {
+        const A = parsePon(a);
+        const B = parsePon(b);
+        if (A.olt !== B.olt) return A.olt - B.olt;
+        if (A.ip  !== B.ip)  return A.ip  - B.ip;
+        return A.port - B.port;
+      });
+
+      // ---------- MAIN BUILD LOOP ----------
+      sortedPons.forEach(([pon, winObj]) => {
         Object.entries(winObj || {}).forEach(([winName, splitterObj]) => {
 
+          // create window node once
           if (!windowMap[winName]){
             const winNode = {
               nodeType: "window",
@@ -338,6 +360,7 @@
 
           const winNode = windowMap[winName];
 
+          // PON node
           const ponNode = {
             nodeType: "pon",
             name: "🔌 " + pon,
@@ -347,58 +370,128 @@
             total: 0
           };
 
+          // ----------- PROCESS SPLITTER ENTRIES ----------
           const entries = [];
+
           Object.entries(splitterObj || {}).forEach(([splitName, info]) => {
+
+            // ------------------ RETAG / FRESH FILTER ------------------
+            const tagText = (info.tag || "").trim();
+
+            // A) blank → skip
+            if (tagText === "") return;
+
+            // B) FRESH → always keep
+            if (tagText === "Fresh") {
+              // keep as is
+            }
+
+            // C) Retag{..rows:6,9...} → only keep LATEST row
+            else if (tagText.startsWith("Retag")) {
+              const m = tagText.match(/rows\s*:\s*([0-9,\s]+)/i);
+              if (!m) return;
+
+              const rows = m[1].split(",").map(x => parseInt(x.trim(),10)).filter(n => !isNaN(n));
+              if (!rows.length) return;
+
+              const lastRow = Math.max(...rows);
+              // GAS data me rowNum nahi, to info.row se match:
+              if (info.row !== lastRow) return;
+            }
+
+            // users
             const users = Array.isArray(info.users) ? info.users : [];
-            const userIds = users.map(u => String(u.id));
-            const set = new Set(userIds);
+            const userIds = users.map(u => String(u.id).trim());
+            const userSet = new Set(userIds);
+
             entries.push({
               splitterName: splitName,
               info,
               users,
               userIds,
-              userSet: set
+              userSet
             });
+
             ponNode.total += info.total || users.length || 0;
           });
 
+          // No entries after filter ⇒ still show PON node
           if (entries.length === 0){
             winNode.children.push(ponNode);
             return;
           }
 
+          // ---------- SORT SPLITTERS (big → small) ----------
           entries.sort((a,b) => b.userIds.length - a.userIds.length);
 
+          // ---------- MAKE NODES ----------
           const nodeEntries = entries.map(e => ({
             entry: e,
             node: makeSplitterNode(e, pon, winName)
           }));
 
-          const primaryNode = nodeEntries[0].node;
-          ponNode.children.push(primaryNode);
+          // ---------- PRIMARY NODE ----------
+          const primary = nodeEntries[0].node;
+          ponNode.children.push(primary);
 
-          for (let i=1; i<nodeEntries.length; i++){
+          // ---------- CHILD LOGIC ----------
+          for (let i = 1; i < nodeEntries.length; i++) {
+
             const child = nodeEntries[i];
             const childSet = child.entry.userSet;
-            let parentNode = null;
 
-            for (let j=i-1; j>=0; j--){
-              const parentEntry = nodeEntries[j];
-              if (isSubset(childSet, parentEntry.entry.userSet)){
-                parentNode = parentEntry.node;
-                break;
+            let matchedParent = null;
+            let overlapFound = false;
+
+            // try matching with previous parents
+            for (let j = 0; j < i; j++) {
+              const parent = nodeEntries[j];
+              const parentSet = parent.entry.userSet;
+
+              // find common users
+              const overlap = [...childSet].filter(x => parentSet.has(x));
+              if (overlap.length > 0) {
+                overlapFound = true;
+
+                // if pure subset → perfect child
+                if (isSubset(childSet, parentSet)) {
+                  matchedParent = parent.node;
+
+                  // propagate overlap upward
+                  overlap.forEach(uid => {
+                    if (!parent.node.userIds.includes(uid)) {
+                      parent.node.userIds.push(uid);
+                    }
+                  });
+
+                  break;
+                }
               }
             }
-            if (!parentNode) parentNode = primaryNode;
-            parentNode.children.push(child.node);
+
+            // ZERO COMMON USERS → new branch
+            if (!matchedParent && !overlapFound) {
+              ponNode.children.push(child.node);
+            }
+            // PARTIAL overlap but not subset → attach under primary
+            else if (!matchedParent && overlapFound) {
+              primary.children.push(child.node);
+            }
+            // Perfect parent
+            else {
+              matchedParent.children.push(child.node);
+            }
           }
 
+          // ---------- OTHER (untagged leftover) ----------
           const allNodes = nodeEntries.map(n => n.node);
+
           allNodes.forEach(node => {
             if (!node.children || node.children.length === 0) return;
 
             const parentSet = new Set(node.userIds);
             const childUnion = new Set();
+
             node.children.forEach(ch => {
               (ch.userIds || []).forEach(id => childUnion.add(id));
             });
@@ -409,7 +502,7 @@
             });
 
             if (leftover.length > 0){
-              const users = leftover.map(id => ({ id, offline: false }));
+              const users = leftover.map(id => ({ id }));
               const otherNode = {
                 nodeType: "untagged",
                 name: "⬜ Other (" + leftover.length + ")",
@@ -436,10 +529,10 @@
       return root;
     }
 
+    // --------- HELPER NODE BUILDER ----------
     function makeSplitterNode(entry, pon, windowName){
-      const info = entry.info || {};
-      const users = entry.users || [];
-      const userIds = entry.userIds || [];
+      const info = entry.info;
+      const users = entry.users;
       const total = info.total ?? users.length ?? 0;
 
       const emoji = emojiForSplitter(entry.splitterName);
@@ -452,7 +545,7 @@
         pon,
         window: windowName,
         users,
-        userIds,
+        userIds: entry.userIds,
         total,
         tag: info.tag || "",
         location: info.location || "",
@@ -462,23 +555,22 @@
       };
     }
 
-    function emojiForSplitter(splitName){
-      const s = (splitName || "").toLowerCase();
-      if (s.includes("link")) return "🔗";
-      if (s.includes("pending")) return "⏳";
-      if (s.includes("16")) return "🔺";
-      if (s.includes("8"))  return "🔵";
-      if (s.includes("4"))  return "🟥";
-      if (s.includes("2"))  return "🟩";
+    function emojiForSplitter(s){
+      const t = (s || "").toLowerCase();
+      if (t.includes("link")) return "🔗";
+      if (t.includes("16"))  return "🔺";
+      if (t.includes("8"))   return "🔵";
+      if (t.includes("4"))   return "🟥";
+      if (t.includes("2"))   return "🟩";
       return "⬜";
     }
 
     function isSubset(aSet, bSet){
-      for (let v of aSet) if (!bSet.has(v)) return false;
+      for (let x of aSet) if (!bSet.has(x)) return false;
       return true;
     }
 
-    // --------------- DRAW TREE ----------------
+        // --------------- DRAW TREE ----------------
 
     function drawTree(data){
       d3.select("#chart").select("svg").remove();
@@ -573,7 +665,7 @@
         )
         .text(d => d.data.name);
 
-      // HOVER + CLICK bindings on entire node group
+      // HOVER + CLICK bindings
       node
         .on("mousemove", handleMouseOver)
         .on("mouseout", () => tooltip.style.opacity = 0)
@@ -585,7 +677,6 @@
     function colorForSplitter(data){
       const total = data.total || 0;
       if (total === 0) return "#6b7280";
-      // default all active as green; tag-based blink-chek already above
       return "#10b981";
     }
 
@@ -594,11 +685,14 @@
       const bounds = g.node().getBBox();
       const fullWidth = chart.clientWidth;
       const fullHeight = chart.clientHeight;
-      const widthScale = fullWidth / (bounds.width + 160);
+
+      const widthScale  = fullWidth  / (bounds.width + 160);
       const heightScale = fullHeight / (bounds.height + 160);
       const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
+
       const tx = -(bounds.x)*scale + 40;
       const ty = -(bounds.y)*scale + 40;
+
       svgRoot.transition().duration(600).call(
         zoom.transform,
         d3.zoomIdentity.translate(tx,ty).scale(scale)
@@ -613,9 +707,11 @@
 
       if (data.nodeType === "window"){
         html += `Window`;
-      } else if (data.nodeType === "pon"){
+      }
+      else if (data.nodeType === "pon"){
         html += `PON: ${data.rawPon}<br/>Total users: ${data.total || 0}`;
-      } else if (data.nodeType === "splitter" || data.nodeType === "untagged"){
+      }
+      else if (data.nodeType === "splitter" || data.nodeType === "untagged"){
         html += `Window: ${data.window}<br/>PON: ${data.pon}<br/>Users: <strong>${data.total || (data.users ? data.users.length : 0)}</strong>`;
         if (data.tag){
           html += `<br/>Tag: ${data.tag}`;
@@ -633,18 +729,17 @@
     function handleNodeClick(event, d){
       const data = d.data;
 
-      // PON / window pe popup disable
       if (!(data.nodeType === "splitter" || data.nodeType === "untagged")) return;
 
       const total = data.total || (data.users ? data.users.length : 0);
 
-      popupTitleEl.textContent = data.nodeType === "untagged"
+      popupTitleEl.textContent =
+        data.nodeType === "untagged"
         ? `⬜ Untagged users (${total})`
         : `${data.rawSplitter} — Users`;
 
       popupPathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter}`;
 
-      // Meta: Window / PON / Splitter repeat nahi; sirf totals + tag
       popupMetaEl.innerHTML = `
         <div><span class="font-semibold">Total users:</span> ${total}</div>
         <div><span class="font-semibold">Tag:</span> ${data.tag || "-"}</div>
@@ -672,7 +767,6 @@
 
       currentPopupRows = [];
 
-      // table header
       popupUsersTbl.innerHTML = `
         <thead>
           <tr>
@@ -694,21 +788,16 @@
         const normId = normalizeId(rawId);
         const dbRow = statusMap[normId];
 
-        const name = dbRow?.name ?? "";
-        const number = dbRow?.number ?? "";
-        const loc = dbRow?.location ?? "";
-        const status = dbRow?.status ?? "";
-
         const tr = document.createElement("tr");
         tr.className = "user-row";
 
         tr.innerHTML = `
           <td>${idx+1}</td>
           <td>${rawId}</td>
-          <td>${name}</td>
-          <td>${number}</td>
-          <td>${loc}</td>
-          <td>${status}</td>
+          <td>${dbRow?.name ?? ""}</td>
+          <td>${dbRow?.number ?? ""}</td>
+          <td>${dbRow?.location ?? ""}</td>
+          <td>${dbRow?.status ?? ""}</td>
         `;
 
         tbody.appendChild(tr);
@@ -716,15 +805,16 @@
         currentPopupRows.push({
           sr: idx+1,
           id: rawId,
-          name,
-          number,
-          location: loc,
-          status
+          name: dbRow?.name ?? "",
+          number: dbRow?.number ?? "",
+          location: dbRow?.location ?? "",
+          status: dbRow?.status ?? ""
         });
       });
     }
 
-    function openLink(url){
+
+        function openLink(url){
       if (url) window.open(url, "_blank");
     }
 
@@ -755,7 +845,7 @@
           `"${(r.name||"").replace(/"/g,'""')}"`,
           `"${(r.number||"").replace(/"/g,'""')}"`,
           `"${(r.location||"").replace(/"/g,'""')}"`,
-          `"${(r.status||"").replace(/"/g,'""')}"`
+          `"${(r.status||"").replace(/"/g,'""')}"`,
         ];
         lines.push(row.join(","));
       });
