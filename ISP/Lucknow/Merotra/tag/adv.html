@@ -324,6 +324,7 @@
     // --------------- TREE BUILDING ----------------
     // --------------- TREE BUILDING ----------------
 
+
 function buildHierarchy(board){
   const root = {
     nodeType: "root",
@@ -368,16 +369,15 @@ function buildHierarchy(board){
         total: 0
       };
 
-      // ----------- Convert all splitters into comparable entries ----------
+      // ----------- Convert to comparable entries ----------
       const entries = [];
 
       Object.entries(splitterObj || {}).forEach(([splitName, info]) => {
         const users = Array.isArray(info.users) ? info.users : [];
         const userIds = users.map(u => String(u.id).trim());
         const userSet = new Set(userIds);
-        const total = userIds.length;
 
-        ponNode.total += total;
+        ponNode.total += userIds.length;
 
         entries.push({
           splitterName: splitName,
@@ -388,8 +388,7 @@ function buildHierarchy(board){
         });
       });
 
-      // no splitter? still attach pon node
-      if (entries.length === 0) {
+      if (entries.length === 0){
         winNode.children.push(ponNode);
         return;
       }
@@ -403,61 +402,59 @@ function buildHierarchy(board){
         node: makeSplitterNode(e, pon, winName)
       }));
 
-      // ---------- PRIMARY (largest) splitter ----------
+      // ---------- PRIMARY (largest splitter) ----------
       const primary = nodeEntries[0].node;
       ponNode.children.push(primary);
 
-      // ---------- CHILD RELATIONSHIP LOGIC ----------
+      // ---------- CHILD LOGIC ----------
       for (let i = 1; i < nodeEntries.length; i++) {
 
         const childObj = nodeEntries[i];
         const childSet = childObj.entry.userSet;
 
-        let matchedParent = null;
-        let overlapFound = false;
+        let bestParent = null;
+        let maxOverlap = 0;
 
-        // Check potential parents (bigger → smaller)
+        // find best parent match (highest overlap)
         for (let j = 0; j < i; j++) {
           const parentObj = nodeEntries[j];
           const parentSet = parentObj.entry.userSet;
 
-          // Check overlap
           const overlap = [...childSet].filter(x => parentSet.has(x));
+          const n = overlap.length;
 
-          if (overlap.length > 0) {
-            overlapFound = true;
-
-            // check subset
-            if (isSubset(childSet, parentSet)) {
-              matchedParent = parentObj.node;
-
-              // propagate upward
-              overlap.forEach(uid => {
-                if (!parentObj.node.userIds.includes(uid)) {
-                  parentObj.node.userIds.push(uid);
-                }
-              });
-
-              break;
-            }
+          if (n > maxOverlap) {
+            maxOverlap = n;
+            bestParent = parentObj;
           }
         }
 
-        // ZERO overlap → separate branch
-        if (!matchedParent && !overlapFound) {
+        // Case 1: NO overlap → completely separate branch
+        if (maxOverlap === 0) {
           ponNode.children.push(childObj.node);
+          continue;
         }
-        else if (!matchedParent && overlapFound) {
-          // partial overlap → branch under primary
-          primary.children.push(childObj.node);
+
+        // Case 2: perfect subset → attach under bestParent
+        const parentSet = bestParent.entry.userSet;
+        if (isSubset(childSet, parentSet)) {
+          bestParent.node.children.push(childObj.node);
+
+          // propagate overlap upward
+          childObj.entry.userIds.forEach(uid => {
+            if (!bestParent.node.userIds.includes(uid)) {
+              bestParent.node.userIds.push(uid);
+            }
+          });
+
+          continue;
         }
-        else {
-          // perfect parent
-          matchedParent.children.push(childObj.node);
-        }
+
+        // Case 3: partial overlap (NOT subset) → attach under primary
+        primary.children.push(childObj.node);
       }
 
-      // ---------- OTHER NODE (leftovers) ----------
+      // ---------- "OTHER" leftover logic ----------
       const allNodes = nodeEntries.map(o => o.node);
 
       allNodes.forEach(node => {
@@ -495,14 +492,13 @@ function buildHierarchy(board){
         }
       });
 
-      // Attach PON under window
+      // attach PON → window
       winNode.children.push(ponNode);
     });
   });
 
   return root;
 }
-
 
 
     // --------- HELPER NODE BUILDER ----------
