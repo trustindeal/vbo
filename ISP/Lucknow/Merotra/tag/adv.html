@@ -333,8 +333,8 @@ function buildHierarchy(board){
 
   const windowMap = {};
 
-  // ----------- SORT PONs (numeric O#,I#,P#) -----------
-  const sortedPons = Object.entries(board).sort(([a],[b]) => {
+  // ----------- SORT PONs (O#, I#, P#) -----------
+  const sortedPons = Object.entries(board).sort(([a], [b]) => {
     const A = parsePon(a);
     const B = parsePon(b);
     if (A.olt !== B.olt) return A.olt - B.olt;
@@ -342,12 +342,11 @@ function buildHierarchy(board){
     return A.port - B.port;
   });
 
-  // ---------- MAIN BUILD ----------
+  // ---------- MAIN LOOP ----------
   sortedPons.forEach(([pon, winObj]) => {
-
     Object.entries(winObj || {}).forEach(([winName, splitterObj]) => {
 
-      // ----------- Window node (create once) -----------
+      // WINDOW node create once
       if (!windowMap[winName]) {
         windowMap[winName] = {
           nodeType: "window",
@@ -357,10 +356,9 @@ function buildHierarchy(board){
         };
         root.children.push(windowMap[winName]);
       }
-
       const winNode = windowMap[winName];
 
-      // ----------- PON node -----------
+      // PON node
       const ponNode = {
         nodeType: "pon",
         name: "🔌 " + pon,
@@ -370,41 +368,141 @@ function buildHierarchy(board){
         total: 0
       };
 
-      // ----------- SPLITTERS -----------
-      Object.entries(splitterObj).forEach(([splitName, info]) => {
+      // ----------- Convert all splitters into comparable entries ----------
+      const entries = [];
 
-        // users array (ensure safe)
+      Object.entries(splitterObj || {}).forEach(([splitName, info]) => {
         const users = Array.isArray(info.users) ? info.users : [];
         const userIds = users.map(u => String(u.id).trim());
-
+        const userSet = new Set(userIds);
         const total = userIds.length;
+
         ponNode.total += total;
 
-        // splitter node
-        ponNode.children.push({
-          nodeType: "splitter",
-          name: `${emojiForSplitter(splitName)} ${splitName} (${total})`,
-          rawSplitter: splitName,
-          pon,
-          window: winName,
+        entries.push({
+          splitterName: splitName,
+          info,
           users,
           userIds,
-          total,
-          tag: info.tag || "",
-          location: info.location || "",
-          jcPic: info.jcPic || "",
-          polePic: info.polePic || "",
-          children: []
+          userSet
         });
       });
 
-      // attach into window
+      // no splitter? still attach pon node
+      if (entries.length === 0) {
+        winNode.children.push(ponNode);
+        return;
+      }
+
+      // ---------- SORT: biggest → smallest ----------
+      entries.sort((a,b) => b.userIds.length - a.userIds.length);
+
+      // ---------- Build node objects ----------
+      const nodeEntries = entries.map(e => ({
+        entry: e,
+        node: makeSplitterNode(e, pon, winName)
+      }));
+
+      // ---------- PRIMARY (largest) splitter ----------
+      const primary = nodeEntries[0].node;
+      ponNode.children.push(primary);
+
+      // ---------- CHILD RELATIONSHIP LOGIC ----------
+      for (let i = 1; i < nodeEntries.length; i++) {
+
+        const childObj = nodeEntries[i];
+        const childSet = childObj.entry.userSet;
+
+        let matchedParent = null;
+        let overlapFound = false;
+
+        // Check potential parents (bigger → smaller)
+        for (let j = 0; j < i; j++) {
+          const parentObj = nodeEntries[j];
+          const parentSet = parentObj.entry.userSet;
+
+          // Check overlap
+          const overlap = [...childSet].filter(x => parentSet.has(x));
+
+          if (overlap.length > 0) {
+            overlapFound = true;
+
+            // check subset
+            if (isSubset(childSet, parentSet)) {
+              matchedParent = parentObj.node;
+
+              // propagate upward
+              overlap.forEach(uid => {
+                if (!parentObj.node.userIds.includes(uid)) {
+                  parentObj.node.userIds.push(uid);
+                }
+              });
+
+              break;
+            }
+          }
+        }
+
+        // ZERO overlap → separate branch
+        if (!matchedParent && !overlapFound) {
+          ponNode.children.push(childObj.node);
+        }
+        else if (!matchedParent && overlapFound) {
+          // partial overlap → branch under primary
+          primary.children.push(childObj.node);
+        }
+        else {
+          // perfect parent
+          matchedParent.children.push(childObj.node);
+        }
+      }
+
+      // ---------- OTHER NODE (leftovers) ----------
+      const allNodes = nodeEntries.map(o => o.node);
+
+      allNodes.forEach(node => {
+        if (!node.children || node.children.length === 0) return;
+
+        const parentSet = new Set(node.userIds);
+        const childUnion = new Set();
+
+        node.children.forEach(ch => {
+          (ch.userIds || []).forEach(id => childUnion.add(id));
+        });
+
+        const leftover = [];
+        parentSet.forEach(id => {
+          if (!childUnion.has(id)) leftover.push(id);
+        });
+
+        if (leftover.length > 0) {
+          const otherNode = {
+            nodeType: "untagged",
+            name: "⬜ Other (" + leftover.length + ")",
+            rawSplitter: "Other",
+            pon: node.pon,
+            window: node.window,
+            users: leftover.map(id => ({id})),
+            userIds: leftover,
+            total: leftover.length,
+            tag: "",
+            location: node.location,
+            jcPic: node.jcPic,
+            polePic: node.polePic,
+            children: []
+          };
+          node.children.push(otherNode);
+        }
+      });
+
+      // Attach PON under window
       winNode.children.push(ponNode);
     });
   });
 
   return root;
 }
+
 
 
     // --------- HELPER NODE BUILDER ----------
