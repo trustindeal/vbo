@@ -279,147 +279,172 @@
 
   // -------------- BUILD HIERARCHY (for D3) --------------
   // Input board shape: { pon: { window: { splitName: { users:[{id:...}], tag, location, jcPic, polePic }}}}
-  function buildHierarchy(board) {
-    const root = { nodeType:"root", name:"🌐 Merotra Network", children:[] };
-    const windowMap = {};
+  // improved buildHierarchy — preserves all splitters and attaches sensibly
+function buildHierarchy(board) {
+  const root = { nodeType: "root", name: "🌐 Merotra Network", children: [] };
+  const windowMap = {};
 
-    // Sort PONs
-    const sortedPons = Object.entries(board).sort(([a],[b])=>{
-      const A = parsePon(a), B = parsePon(b);
-      if (A.olt !== B.olt) return A.olt-B.olt;
-      if (A.ip !== B.ip) return A.ip-B.ip;
-      return A.port-B.port;
-    });
+  // sort PONs
+  const sortedPons = Object.entries(board).sort(([a],[b])=>{
+    const A = parsePon(a), B = parsePon(b);
+    if (A.olt !== B.olt) return A.olt - B.olt;
+    if (A.ip !== B.ip) return A.ip - B.ip;
+    return A.port - B.port;
+  });
 
-    sortedPons.forEach(([pon, winObj])=>{
-      Object.entries(winObj || {}).forEach(([winName, splitters])=>{
-        if (!windowMap[winName]) {
-          windowMap[winName] = { nodeType:"window", name: "🪟 " + winName, rawWindow: winName, children: [] };
-          root.children.push(windowMap[winName]);
-        }
-        const winNode = windowMap[winName];
+  sortedPons.forEach(([pon, winObj])=>{
+    Object.entries(winObj || {}).forEach(([winName, splitters])=>{
+      if (!windowMap[winName]) {
+        windowMap[winName] = { nodeType:"window", name: "🪟 " + winName, rawWindow: winName, children: [] };
+        root.children.push(windowMap[winName]);
+      }
+      const winNode = windowMap[winName];
 
-        // PON node
-        const ponNode = { nodeType:"pon", name: "🔌 " + pon, rawPon: pon, window: winName, children: [], total:0 };
+      const ponNode = { nodeType:"pon", name:"🔌 " + pon, rawPon: pon, window: winName, children: [], total:0 };
 
-        // Build split entries (convert users to id strings)
-        const entries = Object.entries(splitters || {}).map(([splitName, info])=>{
-          const userIds = (info.users || []).map(u => (typeof u === 'object' && u !== null) ? (u.id ?? "") : String(u)).filter(Boolean);
-          const sset = new Set(userIds);
-          return {
-            splitName,
-            info,
-            userIds,
-            userSet: sset,
-            userCount: sset.size
-          };
-        });
-
-        if (entries.length === 0) {
-          winNode.children.push(ponNode);
-          return;
-        }
-
-        // sort by userCount desc (largest primary)
-        entries.sort((a,b)=> b.userCount - a.userCount);
-
-        // create node objects with sets for building
-        const nodes = entries.map(e=>({
-          nodeType:"splitter",
-          name: e.splitName,
-          rawSplitter: e.splitName,
-          splitterName: e.splitName,
-          pon,
-          window: winName,
-          users: e.userIds.slice(),
-          usersSet: new Set(e.userIds),
-          total: e.userCount,
-          tag: e.info.tag || "",
-          location: e.info.location || "",
-          jcPic: e.info.jcPic || "",
-          polePic: e.info.polePic || "",
-          children: []
-        }));
-
-        const roots = [nodes[0]];
-
-        const isSubset = (aSet,bSet) => {
-          for (const x of aSet) if (!bSet.has(x)) return false;
-          return true;
+      // build list of splitters (KEEP even if users empty so structure shows)
+      const entries = Object.entries(splitters || {}).map(([splitName, info])=>{
+        const userIds = (info.users || []).map(u => (typeof u === 'object' && u !== null) ? (u.id ?? "") : String(u)).filter(Boolean);
+        return {
+          splitName,
+          info,
+          userIds,
+          usersSet: new Set(userIds),
+          userCount: userIds.length
         };
-
-        // Build parent-child using your GAS rules (subset -> child, overlap -> primary child, no overlap -> sibling)
-        for (let i=1; i<nodes.length; i++){
-          const curr = nodes[i];
-          let attached = false;
-
-          for (let j=0; j<roots.length; j++){
-            const parent = roots[j];
-            if (isSubset(curr.usersSet, parent.usersSet)) {
-              parent.children.push(curr);
-              attached = true;
-              break;
-            }
-
-            // overlap?
-            const overlap = curr.users.some(u => parent.usersSet.has(u));
-            if (overlap) {
-              roots[0].children.push(curr);
-              attached = true;
-              break;
-            }
-          }
-
-          if (!attached) {
-            roots.push(curr);
-          }
-        }
-
-        // Add untagged nodes where appropriate (children exist but some users remain in parent)
-        function addUntagged(node) {
-          if (!node.children.length) return;
-          const covered = new Set();
-          node.children.forEach(c=>{
-            addUntagged(c);
-            (c.users || []).forEach(u => covered.add(u));
-          });
-          const own = (node.users || []).filter(u => !covered.has(u));
-          if (own.length > 0) {
-            node.children.push({
-              nodeType: "untagged",
-              name: `Other / Untagged (${own.length})`,
-              users: own,
-              total: own.length,
-              children: []
-            });
-          }
-        }
-        roots.forEach(addUntagged);
-
-        // cleanup helper (remove usersSet, ensure arrays)
-        function cleanup(node) {
-          if (node.usersSet) {
-            node.users = Array.from(node.usersSet);
-            delete node.usersSet;
-          }
-          node.total = node.total ?? (Array.isArray(node.users) ? node.users.length : 0);
-          node.children.forEach(cleanup);
-        }
-        roots.forEach(cleanup);
-
-        // compute pon total as unique users across splitters (union)
-        const union = new Set();
-        entries.forEach(e => e.userIds.forEach(u => union.add(u)));
-
-        ponNode.total = union.size;
-        ponNode.children = roots;
-
-        winNode.children.push(ponNode);
       });
-    });
 
-    return root;
-  }
+      if (entries.length === 0) {
+        winNode.children.push(ponNode);
+        return;
+      }
+
+      // sort by userCount desc so largest becomes primary candidate
+      entries.sort((a,b)=> b.userCount - a.userCount);
+
+      // convert to working nodes
+      const nodes = entries.map(e => ({
+        nodeType: "splitter",
+        name: e.splitName,
+        rawSplitter: e.splitName,
+        splitterName: e.splitName,
+        pon,
+        window: winName,
+        users: Array.from(e.usersSet),
+        usersSet: new Set(e.usersSet),
+        total: e.userCount,
+        tag: e.info.tag || "",
+        location: e.info.location || "",
+        jcPic: e.info.jcPic || "",
+        polePic: e.info.polePic || "",
+        children: []
+      }));
+
+      const roots = [];
+
+      // helper: intersection size
+      function intersectSize(aSet, bSet) {
+        let c = 0;
+        for (const x of aSet) if (bSet.has(x)) c++;
+        return c;
+      }
+
+      // place each node: try subset first, then best-overlap parent, else make new root
+      for (let i=0; i<nodes.length; i++){
+        const node = nodes[i];
+
+        // try to attach as subset to any existing root (prefer earliest root where subset holds)
+        let attached = false;
+        for (const r of roots) {
+          if (isSubset(node.usersSet, r.usersSet)) {
+            r.children.push(node);
+            // merge: add any users missing in parent so parent counts remain >= children
+            for (const u of node.usersSet) r.usersSet.add(u);
+            attached = true;
+            break;
+          }
+        }
+        if (attached) continue;
+
+        // if not subset: find root with maximum overlap ( >0 )
+        let bestParent = null;
+        let bestOverlap = 0;
+        for (const r of roots) {
+          const ov = intersectSize(node.usersSet, r.usersSet);
+          if (ov > bestOverlap) { bestOverlap = ov; bestParent = r; }
+        }
+        if (bestParent && bestOverlap > 0) {
+          // attach to bestParent (not always roots[0])
+          bestParent.children.push(node);
+          // ensure parent absorbs child's non-overlapping users (rule 4)
+          for (const u of node.usersSet) if (!bestParent.usersSet.has(u)) bestParent.usersSet.add(u);
+          attached = true;
+        }
+
+        if (!attached) {
+          // new sibling root under PON
+          roots.push(node);
+        }
+      }
+
+      // After placement, ensure all parents' sets include children users (propagate up)
+      function propagateUp(n) {
+        n.children.forEach(ch => {
+          propagateUp(ch);
+          for (const u of ch.users) n.usersSet.add(u);
+        });
+      }
+      roots.forEach(r => propagateUp(r));
+
+      // Add UNTAGGED nodes where a parent has some users not covered by children
+      function addUntagged(node) {
+        if (!node.children || node.children.length === 0) return;
+        // compute covered
+        const covered = new Set();
+        node.children.forEach(c => {
+          addUntagged(c);
+          (c.users || []).forEach(u => covered.add(u));
+        });
+        const own = (node.users || []).filter(u => !covered.has(u));
+        if (own.length > 0) {
+          node.children.push({
+            nodeType: "untagged",
+            name: `Other / Untagged (${own.length})`,
+            users: own,
+            total: own.length,
+            children: []
+          });
+        }
+      }
+      roots.forEach(r => addUntagged(r));
+
+      // cleanup: convert usersSet -> users & totals
+      function cleanup(node) {
+        if (node.usersSet) {
+          node.users = Array.from(node.usersSet);
+          node.total = node.users.length;
+          delete node.usersSet;
+        } else {
+          node.total = node.total ?? (Array.isArray(node.users) ? node.users.length : 0);
+        }
+        node.children.forEach(cleanup);
+      }
+      roots.forEach(cleanup);
+
+      // pon total = unique union of all roots users
+      const union = new Set();
+      roots.forEach(r => {
+        (r.users || []).forEach(u => union.add(u));
+      });
+
+      ponNode.total = union.size;
+      ponNode.children = roots;
+      winNode.children.push(ponNode);
+    });
+  });
+
+  return root;
+}
 
   // -------------- DRAW TREE (D3) --------------
   function drawTree(data) {
