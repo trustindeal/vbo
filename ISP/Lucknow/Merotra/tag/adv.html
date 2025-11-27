@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>🌐 Merotra — PON / Splitter Tree</title>
 
   <!-- D3 & Tailwind -->
@@ -13,20 +13,39 @@
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
   <!-- Fonts + CSS -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="adv.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;}
+    body{margin:0;background:#f8fafc;color:#0f172a}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#0f172a;color:#fff}
+    .header .header-title{font-weight:700;font-size:16px}
+    .header .header-sub{font-size:12px;color:#cbd5e1}
+    .btn{background:#fff;color:#0f172a;border-radius:8px;padding:6px 10px;border:none;cursor:pointer}
+    .btn-secondary{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.12)}
+    #chart{height:calc(100vh - 110px);padding:12px}
+    .tooltip{position:absolute;pointer-events:none;background:#0b1220;color:#fff;padding:8px;border-radius:6px;box-shadow:0 4px 14px rgba(2,6,23,0.2);opacity:0;transition:opacity .12s}
+    /* popup */
+    .popup-backdrop{display:none;position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(2,6,23,0.45);align-items:center;justify-content:center;padding:24px;z-index:60}
+    .modal-content{background:#fff;color:#0f172a;border-radius:10px;padding:14px;width:720px;max-height:80vh;overflow:auto}
+    .user-table{width:100%;border-collapse:collapse;font-size:13px}
+    .user-table th,.user-table td{padding:6px 8px;border-bottom:1px solid #eef2f7;text-align:left}
+    /* controls modal */
+    .controls-backdrop{display:none;position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(2,6,23,0.35);align-items:center;justify-content:center;padding:24px;z-index:50}
+    .controls-modal{background:#fff;padding:14px;border-radius:10px;width:360px}
+    .checkbox-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:220px;overflow:auto;padding:6px 0}
+    .link-btn{display:inline-block;margin-right:8px;padding:6px 8px;background:#eef2ff;border-radius:6px;cursor:pointer;font-size:12px}
+    .select-all{cursor:pointer;color:#2563eb;font-size:12px}
+    .download-btns{display:flex;gap:8px;margin-top:8px}
+  </style>
 </head>
 <body>
 
-  <!-- HEADER -->
   <div class="header">
     <div>
-      <div class="header-title">
-        <span>🌐 Merotra Network Tree</span>
-      </div>
-      <div class="header-sub">Window → PON → Splitters → Users (+ Untagged branch)</div>
+      <div class="header-title">🌐 Merotra Network Tree</div>
+      <div class="header-sub">Window → PON → Splitters → Users (+ Untagged)</div>
     </div>
-    <div class="flex items-center gap-2">
+    <div style="display:flex;gap:8px;align-items:center">
       <button id="controlsBtn" class="btn btn-secondary">Filters</button>
       <button id="reloadBtn" class="btn">Reload</button>
     </div>
@@ -35,143 +54,160 @@
   <div id="chart"></div>
   <div id="tooltip" class="tooltip"></div>
 
-  <!-- POPUP: Splitter / Untagged -->
+  <!-- POPUP -->
   <div id="popupModal" class="popup-backdrop">
     <div class="modal-content">
-      <div class="flex justify-between items-start mb-2">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
         <div>
-          <h2 id="popupTitle" class="text-lg font-bold mb-1"></h2>
-          <div id="popupPath" class="text-xs text-gray-500"></div>
+          <h2 id="popupTitle" style="margin:0;font-size:16px"></h2>
+          <div id="popupPath" style="font-size:12px;color:#64748b;margin-top:4px"></div>
         </div>
-        <button id="popupClose" class="btn btn-secondary text-xs px-2 py-1">Close</button>
+        <button id="popupClose" class="btn btn-secondary" style="height:32px">Close</button>
       </div>
 
-      <div class="text-xs text-gray-600 mb-2 space-y-1" id="popupMeta">
-        <!-- Filled by JS -->
-      </div>
+      <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div>
 
-      <div class="mb-2 text-xs" id="popupLinks">
-        <!-- location / JC / pole -->
-      </div>
+      <div id="popupLinks" style="font-size:13px;margin-bottom:8px"></div>
 
-      <h3 class="text-sm font-semibold mt-3 mb-1">Users</h3>
-      <div class="user-table-container">
-        <table id="popupUsersTable" class="user-table">
-          <!-- Filled by JS -->
-        </table>
+      <h3 style="margin:8px 0 6px;font-size:14px">Users</h3>
+      <div style="max-height:40vh;overflow:auto">
+        <table id="popupUsersTable" class="user-table"></table>
       </div>
 
       <div class="download-btns">
-        <button id="btnShot" class="download-btn btn-shot">📸 Screenshot</button>
-        <button id="btnCsv" class="download-btn btn-csv">📊 CSV</button>
+        <button id="btnShot" class="btn">📸 Screenshot</button>
+        <button id="btnCsv" class="btn">📊 CSV</button>
       </div>
     </div>
   </div>
 
-  <!-- CONTROLS MODAL -->
+  <!-- CONTROLS -->
   <div id="controlsModal" class="controls-backdrop">
     <div class="controls-modal">
-      <h2 class="text-base font-bold mb-3">Filters & View</h2>
+      <h3 style="margin:0 0 8px">Filters & View</h3>
 
-      <div class="mb-3">
-        <div class="filter-title">Windows</div>
+      <div style="margin-bottom:10px">
+        <div style="font-weight:600;font-size:13px">Windows</div>
         <div id="windowFilters" class="checkbox-grid"></div>
-        <div class="mt-1 text-center">
-          <span class="select-all" onclick="selectAll('window')">Select All</span> |
-          <span class="select-all" onclick="deselectAll('window')">Deselect All</span>
+        <div style="text-align:center;margin-top:6px;font-size:12px">
+          <span class="select-all" onclick="selectAll('window')">Select All</span> | <span class="select-all" onclick="deselectAll('window')">Deselect All</span>
         </div>
       </div>
 
-      <div class="mb-3">
-        <div class="filter-title">PONs</div>
+      <div style="margin-bottom:10px">
+        <div style="font-weight:600;font-size:13px">PONs</div>
         <div id="ponFilters" class="checkbox-grid pon-grid"></div>
-        <div class="mt-1 text-center">
-          <span class="select-all" onclick="selectAll('pon')">Select All</span> |
-          <span class="select-all" onclick="deselectAll('pon')">Deselect All</span>
+        <div style="text-align:center;margin-top:6px;font-size:12px">
+          <span class="select-all" onclick="selectAll('pon')">Select All</span> | <span class="select-all" onclick="deselectAll('pon')">Deselect All</span>
         </div>
       </div>
 
-      <button id="applyFiltersBtn" class="btn w-full mt-1">Apply Filters</button>
-      <button id="controlsClose" class="btn btn-secondary w-full mt-2">Close</button>
+      <button id="applyFiltersBtn" class="btn" style="width:100%">Apply Filters</button>
+      <button id="controlsClose" class="btn btn-secondary" style="width:100%;margin-top:8px">Close</button>
     </div>
   </div>
 
   <script>
-    // -------------------- CONFIG --------------------
+    // ========== CONFIG ==========
+    const BOARD_URL = "https://script.google.com/macros/s/AKfycbxRnBmBu_ozeU05Wv7cesr5AsWCIILv8FEwaeUnGyDyswJ86hyQWPX259_vwAJZ-h_S/exec?mode=board";
 
-    // YOUR published GAS URL (use mode=board)
-    const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
+    // ========== STATE ==========
+    const tooltip = document.getElementById('tooltip');
+    const popupModal = document.getElementById('popupModal');
+    const controlsModal = document.getElementById('controlsModal');
+    const popupTitleEl = document.getElementById('popupTitle');
+    const popupPathEl = document.getElementById('popupPath');
+    const popupMetaEl = document.getElementById('popupMeta');
+    const popupLinksEl = document.getElementById('popupLinks');
+    const popupUsersTbl = document.getElementById('popupUsersTable');
 
-    // TheMaster DB URLs (token = abcd1234) - unchanged
-    const MASTER_API_MEROTRA = "https://script.google.com/macros/s/AKfycbwEjBWnBLw5S45MdR0yq4Kvuuy5uFC_8a8u0syGpW9Kyq2deGY-MdquN69uF6V51qj3Pw/exec?token=abcd1234";
-    const MASTER_API_SUNNY   = "https://script.google.com/macros/s/AKfycbymVJ8_kU4T0WEK5eSQftItoh_sHtmmutjTeuVQDhnMpPdk3dUBxDu5XiuA6tqZ64ZY/exec?token=abcd1234";
-
-    // TheMaster headers
-    const USER_ID_FIELD      = "Users";       // Col N
-    const USER_NAME_FIELD    = "Name";        // Col O
-    const USER_NUMBER_FIELD  = "Number";      // Col P
-    const USER_LOCATION_FIELD= "Location";    // Col Q
-    const USER_STATUS_FIELD  = "User status"; // Col AF
-
-    // --------------- GLOBAL STATE ----------------
-
-    const tooltip       = document.getElementById("tooltip");
-    const popupModal    = document.getElementById("popupModal");
-    const controlsModal = document.getElementById("controlsModal");
-    const popupTitleEl  = document.getElementById("popupTitle");
-    const popupPathEl   = document.getElementById("popupPath");
-    const popupMetaEl   = document.getElementById("popupMeta");
-    const popupLinksEl  = document.getElementById("popupLinks");
-    const popupUsersTbl = document.getElementById("popupUsersTable");
-
-    let rawBoard = {};        // final internal board: pon -> window -> splitName -> info
-    let serverSummary = null; // server summary info
-    let svg, g, treeLayout, root;
+    let rawBoard = {};         // pon -> window -> splitName -> info (users as array or with children)
     let currentTreeData = null;
-
     let filters = { windows: [], pons: [] };
-
-    // window name => normalizedID => { id, name, number, location, status }
-    const statusMaps = {
-      Merotra: {},
-      Sunny: {}
-    };
-
-    // popup csv data
     let currentPopupRows = [];
 
-    // --------------- HELPERS ----------------
+    // ========== HELPERS ==========
+    function normalizeId(v){ return (v == null) ? "" : String(v).trim(); }
 
-    function normalizeId(v){
-      return (v ?? "").toString().trim().replace(/\s+/g,"").toLowerCase();
+    function parsePon(pon) {
+      const m = String(pon || '').match(/O(\d+)I(\d+)P(\d+)/i);
+      if (!m) return { olt: 9999, ip: 9999, port: 9999 };
+      return { olt: +m[1], ip: +m[2], port: +m[3] };
     }
 
-    // transform server JSON -> internal board shape expected by buildHierarchy
-    function transformServerToBoard(serverJson){
-      // serverJson expected shape: { summary: {...}, windows: [ { window, totalUsers, pons: [ { pon, totalUsers, splitters: [ { name, tag, location, jcPic, polePic, users: [...] } ] } ] } ] }
+    // ========== INIT UI ==========
+    document.getElementById('reloadBtn').addEventListener('click', () => loadAll(true));
+    document.getElementById('controlsBtn').addEventListener('click', () => controlsModal.style.display = 'flex');
+    document.getElementById('controlsClose').addEventListener('click', () => controlsModal.style.display = 'none');
+    document.getElementById('popupClose').addEventListener('click', () => popupModal.style.display = 'none');
+    document.getElementById('applyFiltersBtn').addEventListener('click', applyFiltersFromUI);
+    document.getElementById('btnShot').addEventListener('click', downloadScreenshot);
+    document.getElementById('btnCsv').addEventListener('click', downloadCSV);
+    window.addEventListener('resize', () => { if (currentTreeData) drawTree(currentTreeData); });
+
+    // on load
+    loadAll(false);
+
+    // ========== FETCH + TRANSFORM ==========
+    async function loadAll(showLoading=true){
+      try {
+        setLoading(true);
+        const res = await fetch(BOARD_URL);
+        if (!res.ok) throw new Error('Board API failed: ' + res.status);
+        const serverJson = await res.json();
+
+        // transform server JSON (already in hierarchical form) to internal board object:
+        rawBoard = serverToBoard(serverJson);
+
+        // setup filters
+        setupFiltersFromBoard();
+
+        // filtered board to hierarchy for d3
+        const filtered = filterBoard(rawBoard, filters);
+        const treeData = buildHierarchy(filtered);
+        currentTreeData = treeData;
+        drawTree(treeData);
+
+        // small console info
+        if (serverJson && serverJson.summary) {
+          console.info('Processed', serverJson.summary.processedRows, 'Skipped', serverJson.summary.skippedRows);
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Error loading tree: ' + (e.message || e));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function setLoading(flag){
+      const btn = document.getElementById('reloadBtn');
+      btn.textContent = flag ? 'Loading...' : 'Reload';
+      btn.disabled = flag;
+    }
+
+    function serverToBoard(serverJson){
+      // Expected serverJson.windows[] -> pons[] -> splitters[]
       if (!serverJson || !Array.isArray(serverJson.windows)) return {};
       const board = {};
       serverJson.windows.forEach(win => {
-        const winName = win.window;
-        (win.pons || []).forEach(pon => {
-          const ponName = pon.pon;
-          if (!board[ponName]) board[ponName] = {};
-          if (!board[ponName][winName]) board[ponName][winName] = {};
-          (pon.splitters || []).forEach(split => {
-            // ensure users are objects { id: <value> } as expected by existing code
-            const usersObjArray = (split.users || []).map(u => {
-              // if server returns objects already, attempt to use id or value
-              if (typeof u === "object" && u !== null) {
-                return { id: u.id ?? (u.user ?? "") };
-              }
-              return { id: String(u) };
-            });
-            board[ponName][winName][split.name] = {
-              users: usersObjArray,
-              tag: split.tag || "",
-              location: split.location || "",
-              jcPic: split.jcPic || "",
-              polePic: split.polePic || ""
+        const wname = win.window;
+        (win.pons || []).forEach(p => {
+          const pname = p.pon;
+          if (!board[pname]) board[pname] = {};
+          if (!board[pname][wname]) board[pname][wname] = {};
+          (p.splitters || []).forEach(s => {
+            // s may already have children (splitter nodes with children)
+            // we place it directly under board[pon][window] using s.name as key
+            const usersArray = Array.isArray(s.users) ? s.users.map(u => typeof u === 'object' ? (u.id ?? '') : String(u)) : [];
+            board[pname][wname][s.name] = {
+              users: usersArray.map(id => ({ id: id })), // keep {id} format for buildHierarchy compat
+              tag: s.tag || '',
+              location: s.location || '',
+              jcPic: s.jcPic || '',
+              polePic: s.polePic || '',
+              // include children if server provided nested structure (but server already gives nested)
+              children: s.children || []
             };
           });
         });
@@ -179,164 +215,53 @@
       return board;
     }
 
-    // --------------- INIT ----------------
-
-    document.getElementById("reloadBtn").addEventListener("click", () => {
-      loadAll(true);
-    });
-    document.getElementById("controlsBtn").addEventListener("click", () => {
-      controlsModal.style.display = "flex";
-    });
-    document.getElementById("controlsClose").addEventListener("click", () => {
-      controlsModal.style.display = "none";
-    });
-    document.getElementById("popupClose").addEventListener("click", () => {
-      popupModal.style.display = "none";
-    });
-    document.getElementById("applyFiltersBtn").addEventListener("click", applyFiltersFromUI);
-
-    document.getElementById("btnShot").addEventListener("click", downloadScreenshot);
-    document.getElementById("btnCsv").addEventListener("click", downloadCSV);
-
-    window.addEventListener("resize", () => {
-      if (currentTreeData) drawTree(currentTreeData);
-    });
-
-    // page load
-    loadAll(false);
-
-    async function loadAll(){
-      try {
-        setLoading(true);
-
-        // fetch server JSON (summary + windows[])
-        const bRes = await fetch(BOARD_URL);
-        if (!bRes.ok) throw new Error("Board API fetch failed: " + bRes.status);
-        const serverJson = await bRes.json();
-
-        // show quick summary (optional) and transform
-        serverSummary = serverJson.summary || null;
-
-        rawBoard = transformServerToBoard(serverJson);
-
-        // load status maps as before
-        await Promise.all([
-          loadStatusesForWindow("Merotra", MASTER_API_MEROTRA),
-          loadStatusesForWindow("Sunny", MASTER_API_SUNNY)
-        ]);
-
-        setupFiltersFromBoard();
-
-        const filtered = filterBoard(rawBoard, filters);
-        const treeData = buildHierarchy(filtered);
-        currentTreeData = treeData;
-        drawTree(treeData);
-
-        // if server gave a summary, show a small toast (non-blocking)
-        if (serverSummary) {
-          console.info("Processed rows:", serverSummary.processedRows, "Skipped:", serverSummary.skippedRows);
-        }
-
-      } catch(e){
-        console.error(e);
-        alert("Error loading data: " + (e.message || e));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    function setLoading(flag){
-      const btn = document.getElementById("reloadBtn");
-      btn.textContent = flag ? "Loading..." : "Reload";
-      btn.disabled = flag;
-    }
-
-    // --------------- STATUS MAP (TheMaster) ----------------
-
-    async function loadStatusesForWindow(windowName, apiUrl){
-      if (!apiUrl) return;
-      try {
-        const res = await fetch(apiUrl);
-        const json = await res.json();
-        if (!json || !Array.isArray(json.rows)) return;
-
-        const m = {};
-        json.rows.forEach(row => {
-          const rawId = row[USER_ID_FIELD];
-          const norm  = normalizeId(rawId);
-          if (!norm) return;
-          m[norm] = {
-            id: rawId != null ? rawId.toString().trim() : "",
-            name: row[USER_NAME_FIELD] ?? "",
-            number: row[USER_NUMBER_FIELD] ?? "",
-            location: row[USER_LOCATION_FIELD] ?? "",
-            status: row[USER_STATUS_FIELD] ?? ""
-          };
-        });
-        statusMaps[windowName] = m;
-      } catch(e){
-        console.error("Status load failed for", windowName, e);
-      }
-    }
-
-    // --------------- FILTERS ----------------
-
+    // ========== FILTERS ==========
     function setupFiltersFromBoard(){
       const windowSet = new Set();
       const ponSet = new Set();
-
       Object.entries(rawBoard).forEach(([pon, winObj]) => {
         ponSet.add(pon);
         Object.keys(winObj || {}).forEach(w => windowSet.add(w));
       });
 
       filters.windows = Array.from(windowSet);
-      filters.pons    = Array.from(ponSet);
+      filters.pons = Array.from(ponSet);
 
-      const winDiv = document.getElementById("windowFilters");
-      const ponDiv = document.getElementById("ponFilters");
-      winDiv.innerHTML = "";
-      ponDiv.innerHTML = "";
+      const winDiv = document.getElementById('windowFilters');
+      const ponDiv = document.getElementById('ponFilters');
+      winDiv.innerHTML = ''; ponDiv.innerHTML = '';
 
       Array.from(windowSet).sort().forEach(w => {
-        const el = document.createElement("div");
-        el.className = "checkbox-item";
-        el.innerHTML = `
-          <label>
-            <input type="checkbox" value="${w}" checked>
-            <span>${w}</span>
-          </label>`;
+        const el = document.createElement('label');
+        el.style.display = 'block';
+        el.innerHTML = `<input type="checkbox" value="${w}" checked> ${w}`;
         winDiv.appendChild(el);
       });
 
-      Array.from(ponSet).sort().forEach(p => {
-        const el = document.createElement("div");
-        el.className = "checkbox-item";
-        el.innerHTML = `
-          <label>
-            <input type="checkbox" value="${p}" checked>
-            <span>${p}</span>
-          </label>`;
+      Array.from(ponSet).sort((a,b) => {
+        const pa=parsePon(a), pb=parsePon(b);
+        if (pa.olt!==pb.olt) return pa.olt-pb.olt;
+        if (pa.ip!==pb.ip) return pa.ip-pb.ip;
+        return pa.port-pb.port;
+      }).forEach(p => {
+        const el = document.createElement('label');
+        el.style.display = 'block';
+        el.innerHTML = `<input type="checkbox" value="${p}" checked> ${p}`;
         ponDiv.appendChild(el);
       });
     }
 
     function selectAll(type){
-      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`)
-        .forEach(ch => ch.checked = true);
+      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`).forEach(ch => ch.checked = true);
     }
-
     function deselectAll(type){
-      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`)
-        .forEach(ch => ch.checked = false);
+      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`).forEach(ch => ch.checked = false);
     }
 
     function applyFiltersFromUI(){
-      filters.windows = Array.from(document.querySelectorAll("#windowFilters input:checked")).map(i => i.value);
-      filters.pons    = Array.from(document.querySelectorAll("#ponFilters input:checked")).map(i => i.value);
-
-      controlsModal.style.display = "none";
-
+      filters.windows = Array.from(document.querySelectorAll('#windowFilters input:checked')).map(i => i.value);
+      filters.pons = Array.from(document.querySelectorAll('#ponFilters input:checked')).map(i => i.value);
+      controlsModal.style.display = 'none';
       const filtered = filterBoard(rawBoard, filters);
       const treeData = buildHierarchy(filtered);
       currentTreeData = treeData;
@@ -357,186 +282,156 @@
       return out;
     }
 
-    // ----------------- PON PARSER FOR SORTING -----------------
-    function parsePon(pon) {
-      const m = pon.match(/O(\d+)I(\d+)P(\d+)/i);
-      if (!m) return { olt: 9999, ip: 9999, port: 9999 };
-      return {
-        olt: parseInt(m[1],10),
-        ip:  parseInt(m[2],10),
-        port:parseInt(m[3],10)
-      };
-    }
-
-    // --------------- TREE BUILDING ----------------
-    // (existing buildHierarchy and helper functions are kept unchanged)
+    // ========== BUILD HIERARCHY (converts board -> d3 tree) ==========
+    // This uses the server-provided splitter nodes (which include nested children/untagged),
+    // but we still compute PON totals and ensure structure: root -> windows -> pons -> splitters
     function buildHierarchy(board){
-      const root = {
-        nodeType: "root",
-        name: "🌐 Merotra Network",
-        children: []
-      };
+      const root = { nodeType:'root', name:'🌐 Merotra Network', children: [] };
       const windowMap = {};
+
       const sortedPons = Object.entries(board).sort(([a],[b])=>{
-        const A = parsePon(a), B = parsePon(b);
-        if (A.olt !== B.olt) return A.olt - B.olt;
-        if (A.ip !== B.ip) return A.ip - B.ip;
-        return A.port - B.port;
+        const A=parsePon(a), B=parsePon(b);
+        if (A.olt!==B.olt) return A.olt-B.olt;
+        if (A.ip!==B.ip) return A.ip-B.ip;
+        return A.port-B.port;
       });
-      sortedPons.forEach(([pon,winObj])=>{
-        Object.entries(winObj || {}).forEach(([winName,splitters])=>{
-          if(!windowMap[winName]){
-            windowMap[winName] = {
-              nodeType:"window",
-              name:"🪟 "+winName,
-              rawWindow:winName,
-              children:[]
-            };
+
+      sortedPons.forEach(([pon, winObj])=>{
+        Object.entries(winObj || {}).forEach(([winName, splitters])=>{
+          if (!windowMap[winName]) {
+            windowMap[winName] = { nodeType:'window', name:'🪟 '+winName, rawWindow:winName, children: [] };
             root.children.push(windowMap[winName]);
           }
           const winNode = windowMap[winName];
-          const ponNode = {
-            nodeType:"pon",
-            name:"🔌 "+pon,
-            rawPon:pon,
-            window:winName,
-            children:[],
-            total:0
-          };
-          const entries = [];
-          Object.entries(splitters || {}).forEach(([splitName,info])=>{
-            const userIds = info.users.map(u => normalizeId(u.id)).filter(Boolean);
+          const ponNode = { nodeType:'pon', name:'🔌 '+pon, rawPon:pon, window:winName, children: [], total:0 };
+
+          // Convert splitters object -> array
+          const entries = Object.entries(splitters || {}).map(([splitName, info])=>{
+            // users stored as [{id}] format earlier
+            const userIds = (info.users || []).map(u => normalizeId(u.id ?? u)).filter(Boolean);
             const userSet = new Set(userIds);
-            entries.push({
-              splitterName:splitName,
-              info,
-              userSet,
-              userIds,
-              userCount:userSet.size
-            });
+            return { splitterName: splitName, info, userIds, userSet, userCount: userSet.size };
           });
-          if(entries.length===0){
+
+          if (entries.length === 0) {
             winNode.children.push(ponNode);
             return;
           }
-          // Rule-6: Sort by user count descending → biggest = primary
-          entries.sort((a,b)=>b.userCount - a.userCount);
-          // Create splitter nodes
-          const splitterNodes = entries.map(e=>({
-            node:{
-              nodeType:"splitter",
-              name:`${emojiForSplitter(e.splitterName)} ${e.splitterName} (${e.userCount})`,
-              rawSplitter:e.splitterName,
-              pon,
-              window:winName,
-              users:e.info.users,
-              userIds:e.userIds,
-              total:e.userCount,
-              tag:e.info.tag || "",
-              location:e.info.location || "",
-              jcPic:e.info.jcPic || "",
-              polePic:e.info.polePic || "",
-              userSet:e.userSet,
-              children:[]
-            },
-            userSet:e.userSet
+
+          // sort by userCount desc
+          entries.sort((a,b) => b.userCount - a.userCount);
+
+          // create nodes with children if server included nested 'children' (server likely gave nested)
+          const nodes = entries.map(e => ({
+            nodeType:'splitter',
+            name: `${emojiForSplitter(e.splitterName)} ${e.splitterName} (${e.userCount})`,
+            rawSplitter: e.splitterName,
+            pon,
+            window: winName,
+            users: (e.info.users || []).map(u => ({ id: (u && u.id) ? u.id : String(u) })),
+            total: e.userCount,
+            tag: e.info.tag || '',
+            location: e.info.location || '',
+            jcPic: e.info.jcPic || '',
+            polePic: e.info.polePic || '',
+            children: e.info.children || []
           }));
-          const primary = splitterNodes[0].node;
+
+          // place first as primary
+          const primary = nodes[0];
           ponNode.children.push(primary);
-          for(let i=1;i<splitterNodes.length;i++){
-            const curr = splitterNodes[i];
-            const currSet = curr.userSet;
+
+          // for remaining, try to attach using subset/overlap rules:
+          for (let i=1;i<nodes.length;i++){
+            const curr = nodes[i];
+            const currSet = new Set((curr.users||[]).map(u => normalizeId(u.id)));
             let attached = false;
-            // Rule-7: Subset check
-            for(let j=0;j<i;j++){
-              const parent = splitterNodes[j];
-              if(isSubset(currSet, parent.userSet)){
-                parent.node.children.push(curr.node);
+
+            // check subset of earlier nodes (including primary and earlier siblings)
+            for (let j=0;j<i;j++){
+              const parent = nodes[j];
+              const parentSet = new Set((parent.users||[]).map(u => normalizeId(u.id)));
+              // subset?
+              const isSubset = [...currSet].every(x => parentSet.has(x));
+              if (isSubset) {
+                parent.children = parent.children || [];
+                parent.children.push(curr);
                 attached = true;
                 break;
               }
             }
-            if(!attached){
-              // Check for any overlap
-              let hasOverlap = false;
-              for(let j=0;j<i;j++){
-                const parentSet = splitterNodes[j].userSet;
-                if([...currSet].some(x => parentSet.has(x))){
-                  hasOverlap = true;
-                  break;
-                }
-              }
-              if(hasOverlap){
-                // Rule-8: Partial overlap → under primary
-                primary.children.push(curr.node);
-              } else {
-                // Rule-9: No overlap → sibling
-                ponNode.children.push(curr.node);
-              }
+
+            if (attached) continue;
+
+            // check overlap with any earlier node -> attach to primary
+            let overlap = false;
+            for (let j=0;j<i;j++){
+              const parent = nodes[j];
+              const parentSet = new Set((parent.users||[]).map(u => normalizeId(u.id)));
+              if ([...currSet].some(x => parentSet.has(x))) { overlap = true; break; }
             }
+            if (overlap) {
+              primary.children = primary.children || [];
+              primary.children.push(curr);
+              continue;
+            }
+
+            // no overlap => sibling under PON
+            ponNode.children.push(curr);
           }
-          // Rule-10: Add untagged for ALL splitters (only if has sub-children)
+
+          // Add 'Other / Untagged' nodes for parents that have children and leftover users
           function addUntagged(node){
-            if(node.nodeType !== "splitter") return;
+            if (!node.children || node.children.length === 0) return;
+            // collect covered users from children
             const covered = new Set();
-            const subChildren = [...node.children]; // copy to check len before adding
-            subChildren.forEach(child => {
-              addUntagged(child);
-              child.userSet.forEach(id => covered.add(id));
+            node.children.forEach(ch => {
+              addUntagged(ch);
+              (ch.users || []).forEach(u => covered.add(normalizeId(u.id)));
             });
-            const ownUsers = [...node.userSet].filter(id => !covered.has(id));
-            if(ownUsers.length > 0 && subChildren.length > 0){
-              const untagged = {
-                nodeType: "untagged",
+            const ownUsers = (node.users || []).map(u => normalizeId(u.id)).filter(x => !covered.has(x));
+            if (ownUsers.length > 0) {
+              node.children.push({
+                nodeType: 'untagged',
                 name: `Other / Untagged (${ownUsers.length})`,
-                pon: node.pon,
-                window: node.window,
-                users: node.users.filter(u => ownUsers.includes(normalizeId(u.id))),
+                users: ownUsers.map(id => ({ id })),
                 total: ownUsers.length,
                 children: []
-              };
-              node.children.push(untagged);
+              });
             }
           }
+
           ponNode.children.forEach(addUntagged);
-          // PON total: union of all unique users
-          const allUserSets = entries.map(e => e.userSet);
-          ponNode.total = allUserSets.length ? new Set([...allUserSets.reduce((acc, set) => new Set([...acc, ...set]))]).size : 0;
-          // Clean up userSet (not needed after build)
-          function removeUserSet(n){
-            delete n.userSet;
-            n.children.forEach(removeUserSet);
-          }
-          ponNode.children.forEach(removeUserSet);
+
+          // compute pon total as union of all user ids seen in splitters
+          const allUserSet = new Set();
+          entries.forEach(e => e.userIds.forEach(u => allUserSet.add(u)));
+          ponNode.total = allUserSet.size;
+
           winNode.children.push(ponNode);
         });
       });
+
       return root;
     }
 
     function emojiForSplitter(s){
-      const t = (s || "").toLowerCase();
-      if (t.includes("link")) return "🔗";
-      if (t.includes("16"))  return "🔺";
-      if (t.includes("8"))   return "🔵";
-      if (t.includes("4"))   return "🟥";
-      if (t.includes("2"))   return "🟩";
-      return "⬜";
+      const t = (s || '').toLowerCase();
+      if (t.includes('link')) return '🔗';
+      if (t.includes('16')) return '🔺';
+      if (t.includes('8')) return '🔵';
+      if (t.includes('4')) return '🟥';
+      if (t.includes('2')) return '🟩';
+      return '⬜';
     }
 
-    function isSubset(aSet, bSet){
-      for (let x of aSet) if (!bSet.has(x)) return false;
-      return true;
-    }
-
-    // --------------- DRAW TREE ----------------
-
+    // ========== DRAW TREE (D3) ==========
+    let svg, g, treeLayout, root;
     function drawTree(data){
-      d3.select("#chart").select("svg").remove();
+      d3.select('#chart').select('svg').remove();
 
-      const width = document.getElementById("chart").clientWidth || Math.max(window.innerWidth - 40, 800);
-      const height = Math.max(window.innerHeight - 200, 400);
-
+      const width = document.getElementById('chart').clientWidth || Math.max(window.innerWidth - 40, 900);
+      const height = Math.max(window.innerHeight - 140, 500);
       const dx = 80;
       const dy = width > 900 ? 260 : 200;
 
@@ -544,286 +439,169 @@
       root = d3.hierarchy(data, d => d.children || []);
       treeLayout(root);
 
-      const svgRoot = d3.select("#chart").append("svg")
-        .attr("width", width)
-        .attr("height", height);
+      svg = d3.select('#chart').append('svg').attr('width', width).attr('height', height);
+      const zoom = d3.zoom().scaleExtent([0.4, 3]).on('zoom', (event) => g.attr('transform', event.transform));
+      svg.call(zoom);
+      g = svg.append('g').attr('transform', 'translate(80,60)');
 
-      const zoom = d3.zoom().scaleExtent([0.4, 3])
-        .on("zoom", (event) => g.attr("transform", event.transform));
+      // links
+      g.selectAll('.link').data(root.links()).enter().append('path')
+        .attr('class','link')
+        .attr('d', d3.linkHorizontal().x(d => d.y).y(d => d.x))
+        .attr('fill','none').attr('stroke','#94a3b8').attr('stroke-width',2);
 
-      svgRoot.call(zoom);
+      // nodes
+      const node = g.selectAll('.node').data(root.descendants()).enter().append('g')
+        .attr('class','node')
+        .attr('transform', d => `translate(${d.y},${d.x})`);
 
-      g = svgRoot.append("g").attr("transform", "translate(80,60)");
+      // circles
+      node.filter(d => d.data.nodeType === 'root')
+        .append('circle').attr('r',24).attr('fill','#0ea5a0').attr('stroke','#fff').attr('stroke-width',3);
 
-      const links = root.links();
-      const nodes = root.descendants();
+      node.filter(d => d.data.nodeType === 'window')
+        .append('circle').attr('r',20).attr('fill','#2563eb').attr('stroke','#fff').attr('stroke-width',3);
 
-      g.selectAll(".link")
-        .data(links)
-        .enter()
-        .append("path")
-        .attr("class","link")
-        .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
-        .attr("fill","none")
-        .attr("stroke","#94a3b8")
-        .attr("stroke-width",2);
+      node.filter(d => d.data.nodeType === 'pon')
+        .append('circle').attr('r',18).attr('fill','#0f766e').attr('stroke','#fff').attr('stroke-width',3);
 
-      const node = g.selectAll(".node")
-        .data(nodes)
-        .enter()
-        .append("g")
-        .attr("class","node")
-        .attr("transform", d => `translate(${d.y},${d.x})`);
+      node.filter(d => d.data.nodeType === 'splitter' || d.data.nodeType === 'untagged')
+        .append('circle')
+        .attr('r', d => d.data.nodeType === 'splitter' ? 14 : 10)
+        .attr('fill', d => d.data.nodeType === 'untagged' ? '#6b7280' : (d.data.total > 0 ? '#10b981' : '#6b7280'))
+        .attr('stroke','#fff').attr('stroke-width',2);
 
-      // root
-      node.filter(d => d.data.nodeType === "root")
-        .append("circle")
-        .attr("r",24)
-        .attr("fill","#1e3a8a")
-        .attr("stroke","#fff")
-        .attr("stroke-width",3);
-
-      // window
-      node.filter(d => d.data.nodeType === "window")
-        .append("circle")
-        .attr("r",20)
-        .attr("fill","#1d4ed8")
-        .attr("stroke","#fff")
-        .attr("stroke-width",3);
-
-      // PON
-      node.filter(d => d.data.nodeType === "pon")
-        .append("circle")
-        .attr("r",18)
-        .attr("fill","#0f766e")
-        .attr("stroke","#fff")
-        .attr("stroke-width",3);
-
-      // splitter + untagged
-      node.filter(d => d.data.nodeType === "splitter" || d.data.nodeType === "untagged")
-        .append("circle")
-        .attr("r", d => d.data.nodeType === "splitter" ? 14 : 10)
-        .attr("fill", d => d.data.nodeType === "untagged" ? "#6b7280" : colorForSplitter(d.data))
-        .attr("stroke","#fff")
-        .attr("stroke-width",2)
-        .classed("blink-red", d => d.data.tag && d.data.tag.includes("🔴❌"));
-
-      // TEXT
-      node.append("text")
-        .attr("dy","0.32em")
-        .attr("x", d => d.children && d.depth > 0 ? -20 : 20)
-        .attr("text-anchor", d => d.children && d.depth > 0 ? "end" : "start")
-        .style("font-size", d => {
-          if (d.data.nodeType === "root") return "14px";
-          if (d.data.nodeType === "window") return "13px";
-          if (d.data.nodeType === "pon") return "12px";
-          return "11px";
+      // text
+      node.append('text')
+        .attr('dy','0.32em')
+        .attr('x', d => d.children && d.depth > 0 ? -20 : 20)
+        .attr('text-anchor', d => d.children && d.depth > 0 ? 'end' : 'start')
+        .style('font-size', d => {
+          if (d.data.nodeType === 'root') return '14px';
+          if (d.data.nodeType === 'window') return '13px';
+          if (d.data.nodeType === 'pon') return '12px';
+          return '11px';
         })
-        .style("font-weight", d =>
-          d.data.nodeType === "root" || d.data.nodeType === "window" ? 700 : 500
-        )
-        .text(d => d.data.name);
+        .style('font-weight', d => (d.data.nodeType === 'root' || d.data.nodeType === 'window') ? 700 : 500)
+        .text(d => {
+          if (d.data.nodeType === 'pon') return `${d.data.name} (${d.data.total || 0})`;
+          if (d.data.nodeType === 'splitter') return `${d.data.name}`;
+          return d.data.name;
+        });
 
-      // HOVER + CLICK bindings
-      node
-        .on("mousemove", handleMouseOver)
-        .on("mouseout", () => tooltip.style.opacity = 0)
-        .on("click", handleNodeClick);
+      // interactions
+      node.on('mousemove', handleMouseOver).on('mouseout', () => tooltip.style.opacity = 0)
+        .on('click', handleNodeClick);
 
-      fitToView(svgRoot, g, zoom);
-    }
-
-    function colorForSplitter(data){
-      const total = data.total || 0;
-      if (total === 0) return "#6b7280";
-      return "#10b981";
+      fitToView(svg, g, zoom);
     }
 
     function fitToView(svgRoot, g, zoom){
-      const chart = document.getElementById("chart");
-      const bounds = g.node().getBBox();
-      const fullWidth = chart.clientWidth;
-      const fullHeight = chart.clientHeight;
-
-      const widthScale  = fullWidth  / (bounds.width + 160);
-      const heightScale = fullHeight / (bounds.height + 160);
-      const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
-
-      const tx = -(bounds.x)*scale + 40;
-      const ty = -(bounds.y)*scale + 40;
-
-      svgRoot.transition().duration(600).call(
-        zoom.transform,
-        d3.zoomIdentity.translate(tx,ty).scale(scale)
-      );
+      try {
+        const chart = document.getElementById('chart');
+        const bounds = g.node().getBBox();
+        const fullWidth = chart.clientWidth;
+        const fullHeight = chart.clientHeight;
+        const widthScale = fullWidth / (bounds.width + 160);
+        const heightScale = fullHeight / (bounds.height + 160);
+        const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
+        const tx = -(bounds.x)*scale + 40;
+        const ty = -(bounds.y)*scale + 40;
+        svgRoot.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+      } catch(e) { /* ignore */ }
     }
 
-    // --------------- TOOLTIP ----------------
-
+    // ========== TOOLTIP & POPUP ==========
     function handleMouseOver(event, d){
       const data = d.data;
       let html = `<strong>${data.name}</strong><br/>`;
-
-      if (data.nodeType === "window"){
-        html += `Window`;
-      }
-      else if (data.nodeType === "pon"){
-        html += `PON: ${data.rawPon}<br/>Total users: ${data.total || 0}`;
-      }
-      else if (data.nodeType === "splitter" || data.nodeType === "untagged"){
+      if (data.nodeType === 'window') html += `Window`;
+      else if (data.nodeType === 'pon') html += `PON: ${data.rawPon}<br/>Total: ${data.total || 0}`;
+      else if (data.nodeType === 'splitter' || data.nodeType === 'untagged') {
         html += `Window: ${data.window}<br/>PON: ${data.pon}<br/>Users: <strong>${data.total || (data.users ? data.users.length : 0)}</strong>`;
-        if (data.tag){
-          html += `<br/>Tag: ${data.tag}`;
-        }
+        if (data.tag) html += `<br/>Tag: ${data.tag}`;
       }
-
       tooltip.innerHTML = html;
-      tooltip.style.left = (event.pageX + 14) + "px";
-      tooltip.style.top  = (event.pageY + 8) + "px";
+      tooltip.style.left = (event.pageX + 14) + 'px';
+      tooltip.style.top = (event.pageY + 8) + 'px';
       tooltip.style.opacity = 1;
     }
 
-    // --------------- POPUP ----------------
-
     function handleNodeClick(event, d){
       const data = d.data;
-
-      if (!(data.nodeType === "splitter" || data.nodeType === "untagged")) return;
+      if (!(data.nodeType === 'splitter' || data.nodeType === 'untagged')) return;
 
       const total = data.total || (data.users ? data.users.length : 0);
-
-      popupTitleEl.textContent =
-        data.nodeType === "untagged"
-        ? `⬜ Untagged users (${total})`
-        : `${data.rawSplitter || data.splitterName} — Users`;
-
+      popupTitleEl.textContent = data.nodeType === 'untagged' ? `⬜ Untagged users (${total})` : `${data.rawSplitter || data.splitterName} — Users`;
       popupPathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter || data.splitterName}`;
+      popupMetaEl.innerHTML = `<div><strong>Total users:</strong> ${total}</div><div><strong>Tag:</strong> ${data.tag || '-'}</div>`;
 
-      popupMetaEl.innerHTML = `
-        <div><span class="font-semibold">Total users:</span> ${total}</div>
-        <div><span class="font-semibold">Tag:</span> ${data.tag || "-"}</div>
-      `;
-
-      let linksHtml = "";
-      if (data.location){
-        linksHtml += `<span class="link-btn" onclick="openLink('${data.location}')">📍 Location</span>`;
-      }
-      if (data.jcPic){
-        linksHtml += `<span class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</span>`;
-      }
-      if (data.polePic){
-        linksHtml += `<span class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</span>`;
-      }
-      popupLinksEl.innerHTML = linksHtml || "";
+      // links (location/jc/pole)
+      let linksHtml = '';
+      if (data.location) linksHtml += `<span class="link-btn" onclick="openLink('${data.location}')">📍 Location</span>`;
+      if (data.jcPic) linksHtml += `<span class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</span>`;
+      if (data.polePic) linksHtml += `<span class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</span>`;
+      popupLinksEl.innerHTML = linksHtml || '';
 
       buildUserTable(data);
-      popupModal.style.display = "flex";
+      popupModal.style.display = 'flex';
     }
 
     function buildUserTable(data){
-      // data.users expected: array of { id } OR array of ids (handle both)
-      const rawUsers = data.users || [];
-      const users = rawUsers.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? "") : String(u));
-      const statusMap = statusMaps[data.window] || {};
-
-      currentPopupRows = [];
-
+      // users may be array of {id} or array of strings
+      const raw = data.users || [];
+      const users = raw.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? '') : String(u));
       popupUsersTbl.innerHTML = `
         <thead>
-          <tr>
-            <th style="width:32px;">Sr</th>
-            <th>User ID</th>
-            <th>Name</th>
-            <th>Number</th>
-            <th>Location</th>
-            <th>Status</th>
-          </tr>
+          <tr><th style="width:44px">Sr</th><th>User ID</th></tr>
         </thead>
         <tbody></tbody>
       `;
-
-      const tbody = popupUsersTbl.querySelector("tbody");
-
-      users.forEach((rawId, idx) => {
-        const normId = normalizeId(rawId);
-        const dbRow = statusMap[normId];
-
-        const tr = document.createElement("tr");
-        tr.className = "user-row";
-
-        tr.innerHTML = `
-          <td>${idx+1}</td>
-          <td>${rawId}</td>
-          <td>${dbRow?.name ?? ""}</td>
-          <td>${dbRow?.number ?? ""}</td>
-          <td>${dbRow?.location ?? ""}</td>
-          <td>${dbRow?.status ?? ""}</td>
-        `;
-
+      const tbody = popupUsersTbl.querySelector('tbody');
+      currentPopupRows = [];
+      users.forEach((id, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${idx+1}</td><td>${id}</td>`;
         tbody.appendChild(tr);
-
-        currentPopupRows.push({
-          sr: idx+1,
-          id: rawId,
-          name: dbRow?.name ?? "",
-          number: dbRow?.number ?? "",
-          location: dbRow?.location ?? "",
-          status: dbRow?.status ?? ""
-        });
+        currentPopupRows.push({ sr: idx+1, id });
       });
     }
 
-    function openLink(url){
-      if (url) window.open(url, "_blank");
-    }
+    function openLink(url){ if (url) window.open(url, '_blank'); }
 
-    // --------------- DOWNLOADS ----------------
-
+    // ========== DOWNLOADS ==========
     function downloadScreenshot(){
-      const modalContent = document.querySelector("#popupModal .modal-content");
+      const modalContent = document.querySelector('#popupModal .modal-content');
       if (!modalContent) return;
       html2canvas(modalContent).then(canvas => {
-        const link = document.createElement("a");
-        const today = new Date().toISOString().slice(0,10);
-        link.download = `merotra-users-${today}.png`;
-        link.href = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.download = `merotra-users-${(new Date()).toISOString().slice(0,10)}.png`;
+        link.href = canvas.toDataURL('image/png');
         link.click();
       });
     }
 
     function downloadCSV(){
       if (!currentPopupRows.length) return;
-
-      const header = ["Sr","User ID","Name","Number","Location","Status"];
-      const lines = [header.join(",")];
-
+      const header = ['Sr','User ID'];
+      const lines = [header.join(',')];
       currentPopupRows.forEach(r => {
-        const row = [
-          r.sr,
-          `"${r.id}"`,
-          `"${(r.name||"").replace(/"/g,'""')}"`,
-          `"${(r.number||"").replace(/"/g,'""')}"`,
-          `"${(r.location||"").replace(/"/g,'""')}"`,
-          `"${(r.status||"").replace(/"/g,'""')}"`,
-        ];
-        lines.push(row.join(","));
+        const row = [r.sr, `"${String(r.id).replace(/"/g,'""')}"`];
+        lines.push(row.join(','));
       });
-
-      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      const today = new Date().toISOString().slice(0,10);
-      link.href = url;
-      link.download = `merotra-users-${today}.csv`;
-      link.click();
+      const a = document.createElement('a'); a.href = url;
+      a.download = `merotra-users-${(new Date()).toISOString().slice(0,10)}.csv`;
+      a.click();
       URL.revokeObjectURL(url);
     }
 
-    // expose needed functions
-    window.openLink   = openLink;
-    window.selectAll  = selectAll;
-    window.deselectAll= deselectAll;
-  </script>
+    // expose simple helpers (for inline onclicks)
+    window.selectAll = selectAll;
+    window.deselectAll = deselectAll;
+    window.openLink = openLink;
 
+  </script>
 </body>
 </html>
