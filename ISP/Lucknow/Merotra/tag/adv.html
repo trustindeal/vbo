@@ -3,49 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🌐 Merotra — PON / Splitter Tree</title>
+  <title>Merotra — PON / Splitter Tree (Viewer)</title>
 
-  <!-- D3 & Tailwind -->
+  <!-- d3 + tailwind + html2canvas -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Screenshot lib -->
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
-  <!-- Fonts + CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;}
-    body{margin:0;background:#f8fafc;color:#0f172a}
-    .header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#0f172a;color:#fff}
-    .header .header-title{font-weight:700;font-size:16px}
-    .header .header-sub{font-size:12px;color:#cbd5e1}
-    .btn{background:#fff;color:#0f172a;border-radius:8px;padding:6px 10px;border:none;cursor:pointer}
-    .btn-secondary{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.12)}
-    #chart{height:calc(100vh - 110px);padding:12px}
-    .tooltip{position:absolute;pointer-events:none;background:#0b1220;color:#fff;padding:8px;border-radius:6px;box-shadow:0 4px 14px rgba(2,6,23,0.2);opacity:0;transition:opacity .12s}
-    /* popup */
-    .popup-backdrop{display:none;position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(2,6,23,0.45);align-items:center;justify-content:center;padding:24px;z-index:60}
-    .modal-content{background:#fff;color:#0f172a;border-radius:10px;padding:14px;width:720px;max-height:80vh;overflow:auto}
-    .user-table{width:100%;border-collapse:collapse;font-size:13px}
-    .user-table th,.user-table td{padding:6px 8px;border-bottom:1px solid #eef2f7;text-align:left}
-    /* controls modal */
-    .controls-backdrop{display:none;position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(2,6,23,0.35);align-items:center;justify-content:center;padding:24px;z-index:50}
-    .controls-modal{background:#fff;padding:14px;border-radius:10px;width:360px}
-    .checkbox-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:220px;overflow:auto;padding:6px 0}
-    .link-btn{display:inline-block;margin-right:8px;padding:6px 8px;background:#eef2ff;border-radius:6px;cursor:pointer;font-size:12px}
-    .select-all{cursor:pointer;color:#2563eb;font-size:12px}
-    .download-btns{display:flex;gap:8px;margin-top:8px}
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f8fafc; color:#0f172a; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding:12px 18px; background:#fff; box-shadow:0 1px 4px rgba(2,6,23,0.06); border-radius:6px; margin:12px; }
+    .header-title { font-weight:700; font-size:16px; }
+    .header-sub { font-size:12px; color:#475569; }
+    .btn { background:#0f172a; color:#fff; padding:6px 10px; border-radius:6px; cursor:pointer; border:none; }
+    .btn-secondary { background:#e6eef5; color:#0f172a; }
+    #chart { height: calc(100vh - 220px); margin:12px; background:#fff; border-radius:8px; padding:10px; box-shadow:0 1px 4px rgba(2,6,23,0.06); overflow:hidden; }
+    .tooltip { position:absolute; pointer-events:none; background:#111827; color:#fff; padding:8px 10px; border-radius:6px; font-size:12px; opacity:0; transition:opacity .08s; z-index:20; }
+    .popup-backdrop { display:none; position:fixed; inset:0; background:rgba(2,6,23,0.4); align-items:center; justify-content:center; z-index:50; }
+    .modal-content { background:#fff; border-radius:8px; padding:14px; width:min(820px,95%); max-height:80vh; overflow:auto; box-shadow:0 8px 30px rgba(2,6,23,0.15); }
+    .user-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .user-table th, .user-table td { padding:6px 8px; border-bottom:1px solid #eef2f7; text-align:left; }
+    .controls-backdrop { display:none; position:fixed; inset:0; background:rgba(2,6,23,0.4); align-items:center; justify-content:center; z-index:40; }
+    .controls-modal { background:#fff; padding:16px; border-radius:8px; width:360px; box-shadow:0 8px 30px rgba(2,6,23,0.12); }
+    .checkbox-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .checkbox-item { font-size:13px; }
+    .link-btn { display:inline-block; padding:4px 8px; background:#eef2ff; border-radius:6px; margin-right:6px; cursor:pointer; font-size:12px; }
   </style>
 </head>
 <body>
 
   <div class="header">
     <div>
-      <div class="header-title">🌐 Merotra Network Tree</div>
-      <div class="header-sub">Window → PON → Splitters → Users (+ Untagged)</div>
+      <div class="header-title">🌐 Merotra Network Tree — Viewer</div>
+      <div class="header-sub">Visualizes tree exactly as server JSON provides. No client-side merging/processing.</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+
+    <div class="flex items-center gap-2">
       <button id="controlsBtn" class="btn btn-secondary">Filters</button>
       <button id="reloadBtn" class="btn">Reload</button>
     </div>
@@ -57,26 +51,25 @@
   <!-- POPUP -->
   <div id="popupModal" class="popup-backdrop">
     <div class="modal-content">
-      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
         <div>
-          <h2 id="popupTitle" style="margin:0;font-size:16px"></h2>
-          <div id="popupPath" style="font-size:12px;color:#64748b;margin-top:4px"></div>
+          <h2 id="popupTitle" style="margin:0;font-weight:700;"></h2>
+          <div id="popupPath" style="font-size:12px;color:#64748b;margin-top:6px;"></div>
         </div>
-        <button id="popupClose" class="btn btn-secondary" style="height:32px">Close</button>
+        <button id="popupClose" class="btn btn-secondary" style="height:32px;">Close</button>
       </div>
 
-      <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div>
+      <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px;"></div>
+      <div id="popupLinks" style="margin-bottom:8px;"></div>
 
-      <div id="popupLinks" style="font-size:13px;margin-bottom:8px"></div>
-
-      <h3 style="margin:8px 0 6px;font-size:14px">Users</h3>
-      <div style="max-height:40vh;overflow:auto">
+      <h3 style="margin:8px 0;font-size:14px;">Users</h3>
+      <div style="overflow:auto;max-height:42vh;">
         <table id="popupUsersTable" class="user-table"></table>
       </div>
 
-      <div class="download-btns">
+      <div style="display:flex;gap:8px;margin-top:10px;">
         <button id="btnShot" class="btn">📸 Screenshot</button>
-        <button id="btnCsv" class="btn">📊 CSV</button>
+        <button id="btnCsv" class="btn btn-secondary">📊 CSV</button>
       </div>
     </div>
   </div>
@@ -84,524 +77,454 @@
   <!-- CONTROLS -->
   <div id="controlsModal" class="controls-backdrop">
     <div class="controls-modal">
-      <h3 style="margin:0 0 8px">Filters & View</h3>
-
-      <div style="margin-bottom:10px">
-        <div style="font-weight:600;font-size:13px">Windows</div>
+      <h3 style="margin:0 0 8px 0;">Filters</h3>
+      <div style="margin-bottom:10px;">
+        <div style="font-weight:600;margin-bottom:6px;">Windows</div>
         <div id="windowFilters" class="checkbox-grid"></div>
-        <div style="text-align:center;margin-top:6px;font-size:12px">
-          <span class="select-all" onclick="selectAll('window')">Select All</span> | <span class="select-all" onclick="deselectAll('window')">Deselect All</span>
-        </div>
       </div>
 
-      <div style="margin-bottom:10px">
-        <div style="font-weight:600;font-size:13px">PONs</div>
-        <div id="ponFilters" class="checkbox-grid pon-grid"></div>
-        <div style="text-align:center;margin-top:6px;font-size:12px">
-          <span class="select-all" onclick="selectAll('pon')">Select All</span> | <span class="select-all" onclick="deselectAll('pon')">Deselect All</span>
-        </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-weight:600;margin-bottom:6px;">PONs</div>
+        <div id="ponFilters" class="checkbox-grid"></div>
       </div>
 
-      <button id="applyFiltersBtn" class="btn" style="width:100%">Apply Filters</button>
-      <button id="controlsClose" class="btn btn-secondary" style="width:100%;margin-top:8px">Close</button>
+      <button id="applyFiltersBtn" class="btn" style="width:100%;">Apply</button>
+      <button id="controlsClose" class="btn btn-secondary" style="width:100%;margin-top:8px;">Close</button>
     </div>
   </div>
 
-  <script>
-    // ========== CONFIG ==========
-    const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec/exec?mode=board";
+<script>
+  // -------- CONFIG: set your published GAS board URL (mode=board) --------
+  const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
-    // ========== STATE ==========
-    const tooltip = document.getElementById('tooltip');
-    const popupModal = document.getElementById('popupModal');
-    const controlsModal = document.getElementById('controlsModal');
-    const popupTitleEl = document.getElementById('popupTitle');
-    const popupPathEl = document.getElementById('popupPath');
-    const popupMetaEl = document.getElementById('popupMeta');
-    const popupLinksEl = document.getElementById('popupLinks');
-    const popupUsersTbl = document.getElementById('popupUsersTable');
+  // -------- UI refs --------
+  const tooltip = document.getElementById('tooltip');
+  const popupModal = document.getElementById('popupModal');
+  const controlsModal = document.getElementById('controlsModal');
+  const popupTitleEl = document.getElementById('popupTitle');
+  const popupPathEl = document.getElementById('popupPath');
+  const popupMetaEl = document.getElementById('popupMeta');
+  const popupLinksEl = document.getElementById('popupLinks');
+  const popupUsersTbl = document.getElementById('popupUsersTable');
 
-    let rawBoard = {};         // pon -> window -> splitName -> info (users as array or with children)
-    let currentTreeData = null;
-    let filters = { windows: [], pons: [] };
-    let currentPopupRows = [];
+  const reloadBtn = document.getElementById('reloadBtn');
+  const controlsBtn = document.getElementById('controlsBtn');
+  const controlsClose = document.getElementById('controlsClose');
+  const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+  const windowFiltersDiv = document.getElementById('windowFilters');
+  const ponFiltersDiv = document.getElementById('ponFilters');
 
-    // ========== HELPERS ==========
-    function normalizeId(v){ return (v == null) ? "" : String(v).trim(); }
+  const btnShot = document.getElementById('btnShot');
+  const btnCsv = document.getElementById('btnCsv');
+  const popupClose = document.getElementById('popupClose');
 
-    function parsePon(pon) {
-      const m = String(pon || '').match(/O(\d+)I(\d+)P(\d+)/i);
-      if (!m) return { olt: 9999, ip: 9999, port: 9999 };
-      return { olt: +m[1], ip: +m[2], port: +m[3] };
-    }
+  // -------- state --------
+  let serverJson = null;
+  let board = {}; // internal: board[pon][window][splitName] = info
+  let filters = { windows: [], pons: [] };
+  let currentTreeData = null;
+  let currentPopupRows = [];
 
-    // ========== INIT UI ==========
-    document.getElementById('reloadBtn').addEventListener('click', () => loadAll(true));
-    document.getElementById('controlsBtn').addEventListener('click', () => controlsModal.style.display = 'flex');
-    document.getElementById('controlsClose').addEventListener('click', () => controlsModal.style.display = 'none');
-    document.getElementById('popupClose').addEventListener('click', () => popupModal.style.display = 'none');
-    document.getElementById('applyFiltersBtn').addEventListener('click', applyFiltersFromUI);
-    document.getElementById('btnShot').addEventListener('click', downloadScreenshot);
-    document.getElementById('btnCsv').addEventListener('click', downloadCSV);
-    window.addEventListener('resize', () => { if (currentTreeData) drawTree(currentTreeData); });
+  // -------- helpers --------
+  function safeGet(obj, path, fallback) {
+    try { return path.split('.').reduce((o,k)=>o && o[k], obj) ?? fallback; } catch(e) { return fallback; }
+  }
+  function normalizeId(v){ return (v==null) ? "" : String(v).trim(); }
 
-    // on load
-    loadAll(false);
+  // Transform server JSON → board object exactly (NO processing)
+  function transformServerToBoard(srv) {
+    const b = {};
+    if (!srv || !Array.isArray(srv.windows)) return b;
 
-    // ========== FETCH + TRANSFORM ==========
-    async function loadAll(showLoading=true){
-      try {
-        setLoading(true);
-        const res = await fetch(BOARD_URL);
-        if (!res.ok) throw new Error('Board API failed: ' + res.status);
-        const serverJson = await res.json();
-
-        // transform server JSON (already in hierarchical form) to internal board object:
-        rawBoard = serverToBoard(serverJson);
-
-        // setup filters
-        setupFiltersFromBoard();
-
-        // filtered board to hierarchy for d3
-        const filtered = filterBoard(rawBoard, filters);
-        const treeData = buildHierarchy(filtered);
-        currentTreeData = treeData;
-        drawTree(treeData);
-
-        // small console info
-        if (serverJson && serverJson.summary) {
-          console.info('Processed', serverJson.summary.processedRows, 'Skipped', serverJson.summary.skippedRows);
-        }
-      } catch (e) {
-        console.error(e);
-        alert('Error loading tree: ' + (e.message || e));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    function setLoading(flag){
-      const btn = document.getElementById('reloadBtn');
-      btn.textContent = flag ? 'Loading...' : 'Reload';
-      btn.disabled = flag;
-    }
-
-    function serverToBoard(serverJson){
-      // Expected serverJson.windows[] -> pons[] -> splitters[]
-      if (!serverJson || !Array.isArray(serverJson.windows)) return {};
-      const board = {};
-      serverJson.windows.forEach(win => {
-        const wname = win.window;
-        (win.pons || []).forEach(p => {
-          const pname = p.pon;
-          if (!board[pname]) board[pname] = {};
-          if (!board[pname][wname]) board[pname][wname] = {};
-          (p.splitters || []).forEach(s => {
-            // s may already have children (splitter nodes with children)
-            // we place it directly under board[pon][window] using s.name as key
-            const usersArray = Array.isArray(s.users) ? s.users.map(u => typeof u === 'object' ? (u.id ?? '') : String(u)) : [];
-            board[pname][wname][s.name] = {
-              users: usersArray.map(id => ({ id: id })), // keep {id} format for buildHierarchy compat
-              tag: s.tag || '',
-              location: s.location || '',
-              jcPic: s.jcPic || '',
-              polePic: s.polePic || '',
-              // include children if server provided nested structure (but server already gives nested)
-              children: s.children || []
-            };
+    srv.windows.forEach(win => {
+      const winName = win.window;
+      (win.pons || []).forEach(pon => {
+        const ponName = pon.pon;
+        if (!b[ponName]) b[ponName] = {};
+        if (!b[ponName][winName]) b[ponName][winName] = {};
+        (pon.splitters || []).forEach(split => {
+          // Ensure users are array of objects { id } OR array of ids -> normalize to { id: <val> }
+          const usersArr = (split.users || []).map(u => {
+            if (typeof u === 'object' && u !== null) return { id: u.id ?? (u.user ?? "") };
+            return { id: String(u) };
           });
+          // Use split.name as key if available, else build one
+          const key = split.name || `${split.splitterName || "split"} — ${split.jcName || ""}`;
+          b[ponName][winName][key] = {
+            // keep everything server sent (no recompute)
+            ...split,
+            name: key,
+            users: usersArr
+          };
         });
       });
-      return board;
-    }
+    });
 
-    // ========== FILTERS ==========
-    function setupFiltersFromBoard(){
-      const windowSet = new Set();
-      const ponSet = new Set();
-      Object.entries(rawBoard).forEach(([pon, winObj]) => {
-        ponSet.add(pon);
-        Object.keys(winObj || {}).forEach(w => windowSet.add(w));
-      });
+    return b;
+  }
 
-      filters.windows = Array.from(windowSet);
-      filters.pons = Array.from(ponSet);
+  // Build a minimal tree object expected by d3 from `board` (no logic)
+  // Structure: root -> window nodes -> pon nodes -> splitter nodes (may have children already)
+  function buildTreeFromBoard(boardObj) {
+    const root = { nodeType: 'root', name: '🌐 Merotra Network', children: [] };
 
-      const winDiv = document.getElementById('windowFilters');
-      const ponDiv = document.getElementById('ponFilters');
-      winDiv.innerHTML = ''; ponDiv.innerHTML = '';
+    // Collect windows set so we can sort alphabetically
+    const windowsSet = new Set();
+    Object.entries(boardObj).forEach(([pon, winObj]) => {
+      Object.keys(winObj || {}).forEach(w => windowsSet.add(w));
+    });
+    // Create window nodes in alphabetical order
+    const winNames = Array.from(windowsSet).sort((a,b)=> a.localeCompare(b, undefined, {sensitivity:'base'}));
+    const windowMap = {};
+    winNames.forEach(w => {
+      windowMap[w] = { nodeType: 'window', name: `🪟 ${w}`, rawWindow: w, children: [] };
+      root.children.push(windowMap[w]);
+    });
 
-      Array.from(windowSet).sort().forEach(w => {
-        const el = document.createElement('label');
-        el.style.display = 'block';
-        el.innerHTML = `<input type="checkbox" value="${w}" checked> ${w}`;
-        winDiv.appendChild(el);
-      });
+    // Now iterate pons sorted (simple lexicographic with PON parser fallback)
+    function parsePon(pon){ const m = String(pon||"").match(/O(\d+)I(\d+)P(\d+)/i); if(!m) return {olt:9999,ip:9999,port:9999}; return {olt:+m[1], ip:+m[2], port:+m[3]}; }
+    const ponEntries = Object.entries(boardObj).sort((a,b)=>{
+      const pa = parsePon(a[0]), pb = parsePon(b[0]);
+      if (pa.olt !== pb.olt) return pa.olt - pb.olt;
+      if (pa.ip !== pb.ip) return pa.ip - pb.ip;
+      return pa.port - pb.port;
+    });
 
-      Array.from(ponSet).sort((a,b) => {
-        const pa=parsePon(a), pb=parsePon(b);
-        if (pa.olt!==pb.olt) return pa.olt-pb.olt;
-        if (pa.ip!==pb.ip) return pa.ip-pb.ip;
-        return pa.port-pb.port;
-      }).forEach(p => {
-        const el = document.createElement('label');
-        el.style.display = 'block';
-        el.innerHTML = `<input type="checkbox" value="${p}" checked> ${p}`;
-        ponDiv.appendChild(el);
-      });
-    }
-
-    function selectAll(type){
-      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`).forEach(ch => ch.checked = true);
-    }
-    function deselectAll(type){
-      document.querySelectorAll(`#${type}Filters input[type="checkbox"]`).forEach(ch => ch.checked = false);
-    }
-
-    function applyFiltersFromUI(){
-      filters.windows = Array.from(document.querySelectorAll('#windowFilters input:checked')).map(i => i.value);
-      filters.pons = Array.from(document.querySelectorAll('#ponFilters input:checked')).map(i => i.value);
-      controlsModal.style.display = 'none';
-      const filtered = filterBoard(rawBoard, filters);
-      const treeData = buildHierarchy(filtered);
-      currentTreeData = treeData;
-      drawTree(treeData);
-    }
-
-    function filterBoard(board, filters){
-      const out = {};
-      Object.entries(board).forEach(([pon, winObj]) => {
-        if (!filters.pons.includes(pon)) return;
-        const newWin = {};
-        Object.entries(winObj || {}).forEach(([win, splits]) => {
-          if (!filters.windows.includes(win)) return;
-          newWin[win] = splits;
+    ponEntries.forEach(([ponName, winObj]) => {
+      Object.entries(winObj || {}).forEach(([winName, splits]) => {
+        const winNode = windowMap[winName];
+        if (!winNode) return; // filtered out
+        const ponNode = { nodeType: 'pon', name: `🔌 ${ponName}`, rawPon: ponName, window: winName, children: [], total: null };
+        // For each splitter (already may contain children array) create node object pass-through
+        Object.entries(splits || {}).forEach(([splitName, info]) => {
+          // info may already contain children recursively; keep as-is but normalize fields used for display
+          const node = {
+            nodeType: (info.nodeType || 'splitter'),
+            name: info.name || splitName,
+            splitterName: info.splitterName || info.rawSplitter || splitName,
+            jcName: info.jcName || '',
+            location: info.location || '',
+            jcPic: info.jcPic || info.jcImage || '',
+            polePic: info.polePic || info.poleImage || '',
+            tag: info.tag || '',
+            users: Array.isArray(info.users) ? info.users.slice() : [],
+            total: (typeof info.total === 'number' ? info.total : (Array.isArray(info.users) ? info.users.length : null)),
+            children: Array.isArray(info.children) ? info.children.map(c => c) : []
+          };
+          ponNode.children.push(node);
         });
-        if (Object.keys(newWin).length) out[pon] = newWin;
+        winNode.children.push(ponNode);
       });
-      return out;
-    }
+    });
 
-    // ========== BUILD HIERARCHY (converts board -> d3 tree) ==========
-    // This uses the server-provided splitter nodes (which include nested children/untagged),
-    // but we still compute PON totals and ensure structure: root -> windows -> pons -> splitters
-    function buildHierarchy(board){
-      const root = { nodeType:'root', name:'🌐 Merotra Network', children: [] };
-      const windowMap = {};
+    return root;
+  }
 
-      const sortedPons = Object.entries(board).sort(([a],[b])=>{
-        const A=parsePon(a), B=parsePon(b);
-        if (A.olt!==B.olt) return A.olt-B.olt;
-        if (A.ip!==B.ip) return A.ip-B.ip;
-        return A.port-B.port;
-      });
+  // ---------- DRAW TREE (D3) ----------
+  let svg, g, zoom;
+  function drawTree(data) {
+    // clear
+    d3.select('#chart').selectAll('*').remove();
 
-      sortedPons.forEach(([pon, winObj])=>{
-        Object.entries(winObj || {}).forEach(([winName, splitters])=>{
-          if (!windowMap[winName]) {
-            windowMap[winName] = { nodeType:'window', name:'🪟 '+winName, rawWindow:winName, children: [] };
-            root.children.push(windowMap[winName]);
-          }
-          const winNode = windowMap[winName];
-          const ponNode = { nodeType:'pon', name:'🔌 '+pon, rawPon:pon, window:winName, children: [], total:0 };
+    const width = document.getElementById('chart').clientWidth || Math.max(window.innerWidth - 40, 900);
+    const height = Math.max(window.innerHeight - 220, 420);
 
-          // Convert splitters object -> array
-          const entries = Object.entries(splitters || {}).map(([splitName, info])=>{
-            // users stored as [{id}] format earlier
-            const userIds = (info.users || []).map(u => normalizeId(u.id ?? u)).filter(Boolean);
-            const userSet = new Set(userIds);
-            return { splitterName: splitName, info, userIds, userSet, userCount: userSet.size };
-          });
+    const dx = 80;
+    const dy = width > 900 ? 260 : 200;
 
-          if (entries.length === 0) {
-            winNode.children.push(ponNode);
-            return;
-          }
+    const tree = d3.tree().nodeSize([dx, dy]);
+    const root = d3.hierarchy(data, d => d.children || []);
+    tree(root);
 
-          // sort by userCount desc
-          entries.sort((a,b) => b.userCount - a.userCount);
+    svg = d3.select('#chart').append('svg').attr('width', width).attr('height', height).style('overflow','visible');
 
-          // create nodes with children if server included nested 'children' (server likely gave nested)
-          const nodes = entries.map(e => ({
-            nodeType:'splitter',
-            name: `${emojiForSplitter(e.splitterName)} ${e.splitterName} (${e.userCount})`,
-            rawSplitter: e.splitterName,
-            pon,
-            window: winName,
-            users: (e.info.users || []).map(u => ({ id: (u && u.id) ? u.id : String(u) })),
-            total: e.userCount,
-            tag: e.info.tag || '',
-            location: e.info.location || '',
-            jcPic: e.info.jcPic || '',
-            polePic: e.info.polePic || '',
-            children: e.info.children || []
-          }));
+    zoom = d3.zoom().scaleExtent([0.4, 3]).on('zoom', (ev) => g.attr('transform', ev.transform));
+    svg.call(zoom);
 
-          // place first as primary
-          const primary = nodes[0];
-          ponNode.children.push(primary);
+    g = svg.append('g').attr('transform','translate(80,40)');
 
-          // for remaining, try to attach using subset/overlap rules:
-          for (let i=1;i<nodes.length;i++){
-            const curr = nodes[i];
-            const currSet = new Set((curr.users||[]).map(u => normalizeId(u.id)));
-            let attached = false;
+    // links
+    g.selectAll('.link')
+      .data(root.links())
+      .enter()
+      .append('path')
+      .attr('class','link')
+      .attr('d', d3.linkHorizontal().x(d => d.y).y(d => d.x))
+      .attr('fill','none')
+      .attr('stroke','#94a3b8')
+      .attr('stroke-width',2);
 
-            // check subset of earlier nodes (including primary and earlier siblings)
-            for (let j=0;j<i;j++){
-              const parent = nodes[j];
-              const parentSet = new Set((parent.users||[]).map(u => normalizeId(u.id)));
-              // subset?
-              const isSubset = [...currSet].every(x => parentSet.has(x));
-              if (isSubset) {
-                parent.children = parent.children || [];
-                parent.children.push(curr);
-                attached = true;
-                break;
-              }
-            }
+    // nodes
+    const node = g.selectAll('.node').data(root.descendants()).enter().append('g')
+      .attr('class','node')
+      .attr('transform', d => `translate(${d.y},${d.x})`)
+      .style('cursor','pointer');
 
-            if (attached) continue;
+    // circles
+    node.append('circle')
+      .attr('r', d => {
+        if (d.data.nodeType === 'root') return 24;
+        if (d.data.nodeType === 'window') return 20;
+        if (d.data.nodeType === 'pon') return 18;
+        if (d.data.nodeType === 'untagged') return 10;
+        return 14;
+      })
+      .attr('fill', d => {
+        if (d.data.nodeType === 'root') return '#1e3a8a';
+        if (d.data.nodeType === 'window') return '#1d4ed8';
+        if (d.data.nodeType === 'pon') return '#0f766e';
+        if (d.data.nodeType === 'untagged') return '#6b7280';
+        // for splitter color, use presence of total/users
+        const tot = d.data.total ?? (Array.isArray(d.data.users) ? d.data.users.length : 0);
+        return tot > 0 ? '#10b981' : '#6b7280';
+      })
+      .attr('stroke','#fff').attr('stroke-width',2);
 
-            // check overlap with any earlier node -> attach to primary
-            let overlap = false;
-            for (let j=0;j<i;j++){
-              const parent = nodes[j];
-              const parentSet = new Set((parent.users||[]).map(u => normalizeId(u.id)));
-              if ([...currSet].some(x => parentSet.has(x))) { overlap = true; break; }
-            }
-            if (overlap) {
-              primary.children = primary.children || [];
-              primary.children.push(curr);
-              continue;
-            }
-
-            // no overlap => sibling under PON
-            ponNode.children.push(curr);
-          }
-
-          // Add 'Other / Untagged' nodes for parents that have children and leftover users
-          function addUntagged(node){
-            if (!node.children || node.children.length === 0) return;
-            // collect covered users from children
-            const covered = new Set();
-            node.children.forEach(ch => {
-              addUntagged(ch);
-              (ch.users || []).forEach(u => covered.add(normalizeId(u.id)));
-            });
-            const ownUsers = (node.users || []).map(u => normalizeId(u.id)).filter(x => !covered.has(x));
-            if (ownUsers.length > 0) {
-              node.children.push({
-                nodeType: 'untagged',
-                name: `Other / Untagged (${ownUsers.length})`,
-                users: ownUsers.map(id => ({ id })),
-                total: ownUsers.length,
-                children: []
-              });
-            }
-          }
-
-          ponNode.children.forEach(addUntagged);
-
-          // compute pon total as union of all user ids seen in splitters
-          const allUserSet = new Set();
-          entries.forEach(e => e.userIds.forEach(u => allUserSet.add(u)));
-          ponNode.total = allUserSet.size;
-
-          winNode.children.push(ponNode);
-        });
+    // labels
+    node.append('text')
+      .attr('dy','0.32em')
+      .attr('x', d => d.children && d.depth > 0 ? -20 : 20)
+      .attr('text-anchor', d => d.children && d.depth > 0 ? 'end' : 'start')
+      .style('font-size', d => {
+        if (d.data.nodeType === 'root') return '14px';
+        if (d.data.nodeType === 'window') return '13px';
+        if (d.data.nodeType === 'pon') return '12px';
+        return '11px';
+      })
+      .style('font-weight', d => (d.data.nodeType === 'root' || d.data.nodeType === 'window') ? 700 : 500)
+      .text(d => {
+        // prefer a stable label: use data.name if present, otherwise fallback to splitterName/raw
+        return d.data.name || d.data.splitterName || (d.data.pon ? d.data.pon : '');
       });
 
-      return root;
+    // interactions
+    node.on('mousemove', (event, d) => {
+      handleMouseOver(event, d);
+    }).on('mouseout', () => {
+      tooltip.style.opacity = 0;
+    }).on('click', (event, d) => {
+      handleNodeClick(event, d);
+    });
+
+    fitToView(svg, g, zoom);
+  }
+
+  function fitToView(svgRoot, g, zoom) {
+    try {
+      const chart = document.getElementById('chart');
+      const bounds = g.node().getBBox();
+      const fullWidth = chart.clientWidth;
+      const fullHeight = chart.clientHeight;
+      const widthScale = fullWidth / (bounds.width + 160);
+      const heightScale = fullHeight / (bounds.height + 160);
+      const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
+      const tx = -bounds.x * scale + 40;
+      const ty = -bounds.y * scale + 40;
+      svgRoot.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+    } catch(e) { /* ignore fit errors */ }
+  }
+
+  // tooltip content - no server-side logic here, just show available metadata
+  function handleMouseOver(event, d) {
+    const data = d.data;
+    let html = `<strong>${data.name || data.splitterName || ''}</strong><br/>`;
+    if (data.nodeType === 'window') html += `Window`;
+    else if (data.nodeType === 'pon') html += `PON: ${data.rawPon || ''}<br/>`;
+    else {
+      // splitter or untagged
+      const total = (typeof data.total === 'number') ? data.total : (Array.isArray(data.users) ? data.users.length : '-');
+      html += `Users: <strong>${total}</strong><br/>`;
+      if (data.tag) html += `Tag: ${data.tag}<br/>`;
+      if (data.jcName) html += `JC: ${data.jcName}<br/>`;
     }
+    tooltip.innerHTML = html;
+    tooltip.style.left = (event.pageX + 14) + 'px';
+    tooltip.style.top  = (event.pageY + 8) + 'px';
+    tooltip.style.opacity = 1;
+  }
 
-    function emojiForSplitter(s){
-      const t = (s || '').toLowerCase();
-      if (t.includes('link')) return '🔗';
-      if (t.includes('16')) return '🔺';
-      if (t.includes('8')) return '🔵';
-      if (t.includes('4')) return '🟥';
-      if (t.includes('2')) return '🟩';
-      return '⬜';
-    }
+  // popup builds user table showing raw IDs (no external lookups)
+  function handleNodeClick(event, d) {
+    const data = d.data;
+    // only show popup for splitter or untagged nodes
+    if (!(data.nodeType === 'splitter' || data.nodeType === 'untagged' || (Array.isArray(data.users) && data.users.length))) return;
 
-    // ========== DRAW TREE (D3) ==========
-    let svg, g, treeLayout, root;
-    function drawTree(data){
-      d3.select('#chart').select('svg').remove();
+    const total = (typeof data.total === 'number') ? data.total : (Array.isArray(data.users) ? data.users.length : 0);
 
-      const width = document.getElementById('chart').clientWidth || Math.max(window.innerWidth - 40, 900);
-      const height = Math.max(window.innerHeight - 140, 500);
-      const dx = 80;
-      const dy = width > 900 ? 260 : 200;
+    popupTitleEl.textContent = (data.nodeType === 'untagged') ? `⬜ Untagged users (${total})` : `${data.splitterName || data.name || 'Splitter'} — Users`;
+    popupPathEl.textContent = `${data.window || ''} → ${data.pon || data.rawPon || ''} → ${data.splitterName || data.name || ''}`;
 
-      treeLayout = d3.tree().nodeSize([dx, dy]);
-      root = d3.hierarchy(data, d => d.children || []);
-      treeLayout(root);
+    popupMetaEl.innerHTML = `<div><strong>Total users:</strong> ${total}</div><div><strong>Tag:</strong> ${data.tag || '-'}</div>`;
 
-      svg = d3.select('#chart').append('svg').attr('width', width).attr('height', height);
-      const zoom = d3.zoom().scaleExtent([0.4, 3]).on('zoom', (event) => g.attr('transform', event.transform));
-      svg.call(zoom);
-      g = svg.append('g').attr('transform', 'translate(80,60)');
+    // links
+    let linksHtml = '';
+    if (data.location) linksHtml += `<span class="link-btn" onclick="openLink('${data.location}')">📍 Location</span>`;
+    if (data.jcPic) linksHtml += `<span class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</span>`;
+    if (data.polePic) linksHtml += `<span class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</span>`;
+    popupLinksEl.innerHTML = linksHtml || '';
 
-      // links
-      g.selectAll('.link').data(root.links()).enter().append('path')
-        .attr('class','link')
-        .attr('d', d3.linkHorizontal().x(d => d.y).y(d => d.x))
-        .attr('fill','none').attr('stroke','#94a3b8').attr('stroke-width',2);
+    buildUserTable(data);
+    popupModal.style.display = 'flex';
+  }
 
-      // nodes
-      const node = g.selectAll('.node').data(root.descendants()).enter().append('g')
-        .attr('class','node')
-        .attr('transform', d => `translate(${d.y},${d.x})`);
+  function buildUserTable(data) {
+    // data.users expected array of {id} or strings -> normalize to raw ids
+    const rawUsers = (data.users || []).map(u => (typeof u === 'object' && u !== null) ? (u.id ?? String(u)) : String(u));
+    currentPopupRows = rawUsers.map((id, idx) => ({ sr: idx+1, id }));
 
-      // circles
-      node.filter(d => d.data.nodeType === 'root')
-        .append('circle').attr('r',24).attr('fill','#0ea5a0').attr('stroke','#fff').attr('stroke-width',3);
+    // render table
+    popupUsersTbl.innerHTML = `
+      <thead>
+        <tr><th style="width:36px">Sr</th><th>User ID</th></tr>
+      </thead>
+      <tbody></tbody>
+    `;
+    const tbody = popupUsersTbl.querySelector('tbody');
+    currentPopupRows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.sr}</td><td>${r.id}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
 
-      node.filter(d => d.data.nodeType === 'window')
-        .append('circle').attr('r',20).attr('fill','#2563eb').attr('stroke','#fff').attr('stroke-width',3);
+  // open link helper
+  function openLink(url) { if (url) window.open(url, '_blank'); }
 
-      node.filter(d => d.data.nodeType === 'pon')
-        .append('circle').attr('r',18).attr('fill','#0f766e').attr('stroke','#fff').attr('stroke-width',3);
+  // downloads
+  function downloadScreenshot() {
+    const modalContent = document.querySelector("#popupModal .modal-content");
+    if (!modalContent) return;
+    html2canvas(modalContent).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `merotra-users-${new Date().toISOString().slice(0,10)}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
 
-      node.filter(d => d.data.nodeType === 'splitter' || d.data.nodeType === 'untagged')
-        .append('circle')
-        .attr('r', d => d.data.nodeType === 'splitter' ? 14 : 10)
-        .attr('fill', d => d.data.nodeType === 'untagged' ? '#6b7280' : (d.data.total > 0 ? '#10b981' : '#6b7280'))
-        .attr('stroke','#fff').attr('stroke-width',2);
+  function downloadCSV() {
+    if (!currentPopupRows || !currentPopupRows.length) return;
+    const header = ['Sr','User ID'];
+    const lines = [header.join(',')];
+    currentPopupRows.forEach(r => {
+      lines.push([r.sr, `"${(r.id||'').replace(/"/g,'""')}"`].join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `merotra-users-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
-      // text
-      node.append('text')
-        .attr('dy','0.32em')
-        .attr('x', d => d.children && d.depth > 0 ? -20 : 20)
-        .attr('text-anchor', d => d.children && d.depth > 0 ? 'end' : 'start')
-        .style('font-size', d => {
-          if (d.data.nodeType === 'root') return '14px';
-          if (d.data.nodeType === 'window') return '13px';
-          if (d.data.nodeType === 'pon') return '12px';
-          return '11px';
-        })
-        .style('font-weight', d => (d.data.nodeType === 'root' || d.data.nodeType === 'window') ? 700 : 500)
-        .text(d => {
-          if (d.data.nodeType === 'pon') return `${d.data.name} (${d.data.total || 0})`;
-          if (d.data.nodeType === 'splitter') return `${d.data.name}`;
-          return d.data.name;
-        });
+  // -------- Filters UI setup (from board) --------
+  function setupFiltersFromBoard() {
+    const windowSet = new Set();
+    const ponSet = new Set();
+    Object.entries(board).forEach(([pon, winObj]) => {
+      ponSet.add(pon);
+      Object.keys(winObj || {}).forEach(w => windowSet.add(w));
+    });
 
-      // interactions
-      node.on('mousemove', handleMouseOver).on('mouseout', () => tooltip.style.opacity = 0)
-        .on('click', handleNodeClick);
+    // defaults = all selected
+    filters.windows = Array.from(windowSet);
+    filters.pons = Array.from(ponSet);
 
-      fitToView(svg, g, zoom);
-    }
+    windowFiltersDiv.innerHTML = '';
+    ponFiltersDiv.innerHTML = '';
 
-    function fitToView(svgRoot, g, zoom){
-      try {
-        const chart = document.getElementById('chart');
-        const bounds = g.node().getBBox();
-        const fullWidth = chart.clientWidth;
-        const fullHeight = chart.clientHeight;
-        const widthScale = fullWidth / (bounds.width + 160);
-        const heightScale = fullHeight / (bounds.height + 160);
-        const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
-        const tx = -(bounds.x)*scale + 40;
-        const ty = -(bounds.y)*scale + 40;
-        svgRoot.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
-      } catch(e) { /* ignore */ }
-    }
+    Array.from(windowSet).sort().forEach(w => {
+      const el = document.createElement('label');
+      el.className = 'checkbox-item';
+      el.innerHTML = `<input type="checkbox" value="${w}" checked /> <span>${w}</span>`;
+      windowFiltersDiv.appendChild(el);
+    });
 
-    // ========== TOOLTIP & POPUP ==========
-    function handleMouseOver(event, d){
-      const data = d.data;
-      let html = `<strong>${data.name}</strong><br/>`;
-      if (data.nodeType === 'window') html += `Window`;
-      else if (data.nodeType === 'pon') html += `PON: ${data.rawPon}<br/>Total: ${data.total || 0}`;
-      else if (data.nodeType === 'splitter' || data.nodeType === 'untagged') {
-        html += `Window: ${data.window}<br/>PON: ${data.pon}<br/>Users: <strong>${data.total || (data.users ? data.users.length : 0)}</strong>`;
-        if (data.tag) html += `<br/>Tag: ${data.tag}`;
+    Array.from(ponSet).sort((a,b) => {
+      // try PON parse sort similar to server
+      const pa = a.match(/O(\d+)I(\d+)P(\d+)/i), pb = b.match(/O(\d+)I(\d+)P(\d+)/i);
+      if (pa && pb) {
+        const A = [+pa[1],+pa[2],+pa[3]], B = [+pb[1],+pb[2],+pb[3]];
+        for (let i=0;i<3;i++) if (A[i] !== B[i]) return A[i]-B[i];
+        return 0;
       }
-      tooltip.innerHTML = html;
-      tooltip.style.left = (event.pageX + 14) + 'px';
-      tooltip.style.top = (event.pageY + 8) + 'px';
-      tooltip.style.opacity = 1;
-    }
+      return a.localeCompare(b);
+    }).forEach(p => {
+      const el = document.createElement('label');
+      el.className = 'checkbox-item';
+      el.innerHTML = `<input type="checkbox" value="${p}" checked /> <span>${p}</span>`;
+      ponFiltersDiv.appendChild(el);
+    });
+  }
 
-    function handleNodeClick(event, d){
-      const data = d.data;
-      if (!(data.nodeType === 'splitter' || data.nodeType === 'untagged')) return;
+  // apply filter settings
+  function applyFiltersFromUI() {
+    const winChecked = Array.from(windowFiltersDiv.querySelectorAll('input[type=checkbox]:checked')).map(i => i.value);
+    const ponChecked = Array.from(ponFiltersDiv.querySelectorAll('input[type=checkbox]:checked')).map(i => i.value);
+    filters.windows = winChecked;
+    filters.pons = ponChecked;
+    controlsModal.style.display = 'none';
+    renderFromBoard();
+  }
 
-      const total = data.total || (data.users ? data.users.length : 0);
-      popupTitleEl.textContent = data.nodeType === 'untagged' ? `⬜ Untagged users (${total})` : `${data.rawSplitter || data.splitterName} — Users`;
-      popupPathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter || data.splitterName}`;
-      popupMetaEl.innerHTML = `<div><strong>Total users:</strong> ${total}</div><div><strong>Tag:</strong> ${data.tag || '-'}</div>`;
-
-      // links (location/jc/pole)
-      let linksHtml = '';
-      if (data.location) linksHtml += `<span class="link-btn" onclick="openLink('${data.location}')">📍 Location</span>`;
-      if (data.jcPic) linksHtml += `<span class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</span>`;
-      if (data.polePic) linksHtml += `<span class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</span>`;
-      popupLinksEl.innerHTML = linksHtml || '';
-
-      buildUserTable(data);
-      popupModal.style.display = 'flex';
-    }
-
-    function buildUserTable(data){
-      // users may be array of {id} or array of strings
-      const raw = data.users || [];
-      const users = raw.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? '') : String(u));
-      popupUsersTbl.innerHTML = `
-        <thead>
-          <tr><th style="width:44px">Sr</th><th>User ID</th></tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const tbody = popupUsersTbl.querySelector('tbody');
-      currentPopupRows = [];
-      users.forEach((id, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${idx+1}</td><td>${id}</td>`;
-        tbody.appendChild(tr);
-        currentPopupRows.push({ sr: idx+1, id });
+  // filter board according to selected filters (no processing)
+  function filterBoard(boardObj, filtersObj) {
+    const out = {};
+    Object.entries(boardObj).forEach(([pon, winObj]) => {
+      if (!filtersObj.pons.includes(pon)) return;
+      const newWin = {};
+      Object.entries(winObj || {}).forEach(([win, splits]) => {
+        if (!filtersObj.windows.includes(win)) return;
+        newWin[win] = splits;
       });
+      if (Object.keys(newWin).length) out[pon] = newWin;
+    });
+    return out;
+  }
+
+  // Render process: transform -> build tree -> draw
+  function renderFromBoard() {
+    const filtered = filterBoard(board, filters);
+    const treeData = buildTreeFromBoard(filtered);
+    currentTreeData = treeData;
+    drawTree(treeData);
+  }
+
+  // -------- Load from server --------
+  async function loadAll() {
+    try {
+      reloadBtn.textContent = 'Loading...'; reloadBtn.disabled = true;
+      const res = await fetch(BOARD_URL);
+      if (!res.ok) throw new Error('Board API fetch failed: ' + res.status);
+      serverJson = await res.json();
+      board = transformServerToBoard(serverJson);
+      setupFiltersFromBoard();
+      renderFromBoard();
+      // optional console summary
+      console.info('Server summary:', serverJson.summary || {});
+    } catch (err) {
+      console.error(err);
+      alert('Error loading board: ' + (err.message || err));
+    } finally {
+      reloadBtn.textContent = 'Reload'; reloadBtn.disabled = false;
     }
+  }
 
-    function openLink(url){ if (url) window.open(url, '_blank'); }
+  // -------- Listeners --------
+  reloadBtn.addEventListener('click', loadAll);
+  controlsBtn.addEventListener('click', () => controlsModal.style.display = 'flex');
+  controlsClose.addEventListener('click', () => controlsModal.style.display = 'none');
+  applyFiltersBtn.addEventListener('click', applyFiltersFromUI);
+  popupClose.addEventListener('click', () => popupModal.style.display = 'none');
+  btnShot.addEventListener('click', downloadScreenshot);
+  btnCsv.addEventListener('click', downloadCSV);
 
-    // ========== DOWNLOADS ==========
-    function downloadScreenshot(){
-      const modalContent = document.querySelector('#popupModal .modal-content');
-      if (!modalContent) return;
-      html2canvas(modalContent).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `merotra-users-${(new Date()).toISOString().slice(0,10)}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    }
+  window.addEventListener('resize', () => { if (currentTreeData) drawTree(currentTreeData); });
 
-    function downloadCSV(){
-      if (!currentPopupRows.length) return;
-      const header = ['Sr','User ID'];
-      const lines = [header.join(',')];
-      currentPopupRows.forEach(r => {
-        const row = [r.sr, `"${String(r.id).replace(/"/g,'""')}"`];
-        lines.push(row.join(','));
-      });
-      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url;
-      a.download = `merotra-users-${(new Date()).toISOString().slice(0,10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+  // initial load
+  loadAll();
+</script>
 
-    // expose simple helpers (for inline onclicks)
-    window.selectAll = selectAll;
-    window.deselectAll = deselectAll;
-    window.openLink = openLink;
-
-  </script>
 </body>
 </html>
