@@ -99,12 +99,10 @@
   <script>
     // -------------------- CONFIG --------------------
 
-    // Same API_BASE (board/data) jo aap pehle use kar rahe the
-    const API_BASE = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLgWoNwxGB6cZdAHMQqMmh9R-uY6NTk56cJT4JE1BQNi4u_VU4-hjmrbr1SjmTu7SY_lFxNiNETKTS5sRHKD8Hrr4Uh1GYAGlmrDRjyfoTGetW786IOjsnIqah5_cVjZEPkbGsnQjKY7GGHpErfeZpXItjvb71iz-b-cH5L7ISw_DqTfJBdn8ieDC99pCWOyZv9mzZkpzmxeJVOfxWLnwvj9QMktqCF3PG6871DG6eAotb-vcbTj5XnAw-YLofKgoccAohOSpCB_gn-XWlI1EwQDtLoohgONwIdSu50jkShz1nQ9Cx4&lib=MM9jfESS3VUQ4bogWcHsjBa_bifldmWHw";
+    // YOUR published GAS URL (use mode=board)
+    const BOARD_URL = "https://script.google.com/macros/s/AKfycbxRnBmBu_ozeU05Wv7cesr5AsWCIILv8FEwaeUnGyDyswJ86hyQWPX259_vwAJZ-h_S/exec?mode=board";
 
-    const BOARD_URL = API_BASE + "&mode=board";
-
-    // TheMaster DB URLs (token = abcd1234)
+    // TheMaster DB URLs (token = abcd1234) - unchanged
     const MASTER_API_MEROTRA = "https://script.google.com/macros/s/AKfycbwEjBWnBLw5S45MdR0yq4Kvuuy5uFC_8a8u0syGpW9Kyq2deGY-MdquN69uF6V51qj3Pw/exec?token=abcd1234";
     const MASTER_API_SUNNY   = "https://script.google.com/macros/s/AKfycbymVJ8_kU4T0WEK5eSQftItoh_sHtmmutjTeuVQDhnMpPdk3dUBxDu5XiuA6tqZ64ZY/exec?token=abcd1234";
 
@@ -126,7 +124,8 @@
     const popupLinksEl  = document.getElementById("popupLinks");
     const popupUsersTbl = document.getElementById("popupUsersTable");
 
-    let rawBoard = {};
+    let rawBoard = {};        // final internal board: pon -> window -> splitName -> info
+    let serverSummary = null; // server summary info
     let svg, g, treeLayout, root;
     let currentTreeData = null;
 
@@ -146,6 +145,40 @@
     function normalizeId(v){
       return (v ?? "").toString().trim().replace(/\s+/g,"").toLowerCase();
     }
+
+    // transform server JSON -> internal board shape expected by buildHierarchy
+    function transformServerToBoard(serverJson){
+      // serverJson expected shape: { summary: {...}, windows: [ { window, totalUsers, pons: [ { pon, totalUsers, splitters: [ { name, tag, location, jcPic, polePic, users: [...] } ] } ] } ] }
+      if (!serverJson || !Array.isArray(serverJson.windows)) return {};
+      const board = {};
+      serverJson.windows.forEach(win => {
+        const winName = win.window;
+        (win.pons || []).forEach(pon => {
+          const ponName = pon.pon;
+          if (!board[ponName]) board[ponName] = {};
+          if (!board[ponName][winName]) board[ponName][winName] = {};
+          (pon.splitters || []).forEach(split => {
+            // ensure users are objects { id: <value> } as expected by existing code
+            const usersObjArray = (split.users || []).map(u => {
+              // if server returns objects already, attempt to use id or value
+              if (typeof u === "object" && u !== null) {
+                return { id: u.id ?? (u.user ?? "") };
+              }
+              return { id: String(u) };
+            });
+            board[ponName][winName][split.name] = {
+              users: usersObjArray,
+              tag: split.tag || "",
+              location: split.location || "",
+              jcPic: split.jcPic || "",
+              polePic: split.polePic || ""
+            };
+          });
+        });
+      });
+      return board;
+    }
+
     // --------------- INIT ----------------
 
     document.getElementById("reloadBtn").addEventListener("click", () => {
@@ -176,9 +209,17 @@
       try {
         setLoading(true);
 
+        // fetch server JSON (summary + windows[])
         const bRes = await fetch(BOARD_URL);
-        rawBoard = await bRes.json();
+        if (!bRes.ok) throw new Error("Board API fetch failed: " + bRes.status);
+        const serverJson = await bRes.json();
 
+        // show quick summary (optional) and transform
+        serverSummary = serverJson.summary || null;
+
+        rawBoard = transformServerToBoard(serverJson);
+
+        // load status maps as before
         await Promise.all([
           loadStatusesForWindow("Merotra", MASTER_API_MEROTRA),
           loadStatusesForWindow("Sunny", MASTER_API_SUNNY)
@@ -190,9 +231,15 @@
         const treeData = buildHierarchy(filtered);
         currentTreeData = treeData;
         drawTree(treeData);
+
+        // if server gave a summary, show a small toast (non-blocking)
+        if (serverSummary) {
+          console.info("Processed rows:", serverSummary.processedRows, "Skipped:", serverSummary.skippedRows);
+        }
+
       } catch(e){
         console.error(e);
-        alert("Error loading data: " + e);
+        alert("Error loading data: " + (e.message || e));
       } finally {
         setLoading(false);
       }
@@ -322,202 +369,149 @@
     }
 
     // --------------- TREE BUILDING ----------------
-    // --------------- TREE BUILDING ----------------
-
-
-function buildHierarchy(board){
-  const root = {
-    nodeType: "root",
-    name: "🌐 Merotra Network",
-    children: []
-  };
-  const windowMap = {};
-  const sortedPons = Object.entries(board).sort(([a],[b])=>{
-    const A = parsePon(a), B = parsePon(b);
-    if (A.olt !== B.olt) return A.olt - B.olt;
-    if (A.ip !== B.ip) return A.ip - B.ip;
-    return A.port - B.port;
-  });
-  sortedPons.forEach(([pon,winObj])=>{
-    Object.entries(winObj || {}).forEach(([winName,splitters])=>{
-      if(!windowMap[winName]){
-        windowMap[winName] = {
-          nodeType:"window",
-          name:"🪟 "+winName,
-          rawWindow:winName,
-          children:[]
-        };
-        root.children.push(windowMap[winName]);
-      }
-      const winNode = windowMap[winName];
-      const ponNode = {
-        nodeType:"pon",
-        name:"🔌 "+pon,
-        rawPon:pon,
-        window:winName,
-        children:[],
-        total:0
-      };
-      const entries = [];
-      Object.entries(splitters || {}).forEach(([splitName,info])=>{
-        const userIds = info.users.map(u => normalizeId(u.id)).filter(Boolean);
-        const userSet = new Set(userIds);
-        entries.push({
-          splitterName:splitName,
-          info,
-          userSet,
-          userIds,
-          userCount:userSet.size
-        });
-      });
-      if(entries.length===0){
-        winNode.children.push(ponNode);
-        return;
-      }
-      // Rule-6: Sort by user count descending → biggest = primary
-      entries.sort((a,b)=>b.userCount - a.userCount);
-      // Create splitter nodes
-      const splitterNodes = entries.map(e=>({
-        node:{
-          nodeType:"splitter",
-          name:`${emojiForSplitter(e.splitterName)} ${e.splitterName} (${e.userCount})`,
-          rawSplitter:e.splitterName,
-          pon,
-          window:winName,
-          users:e.info.users,
-          userIds:e.userIds,
-          total:e.userCount,
-          tag:e.info.tag || "",
-          location:e.info.location || "",
-          jcPic:e.info.jcPic || "",
-          polePic:e.info.polePic || "",
-          userSet:e.userSet,
-          children:[]
-        },
-        userSet:e.userSet
-      }));
-      const primary = splitterNodes[0].node;
-      ponNode.children.push(primary);
-      for(let i=1;i<splitterNodes.length;i++){
-        const curr = splitterNodes[i];
-        const currSet = curr.userSet;
-        let attached = false;
-        // Rule-7: Subset check
-        for(let j=0;j<i;j++){
-          const parent = splitterNodes[j];
-          if(isSubset(currSet, parent.userSet)){
-            parent.node.children.push(curr.node);
-            attached = true;
-            break;
-          }
-        }
-        if(!attached){
-          // Check for any overlap
-          let hasOverlap = false;
-          for(let j=0;j<i;j++){
-            const parentSet = splitterNodes[j].userSet;
-            if([...currSet].some(x => parentSet.has(x))){
-              hasOverlap = true;
-              break;
-            }
-          }
-          if(hasOverlap){
-            // Rule-8: Partial overlap → under primary
-            primary.children.push(curr.node);
-          } else {
-            // Rule-9: No overlap → sibling
-            ponNode.children.push(curr.node);
-          }
-        }
-      }
-      // Rule-10: Add untagged for ALL splitters (only if has sub-children)
-      function addUntagged(node){
-        if(node.nodeType !== "splitter") return;
-        const covered = new Set();
-        const subChildren = [...node.children]; // copy to check len before adding
-        subChildren.forEach(child => {
-          addUntagged(child);
-          child.userSet.forEach(id => covered.add(id));
-        });
-        const ownUsers = [...node.userSet].filter(id => !covered.has(id));
-        if(ownUsers.length > 0 && subChildren.length > 0){
-          const untagged = {
-            nodeType: "untagged",
-            name: `Other / Untagged (${ownUsers.length})`,
-            pon: node.pon,
-            window: node.window,
-            users: node.users.filter(u => ownUsers.includes(normalizeId(u.id))),
-            total: ownUsers.length,
-            children: []
-          };
-          node.children.push(untagged);
-        }
-      }
-      ponNode.children.forEach(addUntagged);
-      // PON total: union of all unique users
-      const allUserSets = entries.map(e => e.userSet);
-      ponNode.total = allUserSets.length ? new Set([...allUserSets.reduce((acc, set) => new Set([...acc, ...set]))]).size : 0;
-      // Clean up userSet (not needed after build)
-      function removeUserSet(n){
-        delete n.userSet;
-        n.children.forEach(removeUserSet);
-      }
-      ponNode.children.forEach(removeUserSet);
-      winNode.children.push(ponNode);
-    });
-  });
-  return root;
-}
-
-    
-// -------- FIXED NODE BUILDER (accurate count) --------
-function makeSplitterNodeFixed(entry, pon, windowName){
-  const total = entry.userCount;
-  const emoji = emojiForSplitter(entry.splitterName);
-
-  return {
-    nodeType:"splitter",
-    name:`${emoji} ${entry.splitterName} (${total})`,
-    rawSplitter:entry.splitterName,
-    pon,
-    window:windowName,
-    users:entry.users,
-    userIds:entry.userIds,
-    total,
-    tag:entry.info.tag || "",
-    location:entry.info.location || "",
-    jcPic:entry.info.jcPic || "",
-    polePic:entry.info.polePic || "",
-    children:[]
-  };
-}
-
-
-
-    // --------- HELPER NODE BUILDER ----------
-    function makeSplitterNode(entry, pon, windowName){
-      const info = entry.info;
-      const users = entry.users;
-      const total = info.total ?? users.length ?? 0;
-
-      const emoji = emojiForSplitter(entry.splitterName);
-      const label = `${emoji} ${entry.splitterName} (${total})`;
-
-      return {
-        nodeType: "splitter",
-        name: label,
-        rawSplitter: entry.splitterName,
-        pon,
-        window: windowName,
-        users,
-        userIds: entry.userIds,
-        total,
-        tag: info.tag || "",
-        location: info.location || "",
-        jcPic: info.jcPic || "",
-        polePic: info.polePic || "",
+    // (existing buildHierarchy and helper functions are kept unchanged)
+    function buildHierarchy(board){
+      const root = {
+        nodeType: "root",
+        name: "🌐 Merotra Network",
         children: []
       };
+      const windowMap = {};
+      const sortedPons = Object.entries(board).sort(([a],[b])=>{
+        const A = parsePon(a), B = parsePon(b);
+        if (A.olt !== B.olt) return A.olt - B.olt;
+        if (A.ip !== B.ip) return A.ip - B.ip;
+        return A.port - B.port;
+      });
+      sortedPons.forEach(([pon,winObj])=>{
+        Object.entries(winObj || {}).forEach(([winName,splitters])=>{
+          if(!windowMap[winName]){
+            windowMap[winName] = {
+              nodeType:"window",
+              name:"🪟 "+winName,
+              rawWindow:winName,
+              children:[]
+            };
+            root.children.push(windowMap[winName]);
+          }
+          const winNode = windowMap[winName];
+          const ponNode = {
+            nodeType:"pon",
+            name:"🔌 "+pon,
+            rawPon:pon,
+            window:winName,
+            children:[],
+            total:0
+          };
+          const entries = [];
+          Object.entries(splitters || {}).forEach(([splitName,info])=>{
+            const userIds = info.users.map(u => normalizeId(u.id)).filter(Boolean);
+            const userSet = new Set(userIds);
+            entries.push({
+              splitterName:splitName,
+              info,
+              userSet,
+              userIds,
+              userCount:userSet.size
+            });
+          });
+          if(entries.length===0){
+            winNode.children.push(ponNode);
+            return;
+          }
+          // Rule-6: Sort by user count descending → biggest = primary
+          entries.sort((a,b)=>b.userCount - a.userCount);
+          // Create splitter nodes
+          const splitterNodes = entries.map(e=>({
+            node:{
+              nodeType:"splitter",
+              name:`${emojiForSplitter(e.splitterName)} ${e.splitterName} (${e.userCount})`,
+              rawSplitter:e.splitterName,
+              pon,
+              window:winName,
+              users:e.info.users,
+              userIds:e.userIds,
+              total:e.userCount,
+              tag:e.info.tag || "",
+              location:e.info.location || "",
+              jcPic:e.info.jcPic || "",
+              polePic:e.info.polePic || "",
+              userSet:e.userSet,
+              children:[]
+            },
+            userSet:e.userSet
+          }));
+          const primary = splitterNodes[0].node;
+          ponNode.children.push(primary);
+          for(let i=1;i<splitterNodes.length;i++){
+            const curr = splitterNodes[i];
+            const currSet = curr.userSet;
+            let attached = false;
+            // Rule-7: Subset check
+            for(let j=0;j<i;j++){
+              const parent = splitterNodes[j];
+              if(isSubset(currSet, parent.userSet)){
+                parent.node.children.push(curr.node);
+                attached = true;
+                break;
+              }
+            }
+            if(!attached){
+              // Check for any overlap
+              let hasOverlap = false;
+              for(let j=0;j<i;j++){
+                const parentSet = splitterNodes[j].userSet;
+                if([...currSet].some(x => parentSet.has(x))){
+                  hasOverlap = true;
+                  break;
+                }
+              }
+              if(hasOverlap){
+                // Rule-8: Partial overlap → under primary
+                primary.children.push(curr.node);
+              } else {
+                // Rule-9: No overlap → sibling
+                ponNode.children.push(curr.node);
+              }
+            }
+          }
+          // Rule-10: Add untagged for ALL splitters (only if has sub-children)
+          function addUntagged(node){
+            if(node.nodeType !== "splitter") return;
+            const covered = new Set();
+            const subChildren = [...node.children]; // copy to check len before adding
+            subChildren.forEach(child => {
+              addUntagged(child);
+              child.userSet.forEach(id => covered.add(id));
+            });
+            const ownUsers = [...node.userSet].filter(id => !covered.has(id));
+            if(ownUsers.length > 0 && subChildren.length > 0){
+              const untagged = {
+                nodeType: "untagged",
+                name: `Other / Untagged (${ownUsers.length})`,
+                pon: node.pon,
+                window: node.window,
+                users: node.users.filter(u => ownUsers.includes(normalizeId(u.id))),
+                total: ownUsers.length,
+                children: []
+              };
+              node.children.push(untagged);
+            }
+          }
+          ponNode.children.forEach(addUntagged);
+          // PON total: union of all unique users
+          const allUserSets = entries.map(e => e.userSet);
+          ponNode.total = allUserSets.length ? new Set([...allUserSets.reduce((acc, set) => new Set([...acc, ...set]))]).size : 0;
+          // Clean up userSet (not needed after build)
+          function removeUserSet(n){
+            delete n.userSet;
+            n.children.forEach(removeUserSet);
+          }
+          ponNode.children.forEach(removeUserSet);
+          winNode.children.push(ponNode);
+        });
+      });
+      return root;
     }
 
     function emojiForSplitter(s){
@@ -535,13 +529,13 @@ function makeSplitterNodeFixed(entry, pon, windowName){
       return true;
     }
 
-        // --------------- DRAW TREE ----------------
+    // --------------- DRAW TREE ----------------
 
     function drawTree(data){
       d3.select("#chart").select("svg").remove();
 
-      const width = document.getElementById("chart").clientWidth;
-      const height = document.getElementById("chart").clientHeight;
+      const width = document.getElementById("chart").clientWidth || Math.max(window.innerWidth - 40, 800);
+      const height = Math.max(window.innerHeight - 200, 400);
 
       const dx = 80;
       const dy = width > 900 ? 260 : 200;
@@ -701,9 +695,9 @@ function makeSplitterNodeFixed(entry, pon, windowName){
       popupTitleEl.textContent =
         data.nodeType === "untagged"
         ? `⬜ Untagged users (${total})`
-        : `${data.rawSplitter} — Users`;
+        : `${data.rawSplitter || data.splitterName} — Users`;
 
-      popupPathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter}`;
+      popupPathEl.textContent = `${data.window} → ${data.pon} → ${data.rawSplitter || data.splitterName}`;
 
       popupMetaEl.innerHTML = `
         <div><span class="font-semibold">Total users:</span> ${total}</div>
@@ -727,7 +721,9 @@ function makeSplitterNodeFixed(entry, pon, windowName){
     }
 
     function buildUserTable(data){
-      const users = data.users || [];
+      // data.users expected: array of { id } OR array of ids (handle both)
+      const rawUsers = data.users || [];
+      const users = rawUsers.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? "") : String(u));
       const statusMap = statusMaps[data.window] || {};
 
       currentPopupRows = [];
@@ -748,8 +744,7 @@ function makeSplitterNodeFixed(entry, pon, windowName){
 
       const tbody = popupUsersTbl.querySelector("tbody");
 
-      users.forEach((u, idx) => {
-        const rawId = (u.id ?? "").toString();
+      users.forEach((rawId, idx) => {
         const normId = normalizeId(rawId);
         const dbRow = statusMap[normId];
 
@@ -778,8 +773,7 @@ function makeSplitterNodeFixed(entry, pon, windowName){
       });
     }
 
-
-        function openLink(url){
+    function openLink(url){
       if (url) window.open(url, "_blank");
     }
 
