@@ -1,47 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — PON / Splitter Tree (column layout)</title>
+  <title>Merotra — PON / Splitter Table (Level Columns)</title>
 
   <!-- D3 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
-  <!-- external styling (you provided adv.css) -->
+  <!-- Your adv.css (you asked to use it) -->
   <link rel="stylesheet" href="adv.css">
 
-  <!-- Screenshot lib -->
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-
+  <!-- minimal fallback to ensure the SVG area shows if adv.css missing -->
   <style>
-    /* small local tweaks to integrate with adv.css */
-    body { padding: 10px; background: transparent; }
-    /* Keep tooltip style if adv.css not present for some reason */
-    .tooltip { position: absolute; pointer-events: none; background: rgba(15,23,42,0.9); color: #fff; padding: 6px 8px; border-radius: 6px; font-size: 12px; opacity: 0; transition: opacity .12s; z-index: 9999; }
-    /* node text tweak */
-    .node-text { font-family: Inter, system-ui, Arial; font-weight: 600; font-size: 11px; fill: #0f172a; }
-    .small-text { font-weight: 500; font-size: 10px; fill: #475569; }
-    /* dotted vertical separators between columns */
-    .col-sep { stroke: #e6edf3; stroke-dasharray: 3 6; stroke-width: 1; }
-    /* make links gently translucent to reduce visual clutter */
-    .link { fill: none; stroke-width: 2.2; opacity: 0.92; }
-    .link.light { opacity: 0.6; stroke-width: 1.6; }
-    /* splitters circle */
-    .split-circle { stroke: #fff; stroke-width: 2; }
-    .pon-circle { stroke: #fff; stroke-width: 2; }
-    .window-circle { stroke: #fff; stroke-width: 2; }
+    :root{font-family:Inter,system-ui,Arial}
+    body{margin:0;padding:0;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#111827;height:100vh;overflow:hidden}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(255,255,255,0.95);box-shadow:0 4px 20px rgba(0,0,0,0.06);position:sticky;top:0;z-index:30}
+    .header-title{font-weight:800;font-size:1.1rem}
+    #chart{width:100%;height:calc(100vh - 60px);overflow:hidden}
+    .tooltip{position:absolute;pointer-events:none;background:rgba(15,23,42,0.9);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;opacity:0;transition:opacity .12s;z-index:60}
+    .btn{background:#2563eb;color:#fff;padding:6px 12px;border-radius:999px;border:none;cursor:pointer}
   </style>
 </head>
 <body>
 
   <div class="header">
     <div>
-      <div class="header-title">🌐 Merotra Network Tree</div>
-      <div class="header-sub">Window → PON → Level columns → Splitters (vertical)</div>
+      <div class="header-title">🌐 Merotra Network — Column Levels</div>
+      <div style="font-size:12px;color:#6b7280">Window → PON → Level1 → Level2 → ... (columns)</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="controlsBtn" class="btn btn-secondary">Filters</button>
       <button id="reloadBtn" class="btn">Reload</button>
     </div>
   </div>
@@ -49,8 +37,8 @@
   <div id="chart"></div>
   <div id="tooltip" class="tooltip"></div>
 
-  <!-- POPUP (unchanged) -->
-  <div id="popupModal" class="popup-backdrop">
+  <!-- Popup (kept minimal and compatible with your existing UI) -->
+  <div id="popupModal" class="popup-backdrop" style="display:none">
     <div class="modal-content">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
         <div>
@@ -59,15 +47,10 @@
         </div>
         <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button>
       </div>
-
       <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div>
-      <div id="popupLinks" style="margin-bottom:8px"></div>
-
-      <h3 style="margin:8px 0 6px;font-size:14px">Users</h3>
-      <div style="max-height:300px;overflow:auto">
+      <div style="max-height:400px;overflow:auto">
         <table id="popupUsersTable" class="user-table"></table>
       </div>
-
       <div style="display:flex;gap:8px;margin-top:8px">
         <button id="btnShot" class="btn">📸 Screenshot</button>
         <button id="btnCsv" class="btn btn-secondary">📊 CSV</button>
@@ -75,665 +58,363 @@
     </div>
   </div>
 
-  <!-- CONTROLS (unchanged) -->
-  <div id="controlsModal" class="controls-backdrop">
-    <div class="controls-modal">
-      <h3 style="margin:0 0 8px">Filters</h3>
-
-      <div style="margin-bottom:10px">
-        <div style="font-weight:600;font-size:13px">Windows</div>
-        <div id="windowFilters" class="checkbox-grid"></div>
-        <div style="text-align:center;margin-top:6px;font-size:12px;color:#64748b">
-          <a href="#" onclick="selectAll('window');return false">Select All</a> |
-          <a href="#" onclick="deselectAll('window');return false">Deselect All</a>
-        </div>
-      </div>
-
-      <div style="margin-bottom:10px">
-        <div style="font-weight:600;font-size:13px">PONs</div>
-        <div id="ponFilters" class="checkbox-grid pon-grid"></div>
-        <div style="text-align:center;margin-top:6px;font-size:12px;color:#64748b">
-          <a href="#" onclick="selectAll('pon');return false">Select All</a> |
-          <a href="#" onclick="deselectAll('pon');return false">Deselect All</a>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <button id="applyFiltersBtn" class="btn" style="flex:1">Apply</button>
-        <button id="controlsClose" class="btn btn-secondary" style="flex:1">Close</button>
-      </div>
-    </div>
-  </div>
-
 <script>
-  // -------------- CONFIG --------------
-  const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
+/* =============== CONFIG =============== */
+const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
-  // Palette for branch colors (level-1 splitters). Add more if needed.
-  const PALETTE = ["#2563eb","#059669","#d97706","#db2777","#7c3aed","#0ea5e9","#b91c1c","#065f46","#4b5563","#af7207","#be185d","#e11d48"];
+/* =============== STATE =============== */
+const tooltip = document.getElementById('tooltip');
+let rawJson = null;
 
-  // -------------- STATE --------------
-  const tooltip = document.getElementById("tooltip");
-  const popupModal = document.getElementById("popupModal");
-  const controlsModal = document.getElementById("controlsModal");
-  const popupTitleEl = document.getElementById("popupTitle");
-  const popupPathEl  = document.getElementById("popupPath");
-  const popupMetaEl  = document.getElementById("popupMeta");
-  const popupLinksEl = document.getElementById("popupLinks");
-  const popupUsersTbl = document.getElementById("popupUsersTable");
+/* UI bindings */
+document.getElementById('reloadBtn').addEventListener('click', ()=> loadAndRender(true));
+document.getElementById('popupClose').addEventListener('click', ()=> document.getElementById('popupModal').style.display='none');
+document.getElementById('btnCsv').addEventListener('click', downloadCSV);
+document.getElementById('btnShot').addEventListener('click', downloadScreenshot);
 
-  let rawBoard = null;
-  let serverSummary = null;
-  let currentTreeData = null;
-  let filters = { windows: [], pons: [] };
-  let currentPopupRows = [];
-  const statusMaps = {}; // leave as before
+/* =============== Helpers =============== */
+function randColor() {
+  // pastel-ish random
+  const h = Math.floor(Math.random()*360);
+  const s = 60 + Math.floor(Math.random()*20);
+  const l = 45 + Math.floor(Math.random()*10);
+  return `hsl(${h} ${s}% ${l}%)`;
+}
+function normalizeId(v){ return (v ?? "").toString().trim(); }
 
-  // -------------- HELPERS --------------
-  function normalizeId(v){ return (v ?? "").toString().trim().replace(/\s+/g,'').toLowerCase(); }
+/* =============== Load & Render =============== */
+async function loadAndRender(showToast=false) {
+  try {
+    setLoading(true);
+    const res = await fetch(BOARD_URL);
+    if(!res.ok) throw new Error('Failed fetch: ' + res.status);
+    const j = await res.json();
+    rawJson = j; // keep
+    renderFromJson(j);
+    if (showToast) console.info('Loaded board');
+  } catch (err) {
+    console.error(err);
+    alert('Load failed: ' + (err.message || err));
+  } finally {
+    setLoading(false);
+  }
+}
+function setLoading(flag){
+  const btn = document.getElementById('reloadBtn');
+  btn.textContent = flag ? 'Loading...' : 'Reload';
+  btn.disabled = flag;
+}
 
-  // NEW: Transform server JSON (new format) into board: { ponName: { windowName: { levels: [ {level:1, splitters: [...]}, ... ] } } }
-  function transformServerToBoard(serverJson) {
-    const out = {};
-    if (!serverJson || !Array.isArray(serverJson.windows)) return out;
-    serverJson.windows.forEach(win => {
-      const winName = win.window || "Unknown";
-      (win.pons || []).forEach(pon => {
-        const ponName = pon.pon || "NOPON";
-        if (!out[ponName]) out[ponName] = {};
-        if (!out[ponName][winName]) out[ponName][winName] = { levels: [] };
-        // keep levels in the same order as provided, but ignore empty rows
-        const levels = (pon.levels || []).filter(l => l && Array.isArray(l.splitters) && l.splitters.length > 0)
-                       .map(l => ({ level: +l.level, splitters: l.splitters.map(s => ({
-                         recordId: s.recordId || "",
-                         type: s.type || "",
-                         users: Array.isArray(s.users) ? s.users.slice() : [],
-                         total: +s.total || (Array.isArray(s.users) ? s.users.length : 0)
-                       })))}));
-        out[ponName][winName].levels = levels;
-      });
-    });
-    return out;
+/* =============== Render logic (columns layout) =============== */
+function renderFromJson(serverJson) {
+  const chart = document.getElementById('chart');
+  chart.innerHTML = ''; // clear
+
+  if (!serverJson || !Array.isArray(serverJson.windows) || serverJson.windows.length === 0) {
+    chart.innerHTML = '<div style="padding:20px;color:#6b7280">No data</div>';
+    return;
   }
 
-  // -------------- INIT / UI bindings --------------
-  document.getElementById("reloadBtn").addEventListener("click", ()=> loadAll(true));
-  document.getElementById("controlsBtn").addEventListener("click", ()=> { controlsModal.style.display='flex'; });
-  document.getElementById("controlsClose").addEventListener("click", ()=> { controlsModal.style.display='none'; });
-  document.getElementById("popupClose").addEventListener("click", ()=> { popupModal.style.display='none'; });
-  document.getElementById("applyFiltersBtn").addEventListener("click", applyFiltersFromUI);
-  document.getElementById("btnShot").addEventListener("click", downloadScreenshot);
-  document.getElementById("btnCsv").addEventListener("click", downloadCSV);
-  window.addEventListener("resize", ()=> { if (currentTreeData) drawTree(currentTreeData); });
+  // SVG + zoom/pan
+  const svg = d3.select('#chart').append('svg').attr('width','100%').attr('height','100%').style('background','transparent');
+  const g = svg.append('g');
 
-  // page load
-  loadAll(false);
+  const zoom = d3.zoom().scaleExtent([0.4, 2]).on('zoom', (evt) => g.attr('transform', evt.transform));
+  svg.call(zoom);
 
-  async function loadAll(showToast) {
-    try {
-      setLoading(true);
-      const res = await fetch(BOARD_URL);
-      if (!res.ok) throw new Error("Board API fetch failed: "+res.status);
-      const serverJson = await res.json();
-      serverSummary = serverJson.summary || null;
-      rawBoard = transformServerToBoard(serverJson);
-      setupFiltersFromBoard();
-      const filtered = filterBoard(rawBoard, filters);
-      const treeData = buildHierarchy(filtered);
-      currentTreeData = treeData;
-      drawTree(treeData);
-      if (serverSummary && showToast) {
-        console.info("Processed:", serverSummary.processedRows, "Skipped:", serverSummary.skippedRows);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error loading board: " + (err.message || err));
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Layout parameters (Comfort spacing)
+  const colWidth = 240;         // horizontal gap between columns
+  const ponColWidth = 160;
+  const nodeRadius = 12;        // circles
+  const nodeVgap = 56;          // vertical gap between nodes (Comfort)
+  const sectionGap = 48;        // gap between windows
+  const leftPad = 20;
+  const topPad = 20;
 
-  function setLoading(flag){
-    const btn = document.getElementById("reloadBtn");
-    btn.textContent = flag ? "Loading..." : "Reload";
-    btn.disabled = flag;
-  }
+  // For each window: compute layout blocks vertically stacked
+  let currentY = topPad;
 
-  // -------------- FILTERS --------------
-  function setupFiltersFromBoard(){
-    const windowSet = new Set();
-    const ponSet = new Set();
-    Object.entries(rawBoard || {}).forEach(([pon, winObj]) => {
-      ponSet.add(pon);
-      Object.keys(winObj || {}).forEach(w => windowSet.add(w));
-    });
-    filters.windows = Array.from(windowSet);
-    filters.pons = Array.from(ponSet);
-    const winDiv = document.getElementById("windowFilters");
-    const ponDiv = document.getElementById("ponFilters");
-    winDiv.innerHTML = ""; ponDiv.innerHTML = "";
-    Array.from(windowSet).sort().forEach(w => {
-      const el = document.createElement("div"); el.className="checkbox-item";
-      el.innerHTML = `<label><input type="checkbox" value="${w}" checked> <span>${w}</span></label>`;
-      winDiv.appendChild(el);
-    });
-    Array.from(ponSet).sort().forEach(p => {
-      const el = document.createElement("div"); el.className="checkbox-item";
-      el.innerHTML = `<label><input type="checkbox" value="${p}" checked> <span>${p}</span></label>`;
-      ponDiv.appendChild(el);
-    });
-  }
+  serverJson.windows.forEach(win => {
+    const winName = win.window || 'Window';
+    const pons = Array.isArray(win.pons) ? win.pons : [];
 
-  function selectAll(type){ document.querySelectorAll(`#${type}Filters input[type="checkbox"]`).forEach(ch=>ch.checked=true); }
-  function deselectAll(type){ document.querySelectorAll(`#${type}Filters input[type="checkbox"]`).forEach(ch=>ch.checked=false); }
+    // header label for window
+    g.append('text')
+      .attr('x', leftPad)
+      .attr('y', currentY + 10)
+      .text(winName)
+      .attr('font-weight','700')
+      .attr('font-size',14)
+      .attr('fill','#0f172a');
 
-  function applyFiltersFromUI(){
-    filters.windows = Array.from(document.querySelectorAll("#windowFilters input:checked")).map(i => i.value);
-    filters.pons = Array.from(document.querySelectorAll("#ponFilters input:checked")).map(i => i.value);
-    controlsModal.style.display='none';
-    const filtered = filterBoard(rawBoard, filters);
-    const treeData = buildHierarchy(filtered);
-    currentTreeData = treeData;
-    drawTree(treeData);
-  }
+    currentY += 28; // small header height
 
-  function filterBoard(board, filters){
-    const out = {};
-    Object.entries(board).forEach(([pon, winObj]) => {
-      if (!filters.pons.includes(pon)) return;
-      const newWin = {};
-      Object.entries(winObj || {}).forEach(([win, info]) => {
-        if (!filters.windows.includes(win)) return;
-        // drop empty levels
-        const levels = (info.levels || []).filter(l => Array.isArray(l.splitters) && l.splitters.length>0);
-        if (levels.length) newWin[win] = { levels };
-      });
-      if (Object.keys(newWin).length) out[pon] = newWin;
-    });
-    return out;
-  }
+    // compute the vertical block for each PON. We'll stack PON blocks one below another.
+    pons.forEach((ponObj, ponIndex) => {
+      const ponName = ponObj.pon || 'PON';
+      const levels = Array.isArray(ponObj.levels) ? ponObj.levels : [];
 
-  // -------------- parsePon (sorting) --------------
-  function parsePon(pon) {
-    const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i);
-    if (!m) return { olt:9999, ip:9999, port:9999 };
-    return { olt:+m[1], ip:+m[2], port:+m[3] };
-  }
+      // sort levels by level numeric ascending
+      levels.sort((a,b)=> (a.level||0) - (b.level||0));
 
-  // -------------- BUILD HIERARCHY for columns --------------
-  // We'll produce: root -> window -> pon -> levelNodes[] -> splitters
-  function buildHierarchy(board) {
-    const root = { nodeType: "root", name: "🌐 Merotra Network", children: [] };
-    const windowMap = {};
+      // compute number of columns: 1 (Window col) + 1 (PON col) + levels.length
+      const columns = 2 + levels.length;
+      // For vertical sizing: get max number of splitters in any column for this PON
+      const levelCounts = levels.map(l => (l.splitters && l.splitters.length) || 0);
+      // PON column has 1 node
+      const maxNodes = Math.max(1, ...levelCounts);
 
-    // Helper to preserve window order: gather all windows across PONs, but we'll rely on parsePon for PON order
-    // Build window nodes by scanning PONs sorted by parsePon
-    const sortedPons = Object.entries(board).sort(([a],[b])=>{
-      const A = parsePon(a), B = parsePon(b);
-      if (A.olt !== B.olt) return A.olt - B.olt;
-      if (A.ip !== B.ip) return A.ip - B.ip;
-      return A.port - B.port;
-    });
+      // block height
+      const blockHeight = Math.max( (maxNodes * nodeVgap) + 40, 90);
 
-    // Build windows => ensures each window node created once
-    sortedPons.forEach(([pon, winObj])=>{
-      Object.keys(winObj || {}).forEach(winName=>{
-        if (!windowMap[winName]) {
-          const wNode = { nodeType:"window", name: "🪟 " + winName, rawWindow: winName, children: [] };
-          windowMap[winName] = wNode;
-          root.children.push(wNode);
+      // compute x positions for columns
+      const baseX = leftPad;
+      const winColX = baseX;
+      const ponColX = winColX + colWidth; // PON sits at colWidth from window
+      const levelStartX = ponColX + ponColWidth; // subsequent levels start here
+      // level i column x = levelStartX + (i-1)*colWidth
+
+      const blockY = currentY;
+      const centerY = blockY + blockHeight/2;
+
+      // DRAW Window node (as text only, not circle) leftmost
+      g.append('text')
+        .attr('x', winColX)
+        .attr('y', centerY)
+        .text(winName)
+        .attr('font-size',12)
+        .attr('fill','#0f172a');
+
+      // DRAW PON node as circle + label
+      const ponNodeX = ponColX;
+      const ponNodeY = centerY;
+      g.append('circle')
+        .attr('cx', ponNodeX)
+        .attr('cy', ponNodeY)
+        .attr('r', nodeRadius+4)
+        .attr('fill','#0f766e')
+        .attr('stroke','#fff')
+        .attr('stroke-width',2);
+
+      g.append('text')
+        .attr('x', ponNodeX + nodeRadius + 8)
+        .attr('y', ponNodeY + 4)
+        .text(ponName + (ponObj.totalUsers ? ` (${ponObj.totalUsers})` : ''))
+        .attr('font-size',12)
+        .attr('fill','#0f172a');
+
+      // For each level, compute vertical placement of splitters (order = sheet order: as provided)
+      const levelNodesPositions = []; // array per level: [{splitter, x,y}]
+      levels.forEach((lvl, li) => {
+        const splitters = Array.isArray(lvl.splitters) ? lvl.splitters : [];
+        const colX = levelStartX + li * colWidth;
+        // vertical start such that splitters centered in block
+        const count = Math.max(1, splitters.length);
+        const totalHeight = (count - 1) * nodeVgap;
+        let startY = centerY - (totalHeight / 2);
+
+        const positions = [];
+        for (let si=0; si<splitters.length; si++){
+          const s = splitters[si];
+          const x = colX;
+          const y = startY + si * nodeVgap;
+          positions.push({ s, x, y });
         }
+        levelNodesPositions.push(positions);
       });
-    });
 
-    // For each PON (sorted), attach PON nodes under appropriate window node
-    sortedPons.forEach(([pon, winObj])=>{
-      Object.entries(winObj || {}).forEach(([winName, info])=>{
-        const winNode = windowMap[winName];
-        const ponNode = { nodeType:"pon", name:"🔌 " + pon, rawPon: pon, window: winName, children: [], meta:{levelsCount:0} };
+      // DRAW splitters (as circles + label) column by column
+      levelNodesPositions.forEach((posArr, li) => {
+        posArr.forEach(p => {
+          const s = p.s;
+          // circle
+          g.append('circle')
+            .attr('cx', p.x)
+            .attr('cy', p.y)
+            .attr('r', nodeRadius)
+            .attr('fill', '#10b981')
+            .attr('stroke','#fff')
+            .attr('stroke-width',2)
+            .style('cursor','pointer')
+            .on('mousemove', (event) => showTooltip(event, s, p.x, p.y))
+            .on('mouseout', ()=> hideTooltip())
+            .on('click', ()=> openPopup(s, ponName, winName));
 
-        // levels array - keep sheet order; skip empty
-        const levels = (info.levels || []).filter(l => l && Array.isArray(l.splitters) && l.splitters.length>0);
-        if (levels.length === 0) {
-          winNode.children.push(ponNode);
-          return;
-        }
+          // label to the right
+          const label = (s.type ? `${s.type}` : '') + (s.total ? ` (${s.total})` : '');
+          g.append('text')
+            .attr('x', p.x + nodeRadius + 8)
+            .attr('y', p.y + 4)
+            .text(label)
+            .attr('font-size',11)
+            .attr('fill','#0f172a');
 
-        // Build a placeholder level node for each level to keep columns aligned
-        // levelNode = { nodeType: 'level', level: N, children: [splitterNodes...] }
-        const levelNodes = [];
-        levels.forEach((lvlObj, idx) => {
-          const lvlNum = +lvlObj.level || (idx+1);
-          const levelNode = { nodeType: "level", level: lvlNum, children: [] };
-          // splitters preserved in provided order (sheet order)
-          lvlObj.splitters.forEach((s, sIdx) => {
-            const splitterNode = {
-              nodeType: "splitter",
-              name: `${s.type}${s.recordId ? " — " + s.recordId : ""}`,
-              recordId: s.recordId || "",
-              type: s.type || "",
-              users: Array.isArray(s.users) ? s.users.slice() : [],
-              total: +s.total || (Array.isArray(s.users) ? s.users.length : 0),
-              level: lvlNum,
-              levelIndex: idx,   // 0-based level index
-              orderIndex: sIdx,  // position within level (sheet order)
-              children: []
-            };
-            levelNode.children.push(splitterNode);
-          });
-          levelNodes.push(levelNode);
+          // small thin recordId label under
+          if (s.recordId) {
+            g.append('text')
+              .attr('x', p.x)
+              .attr('y', p.y + nodeRadius + 14)
+              .text(s.recordId)
+              .attr('font-size',10)
+              .attr('fill','#64748b')
+              .attr('text-anchor','middle');
+          }
         });
-
-        // attach levelNodes under pon (so visual columns: pon -> level1 -> splitters, level2 -> splitters...)
-        ponNode.children = levelNodes;
-        ponNode.meta.levelsCount = levelNodes.length;
-
-        // push pon under win node
-        winNode.children.push(ponNode);
       });
-    });
 
-    return root;
-  }
-
-  // -------------- DRAW (columns + colored branches + selective links) --------------
-  function drawTree(data) {
-    d3.select("#chart").select("svg").remove();
-    const chartEl = document.getElementById("chart");
-    const width = chartEl.clientWidth || Math.max(window.innerWidth - 40, 1000);
-    const height = Math.max(window.innerHeight - 120, 560);
-
-    const svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height);
-
-    // margins & layout settings
-    const margin = {left: 40, top: 40, right: 40, bottom: 40};
-    const usableW = width - margin.left - margin.right;
-    const usableH = height - margin.top - margin.bottom;
-
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // Build flattened layout: compute positions column wise
-    // columns: 0=root, 1=window, 2=pon, 3=level1 splitters, 4=level2 splitters, ...
-    // We need to find maximum levels across all PONs to know number of columns
-    const windows = data.children || [];
-    // gather pon-levels info
-    let maxLevels = 0;
-    windows.forEach(w => {
-      (w.children || []).forEach(p => {
-        const L = p.meta && p.meta.levelsCount ? p.meta.levelsCount : (p.children ? p.children.length : 0);
-        if (L > maxLevels) maxLevels = L;
-      });
-    });
-
-    // compute columns count: window(0) + pon(1) + maxLevels columns for splitters
-    const columnsCount = 2 + maxLevels; // 0-window column,1-pon, 2.. = levels
-    const colW = Math.max(170, Math.floor(usableW / columnsCount)); // column width
-    const totalColsWidth = colW * columnsCount;
-    // center horizontally
-    const xOffset = (usableW - totalColsWidth) / 2;
-
-    // vertical spacing: we'll compute per column based on items
-    // We'll map each node to an object with computed x,y and references for links
-    const nodePositions = [];
-    const windowNodes = []; // window-level positions
-    const ponNodes = [];    // pon-level positions
-    const splitterNodes = []; // all splitter nodes
-
-    // Helper for parsing OLT to decide windows->pon mapping color or separate later (not needed because window already assigned)
-    // Build windows column positions
-    const winX = xOffset + 0*colW + colW/2;
-    const ponX  = xOffset + 1*colW + colW/2;
-
-    // compute Y positions for windows down the column (distribute)
-    const winSpacing = Math.max(80, Math.floor(usableH / Math.max(1, windows.length)));
-    windows.forEach((w, wi) => {
-      const wy = wi * winSpacing + winSpacing/2;
-      const wnode = { data: w, x: winX, y: wy, children: [] };
-      windowNodes.push(wnode);
-
-      // PONs under this window: layout vertically under window
-      const pons = w.children || [];
-      const ponsCount = pons.length;
-      // compute vertical slice for these pons
-      const ponsStartY = wy - Math.min( (pnsBlockHeight(ponsCount, usableH)/2), (winSpacing * 0.9) );
-      // simple distribution for pons
-      const ponBlockHeight = pnsBlockHeight(ponsCount, usableH);
-      for (let i=0;i<ponsCount;i++){
-        const py = ponsStartY + (i+0.5) * (ponBlockHeight / Math.max(1, ponsCount));
-        const pnode = { data: pons[i], x: ponX, y: py, parentWindow: wnode, children: [] };
-        ponNodes.push(pnode);
-        wnode.children.push(pnode);
-
-        // For each level (columns 2..), compute splitter positions vertically inside a block aligned to the pon's py and spread.
-        const levels = pons[i].children || [];
-        levels.forEach((lvlNode, lvlIndex) => {
-          const colIndex = 2 + lvlIndex;
-          const colX = xOffset + colIndex*colW + colW/2;
-          const splitters = lvlNode.children || [];
-          const n = splitters.length;
-          const verticalSpan = Math.max(120, Math.min(ponBlockHeight*0.95, 80 + n*28));
-          const top = py - verticalSpan/2;
-          splitters.forEach((s, si) => {
-            const sy = top + (si+0.5) * (verticalSpan / Math.max(1, n));
-            const snode = {
-              data: s,
-              x: colX,
-              y: sy,
-              pon: pnode,
-              levelIndex: lvlIndex,
-              levelNumber: lvlNode.level,
-              orderIndex: si
-            };
-            splitterNodes.push(snode);
-            pnode.children.push(snode);
-          });
+      // DRAW LINKS:
+      // 1) PON -> Level1: always connect PON to all level1 splitters (even if they have zero users)
+      if (levelNodesPositions.length >= 1) {
+        const lvl1 = levelNodesPositions[0];
+        lvl1.forEach(child => {
+          const path = linkPath({x:ponNodeX, y:ponNodeY}, {x:child.x, y:child.y});
+          g.append('path')
+            .attr('d', path)
+            .attr('fill','none')
+            .attr('stroke', randColor())
+            .attr('stroke-width', 2)
+            .attr('stroke-opacity', 0.9)
+            .attr('class','link');
         });
       }
-    });
 
-    // helper functions
-    function pnsBlockHeight(count, usableH) {
-      // return block height assigned to pons under a window
-      // simple heuristic: if many pons, spread across whole usableH
-      if (count <= 2) return Math.min(usableH*0.5, 360);
-      if (count <= 6) return Math.min(usableH*0.7, 560);
-      return usableH * 0.9;
-    }
+      // 2) levelN -> levelN+1: connect a child to the FIRST parent in previous level that shares users
+      for (let li = 0; li < levelNodesPositions.length - 1; li++) {
+        const parents = levelNodesPositions[li];
+        const children = levelNodesPositions[li+1];
 
-    // Build quick lookup for splitters by pon+level to find L1 roots and assign branch colors
-    // Level index 0 is level1 splitters
-    const ponToLevel1 = new Map();
-    const splitterIdToNode = new Map();
-    // assign an internal id for every splitter to help
-    splitterNodes.forEach((sn, idx) => {
-      const key = `${sn.pon.data.rawPon}::L${sn.levelIndex}::I${sn.orderIndex}`;
-      splitterIdToNode.set(key, sn);
-      if (sn.levelIndex === 0) {
-        if (!ponToLevel1.has(sn.pon.data.rawPon)) ponToLevel1.set(sn.pon.data.rawPon, []);
-        ponToLevel1.get(sn.pon.data.rawPon).push(sn);
+        // precompute parent users sets
+        const parentSets = parents.map(p => {
+          const arr = Array.isArray(p.s.users) ? p.s.users.map(normalizeId) : [];
+          return new Set(arr);
+        });
+
+        children.forEach(child => {
+          const childSet = new Set((Array.isArray(child.s.users) ? child.s.users.map(normalizeId) : []));
+          let linked = false;
+          for (let pi = 0; pi < parents.length; pi++) {
+            const parentSet = parentSets[pi];
+            // check intersection
+            let common = false;
+            for (const u of childSet) {
+              if (parentSet.has(u)) { common = true; break; }
+            }
+            if (common) {
+              // connect parent (parents[pi]) -> child
+              const pnode = parents[pi];
+              const path = linkPath({x:pnode.x, y:pnode.y}, {x:child.x, y:child.y});
+              g.append('path')
+                .attr('d', path)
+                .attr('fill','none')
+                .attr('stroke', randColor())
+                .attr('stroke-width', 2)
+                .attr('stroke-opacity', 0.9)
+                .attr('class','link');
+              linked = true;
+              break; // only to first matching parent
+            }
+          }
+          // if no parent matched: do NOT draw link (per your rule)
+        });
       }
-    });
 
-    // Assign branch colors: each level1 splitter (in sheet order) gets a color in PALETTE.
-    const branchColorMap = new Map(); // splitter unique key -> color
-    ponToLevel1.forEach((arr, ponKey) => {
-      // arr is in sheet order because we preserved order building nodes
-      arr.forEach((snode, idx) => {
-        const color = PALETTE[(idx) % PALETTE.length];
-        const key = `${snode.pon.data.rawPon}::L${snode.levelIndex}::I${snode.orderIndex}`;
-        branchColorMap.set(key, color);
-      });
-    });
+      // advance Y for next PON block
+      currentY += blockHeight + 12; // small gap between pon blocks
+    }); // pons loop
 
-    // For deeper levels, choose parent (level-1 parent search algorithm):
-    // For each splitter at level > 0, find candidate parents in previous level (same pon) and pick the one with MAX overlap in users.
-    // If overlap==0 → no link color (grey) and we won't draw parent->child link.
-    function usersSet(arr){ return new Set((arr||[]).map(String)); }
-    // create mapping for quick search: group splitters by pon and levelIndex
-    const mapByPonLevel = {};
-    splitterNodes.forEach(s => {
-      const key = `${s.pon.data.rawPon}::L${s.levelIndex}`;
-      if (!mapByPonLevel[key]) mapByPonLevel[key] = [];
-      mapByPonLevel[key].push(s);
-    });
+    // after all pons in a window, add some space
+    currentY += sectionGap;
+  }); // windows loop
 
-    // now, for each level>0 splitter, find parent in level-1 (same pon)
-    const links = []; // {source:node, target:node, color, overlap}
-    splitterNodes.forEach(s => {
-      if (s.levelIndex === 0) return; // L1 has no parent-level here
-      const prevKey = `${s.pon.data.rawPon}::L${s.levelIndex-1}`;
-      const parents = mapByPonLevel[prevKey] || [];
-      if (!parents.length) return;
-      // compute overlap with each parent
-      const sSet = usersSet(s.data.users);
-      let best = null; let bestOv = 0;
-      parents.forEach(pn => {
-        const pSet = usersSet(pn.data.users);
-        let ov = 0;
-        for (const u of sSet) if (pSet.has(u)) ov++;
-        if (ov > bestOv) { bestOv = ov; best = pn; }
-      });
-      if (best && bestOv > 0) {
-        // color inherited from parent's branch color if parent is L1 or parent has branchColor
-        const parentKey = `${best.pon.data.rawPon}::L${best.levelIndex}::I${best.orderIndex}`;
-        const color = branchColorMap.get(parentKey) || "#94a3b8";
-        links.push({ source: best, target: s, color, overlap: bestOv });
-      } else {
-        // no overlapping parent -> no link (we still display node but no arrow)
-      }
-    });
+  // enable pan/zoom to fit initial view
+  fitToView(svg.node(), g.node());
+}
 
-    // Additionally, draw Window -> PON links (one per pon). Color can be derived from first level1 splitter if present, else neutral.
-    const windowPonLinks = [];
-    ponNodes.forEach(pn => {
-      // find first level1 splitter under this pon to pick color
-      const l1Key = `${pn.data.rawPon}::L0`;
-      const l1 = mapByPonLevel[l1Key] || [];
-      const color = (l1.length ? branchColorMap.get(`${pn.data.rawPon}::L0::I0`) : "#6b7280") || "#6b7280";
-      windowPonLinks.push({ source: pn.parentWindow, target: pn, color });
-    });
+/* helper to produce a smooth horizontal-ish path between two points */
+function linkPath(src, dst) {
+  const midX = src.x + (dst.x - src.x) * 0.5;
+  // make slight vertical curvature
+  return `M ${src.x} ${src.y} C ${midX} ${src.y} ${midX} ${dst.y} ${dst.x} ${dst.y}`;
+}
 
-    // Draw column separators (dotted vertical lines) for clarity
-    for (let col=0; col<columnsCount; col++){
-      const cx = xOffset + col*colW;
-      g.append("line")
-        .attr("class","col-sep")
-        .attr("x1", cx + colW*0.98 )
-        .attr("x2", cx + colW*0.98 )
-        .attr("y1", -20)
-        .attr("y2", usableH + 40);
-    }
-
-    // Draw window nodes
-    const winG = g.append("g").attr("class","windows");
-    winG.selectAll("g.win")
-      .data(windowNodes)
-      .enter().append("g")
-      .attr("transform", d => `translate(${d.x},${d.y})`)
-      .each(function(d){
-        d3.select(this).append("circle")
-          .attr("r", 20)
-          .attr("fill", "#1d4ed8")
-          .attr("class","window-circle");
-        d3.select(this).append("text")
-          .attr("class","node-text")
-          .attr("dy","0.36em")
-          .attr("x", 28)
-          .text(d.data.rawWindow);
-      });
-
-    // Draw PON nodes
-    const ponG = g.append("g").attr("class","pons");
-    ponG.selectAll("g.pon")
-      .data(ponNodes)
-      .enter().append("g")
-      .attr("transform", d => `translate(${d.x},${d.y})`)
-      .each(function(d){
-        d3.select(this).append("circle")
-          .attr("r", 16)
-          .attr("fill", "#0f766e")
-          .attr("class","pon-circle");
-        d3.select(this).append("text")
-          .attr("class","node-text")
-          .attr("dy","0.36em")
-          .attr("x", 22)
-          .text(d.data.rawPon + (d.data.meta && d.data.meta.levelsCount ? ` (${d.data.meta.levelsCount})` : ""));
-      });
-
-    // Draw splitters (vertical stacks) as circles and labels
-    const splitsG = g.append("g").attr("class","splitters");
-    const splitSel = splitsG.selectAll("g.split")
-      .data(splitterNodes)
-      .enter().append("g")
-      .attr("transform", d => `translate(${d.x},${d.y})`)
-      .attr("cursor","pointer")
-      .each(function(d){
-        const primaryColorKey = `${d.pon.data.rawPon}::L${d.levelIndex}::I${d.orderIndex}`;
-        // default fill grey; visible color for node body is white, stroke color shows branch color
-        const strokeColor = (branchColorMap.get(primaryColorKey) || "#6b7280");
-        d3.select(this).append("circle")
-          .attr("r", 12)
-          .attr("fill", "#ffffff")
-          .attr("class","split-circle")
-          .attr("stroke", strokeColor)
-          .attr("stroke-width", 2.4);
-        d3.select(this).append("text")
-          .attr("class","node-text")
-          .attr("dy","0.36em")
-          .attr("x", 18)
-          .text(`${d.data.type}${d.data.recordId ? " — " + d.data.recordId : ""}`);
-        d3.select(this).append("text")
-          .attr("class","small-text")
-          .attr("dy","1.8em")
-          .attr("x", 18)
-          .text(`Users: ${d.data.total || 0}`);
-      })
-      .on("mousemove", (event,d)=> {
-        let html = `<strong>${d.data.type}${d.data.recordId ? " — " + d.data.recordId : ""}</strong><br/>PON: ${d.pon.data.rawPon}<br/>Users: <strong>${d.data.total||0}</strong>`;
-        tooltip.innerHTML = html;
-        tooltip.style.left = (event.pageX + 12) + "px";
-        tooltip.style.top  = (event.pageY + 8) + "px";
-        tooltip.style.opacity = 1;
-      })
-      .on("mouseout", ()=> tooltip.style.opacity = 0)
-      .on("click", (event, d) => {
-        // Build popup
-        const data = d.data;
-        const total = data.total || (data.users ? data.users.length : 0);
-        popupTitleEl.textContent = `${data.type}${data.recordId ? " — " + data.recordId : ""} — Users`;
-        popupPathEl.textContent = `${d.pon.data.rawPon} → level ${d.levelNumber}`;
-        popupMetaEl.innerHTML = `<div><strong>Total users:</strong> ${total}</div>`;
-        popupLinksEl.innerHTML = "";
-        buildUserTable(data);
-        popupModal.style.display = 'flex';
-      });
-
-    // DRAW Window->PON links first (behind splitters)
-    const linkG = g.append("g").attr("class","links");
-    linkG.selectAll("path.winpon")
-      .data(windowPonLinks)
-      .enter().append("path")
-      .attr("class","link winpon")
-      .attr("d", d => {
-        // simple cubic bezier from window to pon; small horizontal offset so they don't overlap
-        const sx = d.source.x, sy = d.source.y;
-        const tx = d.target.x, ty = d.target.y;
-        const mx = (sx + tx) / 2;
-        // compute small vertical offset based on index of PON under same window to avoid overlap
-        const siblings = d.source.children || [];
-        const idx = (siblings.indexOf(d.target) >= 0) ? siblings.indexOf(d.target) : 0;
-        const offset = (idx - (siblings.length-1)/2) * 6;
-        return `M${sx},${sy} C ${mx},${sy+offset} ${mx},${ty+offset} ${tx},${ty}`;
-      })
-      .attr("stroke", d => d.color)
-      .attr("fill", "none")
-      .attr("opacity", 0.95);
-
-    // DRAW splitter->splitter links (between adjacent levels) behind splitter nodes
-    // To reduce crossing, compute small vertical offset per link based on target.orderIndex - source.orderIndex
-    linkG.selectAll("path.slink")
-      .data(links)
-      .enter().append("path")
-      .attr("class","link slink")
-      .attr("d", d => {
-        const sx = d.source.x, sy = d.source.y;
-        const tx = d.target.x, ty = d.target.y;
-        // determine horizontal mid points
-        const mx = (sx + tx) / 2;
-        // offset slightly by difference in order to spread curves
-        const dy = (d.target.orderIndex - d.source.orderIndex) * 8;
-        return `M${sx},${sy} C ${mx},${sy+dy} ${mx},${ty+dy} ${tx},${ty}`;
-      })
-      .attr("stroke", d => d.color)
-      .attr("fill","none")
-      .attr("opacity", 0.95);
-
-    // finished - bring splitters on top (already appended later)
-    // fit view: attempt to center and scale if overflow
-    fitToView(svg, g, margin, width, height);
+/* fit to view — scale/translate to show all */
+function fitToView(svgNode, gNode) {
+  try {
+    const bbox = gNode.getBBox();
+    const svgW = svgNode.clientWidth || (window.innerWidth);
+    const svgH = svgNode.clientHeight || (window.innerHeight - 60);
+    if (!isFinite(bbox.width) || bbox.width === 0) return;
+    const scale = Math.min(1.0, Math.min(svgW / (bbox.width + 100), svgH / (bbox.height + 120)));
+    const tx = -bbox.x * scale + 20;
+    const ty = -bbox.y * scale + 20;
+    d3.select(svgNode).transition().duration(500).call(
+      d3.zoom().transform,
+      d3.zoomIdentity.translate(tx, ty).scale(scale)
+    );
+  } catch (e) {
+    // ignore
   }
+}
 
-  // fit to view simple function
-  function fitToView(svg, g, margin, totalW, totalH) {
-    try {
-      const bounds = g.node().getBBox();
-      const fullW = totalW - margin.left - margin.right;
-      const fullH = totalH - margin.top - margin.bottom;
-      const widthScale = fullW / (bounds.width + 60);
-      const heightScale = fullH / (bounds.height + 60);
-      const scale = Math.min(1.2, Math.max(0.5, Math.min(widthScale, heightScale)));
-      const tx = -bounds.x * scale + margin.left + 20;
-      const ty = -bounds.y * scale + margin.top + 20;
-      svg.transition().duration(600).call(d3.zoom().transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
-    } catch(e) {
-      // ignore
-    }
-  }
+/* =============== Tooltip & Popup =============== */
+function showTooltip(event, splitterObj, x, y) {
+  const t = tooltip;
+  t.style.left = (event.pageX + 12) + 'px';
+  t.style.top = (event.pageY + 8) + 'px';
+  const users = Array.isArray(splitterObj.users) ? splitterObj.users.length : 0;
+  t.innerHTML = `<strong>${splitterObj.type || splitterObj.recordId || 'Splitter'}</strong><br/>Record: ${splitterObj.recordId||'-'}<br/>Users: <strong>${users}</strong>`;
+  t.style.opacity = 1;
+}
+function hideTooltip() { tooltip.style.opacity = 0; }
 
-  // -------------- TOOLTIP & POPUP helpers (unchanged) --------------
-  function buildUserTable(data) {
-    const rawUsers = data.users || [];
-    const users = rawUsers.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? "") : String(u));
-    popupUsersTbl.innerHTML = `
-      <thead>
-        <tr><th style="width:36px">Sr</th><th>User ID</th><th>Name</th><th>Number</th><th>Location</th><th>Status</th></tr>
-      </thead>
-      <tbody></tbody>
-    `;
-    const tbody = popupUsersTbl.querySelector("tbody");
-    currentPopupRows = [];
-    users.forEach((rawId, idx) => {
-      const normId = normalizeId(rawId);
-      const dbRow = statusMaps[normId] || {};
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${idx+1}</td><td>${rawId}</td><td>${dbRow.name||""}</td><td>${dbRow.number||""}</td><td>${dbRow.location||""}</td><td>${dbRow.status||""}</td>`;
-      tbody.appendChild(tr);
-      currentPopupRows.push({ sr: idx+1, id: rawId, name: dbRow.name||"", number: dbRow.number||"", location: dbRow.location||"", status: dbRow.status||"" });
-    });
-  }
+function openPopup(splitterObj, ponName, winName) {
+  const modal = document.getElementById('popupModal');
+  document.getElementById('popupTitle').textContent = `${splitterObj.type || 'Splitter'} — Users`;
+  document.getElementById('popupPath').textContent = `${winName} → ${ponName} → ${splitterObj.recordId || ''}`;
+  document.getElementById('popupMeta').innerHTML = `<div><strong>Total users:</strong> ${splitterObj.total || (splitterObj.users ? splitterObj.users.length : 0)}</div>`;
+  // build users table
+  const tbl = document.getElementById('popupUsersTable');
+  const users = Array.isArray(splitterObj.users) ? splitterObj.users : [];
+  tbl.innerHTML = `<thead><tr><th>Sr</th><th>User ID</th></tr></thead><tbody>${users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')}</tbody>`;
+  modal.style.display = 'flex';
+}
 
-  function downloadScreenshot(){
-    const modalContent = document.querySelector("#popupModal .modal-content");
-    if (!modalContent) return;
-    html2canvas(modalContent).then(canvas=>{
-      const link = document.createElement("a");
-      const today = new Date().toISOString().slice(0,10);
-      link.download = `merotra-users-${today}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    });
-  }
+/* =============== Downloads =============== */
+function downloadCSV(){
+  const modal = document.getElementById('popupModal');
+  if (modal.style.display === 'none' || modal.style.display === '') return;
+  const tbl = document.getElementById('popupUsersTable');
+  if (!tbl) return;
+  const rows = Array.from(tbl.querySelectorAll('tr'));
+  if (!rows.length) return;
+  let csv = '';
+  rows.forEach((r, idx) => {
+    const cols = Array.from(r.querySelectorAll('th,td')).map(c => `"${(c.textContent||'').replace(/"/g,'""')}"`);
+    csv += cols.join(',') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'splitter-users.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
 
-  function downloadCSV(){
-    if (!currentPopupRows.length) return;
-    const header = ["Sr","User ID","Name","Number","Location","Status"];
-    const lines = [header.join(",")];
-    currentPopupRows.forEach(r=>{
-      const row = [
-        r.sr,
-        `"${r.id}"`,
-        `"${(r.name||"").replace(/"/g,'""')}"`,
-        `"${(r.number||"").replace(/"/g,'""')}"`,
-        `"${(r.location||"").replace(/"/g,'""')}"`,
-        `"${(r.status||"").replace(/"/g,'""')}"`
-      ];
-      lines.push(row.join(","));
-    });
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const today = new Date().toISOString().slice(0,10);
-    link.href = url; link.download = `merotra-users-${today}.csv`; link.click();
-    URL.revokeObjectURL(url);
-  }
+function downloadScreenshot(){
+  // simple screenshot of #chart using SVG serialization
+  const svg = document.querySelector('#chart svg');
+  if (!svg) return alert('No chart to screenshot');
+  const serializer = new XMLSerializer();
+  const source = serializer.serializeToString(svg);
+  const svgBlob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(svgBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'merotra-tree.svg'; a.click();
+  URL.revokeObjectURL(url);
+}
 
-  // small isSubset helper still used elsewhere if needed
-  function isSubset(aSet, bSet){
-    for (const x of aSet) {
-      if (!bSet.has(x)) return false;
-    }
-    return true;
-  }
+/* =============== INIT =============== */
+loadAndRender(false);
+window.addEventListener('resize', ()=> { if (rawJson) renderFromJson(rawJson); });
 
 </script>
 </body>
