@@ -3,40 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — Hierarchical PON Tree</title>
+  <title>Merotra — Hierarchical PON Tree (Levels preserved)</title>
 
-  <!-- D3 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
-
-  <!-- external adv.css (user provided) -->
   <link rel="stylesheet" href="adv.css">
-
-  <!-- small fallback / tweaks -->
   <style>
     :root{font-family:Inter,system-ui,Arial}
     body{margin:0;padding:0;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#111827}
-    /* Ensure chart fills remaining space */
     #chart { width:100%; height: calc(100vh - 64px); overflow:hidden; }
     .toolbar { display:flex; gap:8px; align-items:center }
-    .search-folded { cursor:pointer; background:transparent; border:none; color:#2563eb; font-weight:700 }
     .search-input { width:220px; padding:6px 10px; border-radius:8px; border:1px solid #e5e7eb; display:none }
-    @media (max-width:760px){
-      .search-input{ width:140px }
-    }
+    @media (max-width:760px){ .search-input{ width:140px } }
   </style>
 </head>
 <body>
 
   <div class="header">
     <div>
-      <div class="header-title">🌐 Merotra Network — Hierarchical Tree</div>
-      <div class="header-sub">Network → Window → OLT → PON → Level → Splitter</div>
+      <div class="header-title">🌐 Merotra Network — (Preserve Levels)</div>
+      <div class="header-sub">Network → Window → OLT → PON → Level columns (sheet order preserved)</div>
     </div>
 
     <div class="toolbar">
-      <select id="windowFilter" style="padding:6px;border-radius:8px;border:1px solid #e5e7eb"></select>
-      <select id="oltFilter" style="padding:6px;border-radius:8px;border:1px solid #e5e7eb"></select>
-      <select id="ponFilter" style="padding:6px;border-radius:8px;border:1px solid #e5e7eb"></select>
+      <select id="windowFilter"></select>
+      <select id="oltFilter"></select>
+      <select id="ponFilter"></select>
       <button id="clearFilters" class="btn btn-secondary">Clear</button>
 
       <button id="searchFold" class="search-folded">🔍 Search</button>
@@ -49,7 +40,6 @@
   <div id="chart"></div>
   <div id="tooltip" class="tooltip"></div>
 
-  <!-- Popup -->
   <div id="popupModal" class="popup-backdrop" style="display:none">
     <div class="modal-content">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
@@ -71,15 +61,13 @@
   </div>
 
 <script>
-/* ================== CONFIG ================== */
+/* ---------- Config / State ---------- */
 const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
-/* ================== STATE ================== */
 let rawJson = null;
 let colorByOlt = new Map();
-const tooltip = document.getElementById('tooltip');
 
-/* UI refs */
+const tooltip = document.getElementById('tooltip');
 const reloadBtn = document.getElementById('reloadBtn');
 const popupModal = document.getElementById('popupModal');
 const popupClose = document.getElementById('popupClose');
@@ -92,7 +80,6 @@ const windowFilter = document.getElementById('windowFilter');
 const oltFilter = document.getElementById('oltFilter');
 const ponFilter = document.getElementById('ponFilter');
 const clearFilters = document.getElementById('clearFilters');
-
 const searchFold = document.getElementById('searchFold');
 const searchInput = document.getElementById('searchInput');
 
@@ -107,541 +94,426 @@ ponFilter.addEventListener('change', applyFiltersAndRender);
 clearFilters.addEventListener('click', ()=> { windowFilter.value=''; oltFilter.value=''; ponFilter.value=''; applyFiltersAndRender(); });
 
 searchFold.addEventListener('click', ()=>{
-  if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-    searchInput.style.display = 'inline-block';
-    searchInput.focus();
-  } else {
-    searchInput.style.display = 'none';
-    searchInput.value = '';
-    applyFiltersAndRender();
-  }
+  if (searchInput.style.display === 'none' || searchInput.style.display === '') { searchInput.style.display='inline-block'; searchInput.focus(); }
+  else { searchInput.style.display='none'; searchInput.value=''; applyFiltersAndRender(); }
 });
 searchInput.addEventListener('input', ()=> { applyFiltersAndRender(); });
 
-/* ================== HELPERS ================== */
-
+/* ---------- Helpers ---------- */
 function normalizeId(v){ return (v ?? "").toString().trim(); }
+function getOltNumberFromPon(pon){ const m = (pon || "").match(/O(\d+)/i); return m ? m[1] : "0"; }
+function parsePonKey(pon){ const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i); if(!m) return {olt:9999, ip:9999, port:9999}; return {olt:+m[1], ip:+m[2], port:+m[3]}; }
+function ensureColorForOlt(olt){ if(!colorByOlt.has(olt)){ const idx=colorByOlt.size; const h=(idx*50)%360; colorByOlt.set(olt, `hsl(${h} 65% 45%)`); } return colorByOlt.get(olt); }
 
-function parsePonKey(pon){
-  // expect O<olt>I<ip>P<port>
-  const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i);
-  if (!m) return { olt:9999, ip:9999, port:9999 };
-  return { olt: +m[1], ip: +m[2], port: +m[3] };
-}
-
-function getOltNumberFromPon(pon){
-  const m = (pon || "").match(/O(\d+)/i);
-  return m ? m[1] : "0";
-}
-
-function ensureColorForOlt(olt){
-  if (!colorByOlt.has(olt)) {
-    // create consistent palette with HSL spaced by map size
-    const idx = colorByOlt.size;
-    const h = (idx * 47) % 360; // spacing
-    const color = `hsl(${h} 65% 45%)`;
-    colorByOlt.set(olt, color);
-  }
-  return colorByOlt.get(olt);
-}
-
-/* ================== LOAD + TRANSFORM ================== */
-
+/* ---------- Load/Filter/Transform ---------- */
 async function loadAndRender(showToast=false){
-  try {
+  try{
     setLoading(true);
     const res = await fetch(BOARD_URL);
-    if (!res.ok) throw new Error('Board API fetch failed: ' + res.status);
+    if(!res.ok) throw new Error('Fetch failed: '+res.status);
     const j = await res.json();
     rawJson = j;
     colorByOlt = new Map();
     buildFiltersFromJson(j);
-    const filtered = applyClientFilters(j);
-    const root = transformToHierarchy(filtered);
-    renderTree(root);
-    if (showToast) console.info('Loaded:', j.summary || {});
-  } catch (err) {
-    console.error(err);
-    alert('Load failed: ' + (err.message || err));
-  } finally {
-    setLoading(false);
-  }
+    applyFiltersAndRender();
+    if(showToast) console.info('Loaded', j.summary || {});
+  }catch(e){ console.error(e); alert('Load error: '+(e.message||e)) } finally { setLoading(false); }
 }
+function setLoading(flag){ reloadBtn.textContent = flag? 'Loading...':'🔄 Refresh'; reloadBtn.disabled = flag; }
 
-function setLoading(flag){
-  reloadBtn.textContent = flag ? 'Loading...' : '🔄 Refresh';
-  reloadBtn.disabled = flag;
-}
-
-/* Build filter dropdowns */
 function buildFiltersFromJson(j){
-  // windows, olts, pons
-  const winSet = new Set();
-  const oltSet = new Set();
-  const ponSet = new Set();
-
-  (j.windows || []).forEach(win=>{
-    winSet.add(win.window || '');
-    (win.pons || []).forEach(p=>{
-      ponSet.add(p.pon || '');
-      oltSet.add(getOltNumberFromPon(p.pon || ''));
-    });
-  });
-
-  // populate selects (add default blank option)
-  function populate(sel, setVals){
-    const prev = sel.value || '';
-    sel.innerHTML = '';
-    const opt = document.createElement('option'); opt.value=''; opt.textContent='(all)'; sel.appendChild(opt);
-    Array.from(setVals).sort().forEach(v=>{
-      const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o);
-    });
-    if (prev) sel.value = prev;
-  }
-  populate(windowFilter, winSet);
-  populate(oltFilter, Array.from(oltSet).sort((a,b)=>+a-+b));
-  populate(ponFilter, ponSet);
+  const winSet=new Set(), oltSet=new Set(), ponSet=new Set();
+  (j.windows||[]).forEach(win=>{ winSet.add(win.window||''); (win.pons||[]).forEach(p=>{ ponSet.add(p.pon||''); oltSet.add(getOltNumberFromPon(p.pon||'')); });});
+  populateSelect(windowFilter, ['', ...Array.from(winSet).sort()], '(all)');
+  populateSelect(oltFilter, ['', ...Array.from(oltSet).sort((a,b)=>+a-+b)], '(all)');
+  populateSelect(ponFilter, ['', ...Array.from(ponSet).sort()], '(all)');
+}
+function populateSelect(sel, arr, defaultLabel='(all)'){
+  const prev = sel.value||'';
+  sel.innerHTML=''; const opt=document.createElement('option'); opt.value=''; opt.textContent=defaultLabel; sel.appendChild(opt);
+  arr.filter(v=>v!=='').forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+  if(prev) sel.value = prev;
 }
 
-/* Apply client side filters + search */
+function applyFiltersAndRender(){
+  if(!rawJson) return;
+  const filtered = applyClientFilters(rawJson);
+  const root = transformToHierarchy(filtered);
+  renderHybridTree(root);
+}
+
 function applyClientFilters(j){
-  if (!j || !Array.isArray(j.windows)) return { windows: [] };
-  const wsel = windowFilter.value;
-  const oltsel = oltFilter.value;
-  const ponsel = ponFilter.value;
-  const search = (searchInput.value || '').trim().toLowerCase();
-
-  const out = { windows: [] };
-
-  j.windows.forEach(win=>{
-    if (wsel && win.window !== wsel) return;
-    const newWin = { window: win.window, pons: [] };
-    (win.pons || []).forEach(p=>{
-      if (ponsel && p.pon !== ponsel) return;
-      if (oltsel && getOltNumberFromPon(p.pon || '') !== oltsel) return;
-
-      // filter levels: only include levels with splitters array length>0
-      const newLevels = (p.levels || []).filter(l => Array.isArray(l.splitters) && l.splitters.length > 0)
-                                        .map(l => ({ level: l.level, splitters: l.splitters }));
-
-      if (newLevels.length === 0 && search) {
-        // still keep if search matches any user under this PON (deep scan)
-        const matches = deepSearchMatch(p, search);
-        if (!matches) return;
-      } else if (newLevels.length === 0) {
-        // If no levels AND no search, still show PON (user wanted PON static)
-        // but we will keep PON with empty levels only if user hasn't filtered it out (we kept earlier)
+  const wsel=windowFilter.value; const oltsel=oltFilter.value; const ponsel=ponFilter.value; const search=(searchInput.value||'').trim().toLowerCase();
+  const out={windows:[]};
+  (j.windows||[]).forEach(win=>{
+    if(wsel && win.window !== wsel) return;
+    const newWin={window:win.window, pons:[]};
+    (win.pons||[]).forEach(p=>{
+      if(ponsel && p.pon !== ponsel) return;
+      if(oltsel && getOltNumberFromPon(p.pon||'') !== oltsel) return;
+      const newLevels=(p.levels||[]).filter(l=>Array.isArray(l.splitters) && l.splitters.length>0).map(l=>({level:l.level, splitters:l.splitters}));
+      if(newLevels.length===0 && search){
+        const matched=deepSearchMatch(p, search);
+        if(!matched) return;
       }
-
-      newWin.pons.push(Object.assign({}, p, { levels: newLevels }));
+      newWin.pons.push(Object.assign({}, p, {levels:newLevels}));
     });
-
-    if (newWin.pons.length > 0 || !wsel) {
-      out.windows.push(newWin);
-    }
+    if(newWin.pons.length>0 || !wsel) out.windows.push(newWin);
   });
   return out;
 }
-
-/* deep scan for search term in users */
 function deepSearchMatch(pObj, term){
-  if (!term) return false;
-  for (const lvl of (pObj.levels || [])){
-    for (const sp of (lvl.splitters || [])){
-      for (const u of (sp.users || [])){
-        if (String(u).toLowerCase().includes(term)) return true;
-      }
-    }
-  }
+  if(!term) return false;
+  for(const lvl of (pObj.levels||[])) for(const sp of (lvl.splitters||[])) for(const u of (sp.users||[])) if(String(u).toLowerCase().includes(term)) return true;
   return false;
 }
 
-/* Transform JSON to true tree hierarchy:
-   Network -> Window -> OLT (single per olt per window) -> PON -> level -> splitter
-*/
+/* Transform to hierarchy up to PON; keep levels as separate array on PON */
 function transformToHierarchy(j){
-  const root = { name: "Merotra Network", type: "network", children: [] };
-
-  (j.windows || []).forEach(win=>{
-    const winNode = { name: win.window || 'Window', type: 'window', children: [] };
-
-    // group PONs under their OLT numbers for this window
-    const oltMap = {}; // oltNum -> { name: 'OLT-{n}', children: [ponNodes] }
-    (win.pons || []).forEach(p=>{
-      const ponKey = p.pon || 'NOPON';
-      const { olt, ip, port } = parsePonKey(ponKey);
-
-      // create pon node (levels - omit empty levels)
-      const levels = (p.levels || []).filter(l => Array.isArray(l.splitters) && l.splitters.length > 0)
-                                     .map(l => {
-                                       return {
-                                         name: 'Level ' + l.level,
-                                         levelNumber: l.level,
-                                         type: 'level',
-                                         children: l.splitters.map(sp => {
-                                           return {
-                                             name: sp.type ? sp.type : (sp.recordId || 'Splitter'),
-                                             type: 'splitter',
-                                             recordId: sp.recordId || '',
-                                             users: (sp.users || []).map(u => String(u)),
-                                             total: sp.total || (Array.isArray(sp.users) ? sp.users.length : 0)
-                                           };
-                                         })
-                                       };
-                                     });
-
-      const ponNode = {
-        name: ponKey,
-        type: 'pon',
-        meta: { olt, ip, port },
-        children: levels // may be empty array
-      };
-
-      const oltNum = String(olt);
-      if (!oltMap[oltNum]) oltMap[oltNum] = { name: 'OLT-' + oltNum, type: 'olt', children: [], meta:{olt:oltNum} };
+  const root = { name:'Merotra Network', type:'network', children:[] };
+  (j.windows||[]).forEach(win=>{
+    const winNode = { name: win.window || 'Window', type:'window', children:[] };
+    // group PONs by OLT
+    const oltMap = {};
+    (win.pons||[]).forEach(p=>{
+      const ponKey = p.pon||'NOPON';
+      const meta = parsePonKey(ponKey);
+      const levels = (p.levels||[]).filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0).map(l=>({
+        level: l.level,
+        splitters: (l.splitters||[]).map(sp=>({
+          recordId: sp.recordId||'',
+          type: sp.type||'',
+          users: (sp.users||[]).map(u=>String(u)),
+          total: sp.total || ((sp.users||[]).length || 0)
+        }))
+      }));
+      const ponNode = { name: ponKey, type:'pon', meta, levels };
+      const oltNum = String(meta.olt);
+      if(!oltMap[oltNum]) oltMap[oltNum] = { name: 'OLT-' + oltNum, type:'olt', meta:{olt:oltNum}, children: [] };
       oltMap[oltNum].children.push(ponNode);
     });
-
-    // sort PONs within each OLT by OLT/IP/Port (we already have pon meta)
-    Object.values(oltMap).forEach(oltNode=>{
-      oltNode.children.sort((a,b)=> {
-        const A = a.meta || {}, B = b.meta || {};
-        if (A.olt !== B.olt) return A.olt - B.olt;
-        if (A.ip !== B.ip) return A.ip - B.ip;
-        return A.port - B.port;
+    // sort ponds inside each olt
+    Object.values(oltMap).forEach(oltn=>{
+      oltn.children.sort((a,b)=> {
+        const A=a.meta||{}, B=b.meta||{};
+        if(A.olt!==B.olt) return A.olt-B.olt;
+        if(A.ip!==B.ip) return A.ip-B.ip;
+        return A.port-B.port;
       });
     });
-
-    // push sorted OLTs into window node (sorted by olt number)
-    Object.values(oltMap).sort((a,b)=> (+a.meta.olt) - (+b.meta.olt)).forEach(oltNode=>{
-      winNode.children.push(oltNode);
-    });
-
+    // push OLTs sorted by olt number
+    Object.values(oltMap).sort((a,b)=> (+a.meta.olt)-(+b.meta.olt)).forEach(x=>winNode.children.push(x));
     root.children.push(winNode);
   });
-
   return root;
 }
 
-/* ================== RENDER (D3 Tree, vertical top->down) ================== */
-
-function renderTree(rootData){
-  // clear chart
+/* ---------- Render: hybrid approach ----------
+   - Use d3.tree to layout Network->Window->OLT->PON vertically (top->down)
+   - For each PON, draw its levels as columns to the right of the PON (preserving exact order and sheet order)
+   - This preserves level ordering and avoids disturbing splitter-level system
+*/
+function renderHybridTree(rootData){
+  d3.select('#chart').selectAll('*').remove();
   const chart = d3.select('#chart');
-  chart.selectAll('*').remove();
-
-  // compute sizes and dynamic spacing to avoid overlaps:
-  // compute approximate max breadth at any depth to set nodeGap and levelGap
-  function computeBreadth(node, depth=0, map={}){
-    map[depth] = (map[depth] || 0) + (node.type === 'splitter' ? 1 : 1);
-    (node.children || []).forEach(ch => computeBreadth(ch, depth+1, map));
-    return map;
-  }
-  const breadthMap = computeBreadth(rootData, 0, {});
-  const maxAcross = Math.max(...Object.values(breadthMap), 1);
-
-  // layout params (scale with content)
   const width = chart.node().clientWidth || window.innerWidth;
   const height = chart.node().clientHeight || (window.innerHeight - 60);
-  const levelGap = Math.max(160, Math.min(260, Math.floor(width / 6))); // vertical gap between depths
-  const nodeGap = Math.max(36, Math.min(80, Math.floor(height / (maxAcross + 2)))); // vertical spacing between nodes at same depth
 
+  // Small layout tuning
+  const levelColWidth = 220;     // horizontal gap for each level column after PON
+  const ponColGap = 140;         // space between PON column and first level column
+  const nodeVgapBase = 56;      // base vertical gap
+  const rootPadding = 40;
+
+  // create d3.hierarchy for network->window->olt->pon
+  const treeRoot = d3.hierarchy(rootData, d => d.children && d.children.length ? d.children : null);
+
+  // nodeSize: y (depth spacing) and x (vertical spacing)
+  const nodeVerticalGap = Math.max(36, Math.min(80, Math.floor(height / (Math.max(6, countLeaves(rootData)) + 2))));
+  const treeLayout = d3.tree().nodeSize([nodeVerticalGap, 140]); // [x,y] where x is vertical, y is horizontal
+  treeLayout(treeRoot);
+
+  // Prepare SVG & group
   const svg = chart.append('svg').attr('width','100%').attr('height','100%').attr('viewBox',`0 0 ${Math.max(1200, width)} ${Math.max(800, height)}`);
-  const g = svg.append('g').attr('transform','translate(40,40)');
+  const g = svg.append('g').attr('transform', `translate(${rootPadding}, ${rootPadding})`);
 
-  // create d3.hierarchy from our rootData but treat splitter children as leaf nodes (they may have no children)
-  const d3root = d3.hierarchy(rootData, d => d.children && d.children.length ? d.children : null);
+  // compute scale-fit later
+  const nodes = treeRoot.descendants();
+  const links = treeRoot.links();
 
-  // custom nodeSize by depth: vertical distance bigger to avoid overlaps
-  const treeLayout = d3.tree().nodeSize([nodeGap, levelGap]); // [y, x]?? but for d3.tree default is x,y -> we'll map accordingly
-  treeLayout(d3root);
-
-  // The d3.tree has placed nodes with x (vertical coord) and y (horizontal). We want top->down, so use x values for y and y for x.
-  // compute bounds to center
-  const nodes = d3root.descendants();
-  const links = d3root.links();
-
-  // normalize coordinates to place root at top center
-  // compute min/max
-  const minX = d3.min(nodes, d => d.x);
-  const maxX = d3.max(nodes, d => d.x);
-  const minY = d3.min(nodes, d => d.y);
-  const maxY = d3.max(nodes, d => d.y);
-
-  // scale/translate to fit container
-  const availableW = Math.max(1000, width - 120);
-  const availableH = Math.max(700, height - 120);
-  const scaleX = availableW / Math.max(1, maxY - minY + levelGap);
-  const scaleY = availableH / Math.max(1, maxX - minX + nodeGap);
-  const scale = Math.min(scaleX, scaleY, 1.6);
-
-  const tx = -minY * scale + 40;
-  const ty = -minX * scale + 20;
-
-  g.attr('transform', `translate(${tx},${ty}) scale(${scale})`);
-
-  // draw links (curved) with color per OLT branch.
-  // We'll color link by nearest ancestor of link source that is an 'olt' node; fallback to gray.
-  function colorForLink(d){
-    // d: link object with source and target (d.source.data)
-    // find ancestor that is olt (source->root)
-    let node = d.source;
-    while (node && node.data && node.data.type !== 'olt') node = node.parent;
-    const oltNum = node && node.data && node.data.meta ? node.data.meta.olt : (node && node.data && node.data.name && node.data.name.replace('OLT-','')) || '0';
-    return ensureColorForOlt(oltNum);
+  // Draw hierarchical links (network->window->olt->pon)
+  function diagSimple(d){
+    const sx = d.source.y, sy = d.source.x, tx = d.target.y, ty = d.target.x;
+    const midX = (sx + tx) / 2;
+    return `M ${sx} ${sy} C ${midX} ${sy} ${midX} ${ty} ${tx} ${ty}`;
   }
 
-  // helper to produce smooth path top->down
-  function diagonal(d){
-    // source (sx, sy), target (tx, ty)
-    const sx = d.source.y;
-    const sy = d.source.x;
-    const txp = d.target.y;
-    const typ = d.target.x;
-    const midY = (sy + typ) / 2;
-    // smooth curve using cubic bezier from (sx,sy) to (tx,ty)
-    return `M ${sx} ${sy} C ${sx} ${midY} ${txp} ${midY} ${txp} ${typ}`;
-  }
-
-  // minimize crossing by drawing links grouped by color/branch: draw per OLT first
-  // but simple approach: draw all links with opacity and slight stroke-width
-  g.selectAll('.link')
+  g.selectAll('.hwlink')
     .data(links)
-    .enter()
-    .append('path')
-      .attr('class','link')
-      .attr('d', diagonal)
-      .attr('fill','none')
-      .attr('stroke', d => colorForLink(d))
-      .attr('stroke-width', 2)
-      .attr('stroke-opacity', 0.9);
+    .enter().append('path')
+    .attr('class','link hwlink')
+    .attr('d', diagSimple)
+    .attr('fill','none')
+    .attr('stroke','#94a3b8')
+    .attr('stroke-width',2)
+    .attr('stroke-opacity',0.9);
 
-  // nodes
-  const node = g.selectAll('.node')
-    .data(nodes)
-    .enter()
-    .append('g')
-      .attr('class','node')
-      .attr('transform', d => `translate(${d.y},${d.x})`)
-      .style('cursor','pointer')
-      .on('mousemove', (event, d) => showTooltip(event, d.data))
-      .on('mouseout', hideTooltip)
-      .on('click', (event, d) => handleNodeClick(d.data, d));
+  // Draw nodes (network/window/olt/pon). We'll later draw level columns to the right of pon nodes.
+  const node = g.selectAll('.hnode').data(nodes).enter().append('g')
+    .attr('class','node hnode')
+    .attr('transform', d => `translate(${d.y},${d.x})`);
 
-  // circle styling by type
   node.append('circle')
     .attr('r', d => {
-      if (d.data.type === 'network') return 22;
-      if (d.data.type === 'window') return 18;
-      if (d.data.type === 'olt') return 16;
-      if (d.data.type === 'pon') return 14;
-      if (d.data.type === 'level') return 0; // levels are not shown as nodes (we don't want level nodes per user request)
-      if (d.data.type === 'splitter') return 12;
+      if(d.data.type==='network') return 22;
+      if(d.data.type==='window') return 18;
+      if(d.data.type==='olt') return 16;
+      if(d.data.type==='pon') return 14;
       return 10;
     })
     .attr('fill', d => {
-      if (d.data.type === 'network') return '#1e3a8a';
-      if (d.data.type === 'window') return '#1d4ed8';
-      if (d.data.type === 'olt') return ensureColorForOlt(d.data.meta ? d.data.meta.olt : (getOltNumberFromPon(d.data.name)||'0'));
-      if (d.data.type === 'pon') return '#0f766e';
-      if (d.data.type === 'splitter') return (d.data.total && d.data.total>0) ? '#10b981' : '#6b7280';
+      if(d.data.type==='network') return '#1e3a8a';
+      if(d.data.type==='window') return '#1d4ed8';
+      if(d.data.type==='olt') return ensureColorForOlt(d.data.meta ? d.data.meta.olt : getOltNumberFromPon(d.data.name || '0'));
+      if(d.data.type==='pon') return '#0f766e';
       return '#94a3b8';
     })
-    .attr('stroke','#fff')
-    .attr('stroke-width', 2)
-    .style('pointer-events', d=> d.data.type === 'level' ? 'none' : 'auto');
+    .attr('stroke','#fff').attr('stroke-width',2)
+    .style('cursor','pointer');
 
-  // labels
   node.append('text')
-    .attr('dy', d => {
-      if (d.data.type === 'network') return '0.35em';
-      return '0.31em';
-    })
-    .attr('x', d => {
-      // position text to the right for most, but for network put centered
-      if (d.data.type === 'network') return 0;
-      return d.children ? (d.data.type === 'splitter' ? 18 : 18) : 18;
-    })
-    .attr('text-anchor', d => (d.data.type === 'network' ? 'middle' : 'start'))
-    .style('font-size', d => {
-      if (d.data.type === 'network') return '14px';
-      if (d.data.type === 'window') return '13px';
-      if (d.data.type === 'olt') return '12px';
-      if (d.data.type === 'pon') return '12px';
-      if (d.data.type === 'splitter') return '11px';
-      return '11px';
-    })
-    .style('font-weight', d => (d.data.type === 'network' || d.data.type === 'window') ? 800 : 600)
+    .attr('x', d => d.data.type==='network'?0:18)
+    .attr('y', d => d.data.type==='network'?4:4)
+    .attr('text-anchor', d => d.data.type==='network' ? 'middle' : 'start')
+    .style('font-size', d => (d.data.type==='network'? '14px' : (d.data.type==='window'?'13px': '12px')))
+    .style('font-weight', d => (d.data.type==='network' || d.data.type==='window') ? 800 : 600)
     .text(d => {
-      if (d.data.type === 'network') return d.data.name;
-      if (d.data.type === 'window') return d.data.name;
-      if (d.data.type === 'olt') return d.data.name; // shows OLT-{n}
-      if (d.data.type === 'pon') return d.data.name;
-      if (d.data.type === 'splitter') return `${d.data.name}${d.data.total? ` (${d.data.total})` : ''}`;
+      if(d.data.type==='network') return d.data.name;
+      if(d.data.type==='window') return d.data.name;
       return d.data.name;
+    })
+    .style('pointer-events','none');
+
+  // After drawing hierarchical nodes, for each PON draw level columns to the right, preserving level order & splitter sheet order
+  // We'll compute positions for each PON's column layout independently using the PON's vertical center as base.
+  const ponNodes = nodes.filter(n => n.data && n.data.type === 'pon');
+
+  // For links between PON -> level1 and levelN->levelN+1, we need to store created splitter positions for linking.
+  const allSplitterPositions = []; // {pon, level, splitterIndex, x,y, data}
+
+  ponNodes.forEach(ponN => {
+    const p = ponN.data;
+    const baseX = ponN.y; // x-position (horizontal) of PON in tree
+    const baseY = ponN.x; // y-position (vertical) of PON in tree
+
+    const levels = p.levels || [];
+    // skip PONs with no levels? still draw nothing on right but keep pon
+    if(levels.length === 0) return;
+
+    // starting X for first level column
+    const firstColX = baseX + ponColGap;
+
+    // For each level compute vertical positions of its splitters.
+    // We'll center all splitters around baseY and avoid overlaps by using a nodeVgap scaled by the number of splitters.
+    levels.forEach((lvl, li) => {
+      const splitters = lvl.splitters || [];
+      const colX = firstColX + li * levelColWidth;
+      const count = Math.max(1, splitters.length);
+      // spacing: increase if many splitters so they don't overlap
+      const vGap = Math.max(nodeVgapBase, Math.ceil((count * 12))); // min 56, but grows for many splitters
+      // total height
+      const totalHeight = (count - 1) * vGap;
+      const startY = baseY - (totalHeight / 2);
+
+      splitters.forEach((sp, si) => {
+        const sx = colX, sy = startY + si * vGap;
+        allSplitterPositions.push({ pon: p.name, level: lvl.level, idx: si, x: sx, y: sy, data: sp });
+      });
+    });
+  });
+
+  // draw splitter nodes (circles + labels) in columns
+  const spG = g.append('g').attr('class','splitters-group');
+
+  spG.selectAll('g.splitter').data(allSplitterPositions).enter().append('g')
+    .attr('class','splitter')
+    .attr('transform', d => `translate(${d.x},${d.y})`)
+    .style('cursor','pointer')
+    .on('mousemove', (event,d) => showTooltip(event, { name: d.data.type || d.data.recordId, type:'splitter', total:d.data.total }))
+    .on('mouseout', hideTooltip)
+    .on('click', (event,d) => openPopup(d.data, d.pon, findWindowForPon(d.pon)) )
+    .each(function(d){
+      const gnode = d3.select(this);
+      gnode.append('circle').attr('r', 12)
+        .attr('fill', d.data.total && d.data.total>0 ? '#10b981' : '#6b7280')
+        .attr('stroke','#fff').attr('stroke-width',2);
+      gnode.append('text').attr('x', 18).attr('y', 4).attr('font-size',11).attr('fill','#0f172a').text(`${d.data.type}${d.data.total?` (${d.data.total})`:''}`);
+      if(d.data.recordId){
+        gnode.append('text').attr('x', 0).attr('y', 20).attr('font-size',10).attr('fill','#64748b').attr('text-anchor','middle').text(d.data.recordId);
+      }
     });
 
-  // hide level-type nodes (we used their children directly as splitters) - but some nodes may be 'level' visible in hierarchy; remove circles and labels for level nodes
-  // (We created level nodes earlier in transformToHierarchy; in d3.hierarchy they appear. To avoid duplicate display, we hide level nodes visually by setting opacity 0)
-  node.filter(d => d.data.type === 'level').selectAll('circle,text').attr('opacity',0);
+  // draw links:
+  // 1) PON -> all level1 splitters (always)
+  ponNodes.forEach(ponN => {
+    const p = ponN.data;
+    const ponX = ponN.y, ponY = ponN.x;
+    const firstLevelSplitters = allSplitterPositions.filter(s => s.pon === p.name && s.level === (p.levels[0] && p.levels[0].level));
+    firstLevelSplitters.forEach(child => {
+      const path = pathBezier({x:ponX, y:ponY}, {x:child.x, y:child.y});
+      g.append('path').attr('d', path).attr('fill','none').attr('stroke', ensureColorForOlt(p.meta? p.meta.olt : getOltNumberFromPon(p.name))).attr('stroke-width',2).attr('stroke-opacity',0.95);
+    });
+  });
 
-  // interactions: click on splitters or pon shows popup
-  function handleNodeClick(data, d3node){
-    if (!data) return;
-    if (data.type === 'splitter') openPopup(data, findPonAncestor(d3node), findWindowAncestor(d3node));
-    else if (data.type === 'pon') openPopupForPon(data, findPonAncestor(d3node), findWindowAncestor(d3node));
-  }
+  // 2) levelN -> levelN+1 : connect each child splitter to the FIRST previous-level splitter that shares any user (preserve your rule). If no parent match -> no link.
+  // For each PON, process its levels sequentially.
+  ponNodes.forEach(ponN => {
+    const p = ponN.data;
+    const levels = p.levels || [];
+    for(let li=0; li<levels.length-1; li++){
+      const parentLevel = levels[li];
+      const childLevel = levels[li+1];
+      const parents = allSplitterPositions.filter(s => s.pon===p.name && s.level===parentLevel.level);
+      const children = allSplitterPositions.filter(s => s.pon===p.name && s.level===childLevel.level);
 
-  function findPonAncestor(d){
-    let node = d;
-    while (node && node.data && node.data.type !== 'pon') node = node.parent;
-    return node ? node.data.name : '';
-  }
-  function findWindowAncestor(d){
-    let node = d;
-    while (node && node.data && node.data.type !== 'window') node = node.parent;
-    return node ? node.data.name : '';
-  }
+      // build parent sets
+      const parentSets = parents.map(pr => new Set((pr.data.users||[]).map(u => normalizeId(u))));
+      children.forEach(ch => {
+        const chSet = new Set((ch.data.users||[]).map(u => normalizeId(u)));
+        let linked=false;
+        for(let pi=0; pi<parents.length; pi++){
+          const parentSet = parentSets[pi];
+          // check intersection
+          let hasCommon = false;
+          for(const u of chSet){ if(parentSet.has(u)){ hasCommon = true; break; } }
+          if(hasCommon){
+            const pnode = parents[pi];
+            const path = pathBezier({x:pnode.x, y:pnode.y}, {x:ch.x, y:ch.y});
+            g.append('path').attr('d', path).attr('fill','none').attr('stroke', ensureColorForOlt(p.meta? p.meta.olt : getOltNumberFromPon(p.name))).attr('stroke-width',2).attr('stroke-opacity',0.95);
+            linked=true; break;
+          }
+        }
+        // if not linked, do not draw (per your rule)
+      });
+    }
+  });
 
-  // fit to view by resetting transform with d3.zoom
-  // Attach zoom behavior for user to pan/zoom after initial fit
+  // Fit / zoom: attach zoom behavior and auto-fit initial view
   const zoom = d3.zoom().scaleExtent([0.2, 3]).on('zoom', (evt) => g.attr('transform', evt.transform));
   svg.call(zoom);
 
-  // initial auto-fit: compute bbox and set transform to center vertically (top->down)
   try {
     const bbox = g.node().getBBox();
     const svgW = svg.node().clientWidth || width;
     const svgH = svg.node().clientHeight || height;
-    const sx = svgW / (bbox.width + 160);
-    const sy = svgH / (bbox.height + 160);
-    const s0 = Math.min(sx, sy, 1.2);
-    const tx0 = -bbox.x * s0 + 40;
+    const sx = svgW / (bbox.width + 120);
+    const sy = svgH / (bbox.height + 120);
+    const s0 = Math.min(sx, sy, 1.0);
+    const tx0 = -bbox.x * s0 + 20;
     const ty0 = -bbox.y * s0 + 20;
-    svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx0,ty0).scale(s0));
+    svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity.translate(tx0,ty0).scale(s0));
   } catch(e){ /* ignore */ }
 
-  // After render, apply search highlight if active
+  // After render, apply search highlight
   applySearchHighlight();
 }
 
-/* ================== Tooltip & Popup ================== */
+/* ---------- Utility path builder (gentle bezier) ---------- */
+function pathBezier(src, dst){
+  const sx = src.x, sy = src.y, tx = dst.x, ty = dst.y;
+  const midX = sx + (tx - sx) * 0.5;
+  return `M ${sx} ${sy} C ${midX} ${sy} ${midX} ${ty} ${tx} ${ty}`;
+}
 
+/* count leaves helper (approx for spacing) */
+function countLeaves(node){
+  if(!node) return 1;
+  if(!node.children || node.children.length===0) return 1;
+  return node.children.reduce((s,c)=> s + countLeaves(c), 0);
+}
+
+/* find window for a PON name (simple scan in rawJson) */
+function findWindowForPon(ponName){
+  if(!rawJson) return '';
+  for(const win of (rawJson.windows||[])){
+    for(const p of (win.pons||[])) if(p.pon === ponName) return win.window;
+  }
+  return '';
+}
+
+/* ---------- Tooltip / Popup ---------- */
 function showTooltip(event, data){
-  const t = tooltip;
-  if (!data) { t.style.opacity = 0; return; }
-  let html = `<strong>${data.name || ''}</strong><br/>Type: ${data.type || ''}`;
-  if (data.type === 'splitter') {
-    html += `<br/>Record: ${data.recordId || '-'}<br/>Users: <strong>${data.total || (data.users?data.users.length:0)}</strong>`;
-  }
-  if (data.type === 'pon') {
-    html += `<br/>PON: ${data.name}`;
-  }
-  t.innerHTML = html;
-  t.style.left = (event.pageX + 12) + 'px';
-  t.style.top = (event.pageY + 8) + 'px';
-  t.style.opacity = 1;
+  if(!data){ tooltip.style.opacity = 0; return; }
+  let html = `<strong>${data.name || data.type || ''}</strong><br/>Type: ${data.type||''}`;
+  if(data.type === 'splitter') html += `<br/>Users: <strong>${data.total || (data.users?data.users.length:0)}</strong>`;
+  tooltip.innerHTML = html;
+  tooltip.style.left = (event.pageX + 12) + 'px';
+  tooltip.style.top = (event.pageY + 8) + 'px';
+  tooltip.style.opacity = 1;
 }
 function hideTooltip(){ tooltip.style.opacity = 0; }
 
-function openPopup(splitterObj, ponName, winName){
+function openPopup(spObj, ponName, winName){
   popupModal.style.display = 'flex';
-  popupTitle.textContent = `${splitterObj.type || 'Splitter'} — Users`;
-  popupPath.textContent = `${winName || ''} → ${ponName || ''} → ${splitterObj.recordId || ''}`;
-  popupMeta.innerHTML = `<div><strong>Total users:</strong> ${splitterObj.total || (splitterObj.users ? splitterObj.users.length : 0)}</div>`;
-  const users = Array.isArray(splitterObj.users) ? splitterObj.users : [];
+  popupTitle.textContent = `${spObj.type || 'Splitter'} — Users`;
+  popupPath.textContent = `${winName||''} → ${ponName||''} → ${spObj.recordId||''}`;
+  popupMeta.innerHTML = `<div><strong>Total users:</strong> ${spObj.total || (spObj.users?spObj.users.length:0)}</div>`;
+  const users = Array.isArray(spObj.users) ? spObj.users : [];
   popupUsers.innerHTML = `<thead><tr><th>Sr</th><th>User ID</th></tr></thead><tbody>${users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')}</tbody>`;
 }
 
-function openPopupForPon(ponObj, ponName, winName){
-  popupModal.style.display = 'flex';
-  popupTitle.textContent = `PON — ${ponObj.name}`;
-  popupPath.textContent = `${winName || ''} → ${ponName || ''}`;
-  // collect all users under this PON
-  const users = [];
-  (ponObj.children || []).forEach(lvl => {
-    (lvl.children || []).forEach(sp => {
-      (sp.users || []).forEach(u => users.push(u));
-    });
-  });
-  popupMeta.innerHTML = `<div><strong>Total users (unique):</strong> ${new Set(users).size}</div>`;
-  popupUsers.innerHTML = `<thead><tr><th>Sr</th><th>User ID</th></tr></thead><tbody>${Array.from(new Set(users)).map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')}</tbody>`;
-}
-
-/* ================== Search Highlight + Filters ================== */
-
-function applyFiltersAndRender(){
-  if (!rawJson) return;
-  const filtered = applyClientFilters(rawJson);
-  const root = transformToHierarchy(filtered);
-  renderTree(root);
-}
-
+/* ---------- Search / highlight ---------- */
 function applySearchHighlight(){
-  const term = (searchInput.value || '').trim().toLowerCase();
-  if (!term) {
-    // remove highlight styles
-    d3.selectAll('.node circle').attr('stroke-width', 2).attr('stroke', '#fff').attr('opacity', 1);
-    d3.selectAll('.node text').style('font-weight', d=> (d && d.data && (d.data.type === 'network' || d.data.type === 'window')) ? 800 : 600);
-    return;
-  }
-  // highlight any node (splitter) that contains user matching term - flexible: substring match
-  d3.selectAll('.node').each(function(d){
-    const n = d3.select(this);
-    const data = d.data;
-    let match = false;
-    if (data && data.type === 'splitter'){
-      const users = data.users || [];
-      for (const u of users){ if (String(u).toLowerCase().includes(term)) { match = true; break; } }
-    } else if (data && data.type === 'pon'){
-      // check all splitters under pon
-      const allUsers = [];
-      (data.children||[]).forEach(l=> (l.children||[]).forEach(s=> (s.users||[]).forEach(u=> allUsers.push(u))));
-      for (const u of allUsers){ if (String(u).toLowerCase().includes(term)) { match = true; break; } }
-    }
-    if (match){
-      n.select('circle').attr('stroke-width', 4).attr('stroke','#ffb020').attr('opacity',1);
-      n.select('text').style('font-weight', 900);
+  const term = (searchInput.value||'').trim().toLowerCase();
+  // highlight all splitter nodes that include the term; highlight their PON and OLT circles too
+  d3.selectAll('g.splitter').each(function(d){
+    const datum = d;
+    const node = d3.select(this);
+    const users = Array.isArray(datum.data.users) ? datum.data.users : [];
+    const matches = term ? users.some(u => String(u).toLowerCase().includes(term)) : false;
+    if(matches){
+      node.select('circle').attr('stroke','#ffb020').attr('stroke-width',4).attr('opacity',1);
+      node.select('text').style('font-weight',900);
     } else {
-      n.select('circle').attr('stroke-width', 2).attr('stroke','#fff').attr('opacity', 0.35);
-      n.select('text').style('font-weight', d=> (d && d.data && (d.data.type === 'network' || d.data.type === 'window')) ? 800 : 500);
+      node.select('circle').attr('stroke','#fff').attr('stroke-width',2).attr('opacity',1);
+      node.select('text').style('font-weight',600);
     }
   });
+  // also dim non-matching splitters if search active
+  if(!term){
+    d3.selectAll('g.splitter circle').attr('opacity',1);
+    d3.selectAll('g.splitter text').style('opacity',1);
+  } else {
+    // lighten non-matching
+    d3.selectAll('g.splitter').each(function(d){
+      const node = d3.select(this);
+      const users = Array.isArray(d.data.users) ? d.data.users : [];
+      const matches = users.some(u=>String(u).toLowerCase().includes(term));
+      if(!matches){ node.select('circle').attr('opacity',0.25); node.select('text').attr('opacity',0.35); }
+    });
+  }
 }
 
-/* ================== Downloads ================== */
-
+/* ---------- Downloads ---------- */
 function downloadCSV(){
-  const modalVisible = popupModal.style.display === 'flex';
-  if (!modalVisible) { alert('Open a splitter / PON popup to export its users'); return; }
+  if(popupModal.style.display !== 'flex') { alert('Open popup first'); return; }
   const rows = Array.from(popupUsers.querySelectorAll('tr'));
-  if (!rows.length) return;
+  if(!rows.length) return;
   let csv = '';
-  rows.forEach((r, idx) => {
-    const cols = Array.from(r.querySelectorAll('th,td')).map(c => `"${(c.textContent||'').replace(/"/g,'""')}"`);
-    csv += cols.join(',') + '\n';
-  });
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'users.csv'; a.click();
-  URL.revokeObjectURL(url);
+  rows.forEach(r=>{ const cols = Array.from(r.querySelectorAll('th,td')).map(c=>`"${(c.textContent||'').replace(/"/g,'""')}"`); csv += cols.join(',') + '\n'; });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='users.csv'; a.click(); URL.revokeObjectURL(url);
 }
-
 function downloadScreenshot(){
-  // serialize current SVG
-  const svg = document.querySelector('#chart svg');
-  if (!svg) return alert('No chart to export');
-  const serializer = new XMLSerializer();
-  const txt = serializer.serializeToString(svg);
-  const blob = new Blob([txt], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'merotra-tree.svg'; a.click();
-  URL.revokeObjectURL(url);
+  const svg = document.querySelector('#chart svg'); if(!svg) return alert('No chart');
+  const serializer = new XMLSerializer(); const source = serializer.serializeToString(svg);
+  const blob = new Blob([source], {type:'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='merotra-tree.svg'; a.click(); URL.revokeObjectURL(url);
 }
 
-/* ================== INIT ================== */
+/* ---------- Init ---------- */
 loadAndRender(false);
-window.addEventListener('resize', ()=> { if (rawJson) applyFiltersAndRender(); });
+window.addEventListener('resize', ()=> { if(rawJson) applyFiltersAndRender(); });
 
 </script>
 </body>
