@@ -194,13 +194,23 @@ function transformToHierarchy(j){
     });
     // sort ponds inside each olt
     Object.values(oltMap).forEach(oltn=>{
-      oltn.children.sort((a,b)=> {
-        const A=a.meta||{}, B=b.meta||{};
-        if(A.olt!==B.olt) return A.olt-B.olt;
-        if(A.ip!==B.ip) return A.ip-B.ip;
-        return A.port-B.port;
-      });
-    });
+oltn.children.sort((a,b)=> {
+  const A = a.meta || {};
+  const B = b.meta || {};
+
+  const ao = Number(A.olt) || 0;
+  const bo = Number(B.olt) || 0;
+  if (ao !== bo) return ao - bo;
+
+  const ai = Number(A.ip) || 0;
+  const bi = Number(B.ip) || 0;
+  if (ai !== bi) return ai - bi;
+
+  const ap = Number(A.port) || 0;
+  const bp = Number(B.port) || 0;
+  return ap - bp;
+});
+
     // push OLTs sorted by olt number
     Object.values(oltMap).sort((a,b)=> (+a.meta.olt)-(+b.meta.olt)).forEach(x=>winNode.children.push(x));
     root.children.push(winNode);
@@ -320,7 +330,11 @@ function renderHybridTree(rootData){
       const colX = firstColX + li * levelColWidth;
       const count = Math.max(1, splitters.length);
       // spacing: increase if many splitters so they don't overlap
-      const vGap = Math.max(nodeVgapBase, Math.ceil((count * 12))); // min 56, but grows for many splitters
+      // dynamic vertical spacing to avoid any overlap
+const minGap = 42;        // minimum space between splitters
+const scaleFactor = 18;   // spacing growth per splitter
+const vGap = Math.max(minGap, minGap + (count - 1) * scaleFactor);
+
       // total height
       const totalHeight = (count - 1) * vGap;
       const startY = baseY - (totalHeight / 2);
