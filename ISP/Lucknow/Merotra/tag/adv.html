@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — Hierarchical PON Tree (Levels preserved)</title>
+  <title>Merotra — Hierarchical PON Tree (Balanced Layout)</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <link rel="stylesheet" href="adv.css">
@@ -22,8 +22,8 @@
 
   <div class="header">
     <div>
-      <div class="header-title">🌐 Merotra Network — (Preserve Levels)</div>
-      <div class="header-sub">Network → Window → OLT → PON → Level columns (sheet order preserved)</div>
+      <div class="header-title">🌐 Merotra Network — Balanced Tree</div>
+      <div class="header-sub">Network → Window → OLT → PON → Levels</div>
     </div>
 
     <div class="toolbar">
@@ -42,7 +42,7 @@
   <div id="chart"></div>
   <div id="tooltip" class="tooltip"></div>
 
-  <!-- Popup -->
+  <!-- Popup Panel -->
   <div id="popupModal" class="popup-backdrop" style="display:none">
     <div class="modal-content">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
@@ -52,10 +52,13 @@
         </div>
         <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button>
       </div>
+
       <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div>
+
       <div style="max-height:60vh;overflow:auto">
         <table id="popupUsersTable" class="user-table"></table>
       </div>
+
       <div style="display:flex;gap:8px;margin-top:8px">
         <button id="btnShot" class="btn">📸 Screenshot</button>
         <button id="btnCsv" class="btn btn-secondary">📊 CSV</button>
@@ -64,15 +67,16 @@
   </div>
 
 <script>
-/* ==========================================
-   CONFIG & GLOBALS
-========================================== */
+/* ======================================================
+   CONFIG
+====================================================== */
 const BOARD_URL =
  "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
 let rawJson = null;
 let colorByOlt = new Map();
 
+/* DOM refs */
 const tooltip = document.getElementById('tooltip');
 const reloadBtn = document.getElementById('reloadBtn');
 const popupModal = document.getElementById('popupModal');
@@ -86,26 +90,31 @@ const windowFilter = document.getElementById('windowFilter');
 const oltFilter = document.getElementById('oltFilter');
 const ponFilter = document.getElementById('ponFilter');
 const clearFilters = document.getElementById('clearFilters');
-
 const searchFold = document.getElementById('searchFold');
 const searchInput = document.getElementById('searchInput');
 
+/* Buttons */
 document.getElementById('btnShot').addEventListener('click', downloadScreenshot);
 document.getElementById('btnCsv').addEventListener('click', downloadCSV);
 popupClose.addEventListener('click', ()=> popupModal.style.display='none');
 
 reloadBtn.addEventListener('click', ()=> loadAndRender(true));
+
+/* Filter events */
 windowFilter.addEventListener('change', applyFiltersAndRender);
 oltFilter.addEventListener('change', applyFiltersAndRender);
 ponFilter.addEventListener('change', applyFiltersAndRender);
 
 clearFilters.addEventListener('click', ()=>{
-  windowFilter.value=''; oltFilter.value=''; ponFilter.value='';
+  windowFilter.value='';
+  oltFilter.value='';
+  ponFilter.value='';
   applyFiltersAndRender();
 });
 
+/* Search box behavior */
 searchFold.addEventListener('click', ()=>{
-  if (searchInput.style.display === 'none') {
+  if (searchInput.style.display === 'none'){
     searchInput.style.display='inline-block';
     searchInput.focus();
   } else {
@@ -114,36 +123,38 @@ searchFold.addEventListener('click', ()=>{
     applyFiltersAndRender();
   }
 });
-
 searchInput.addEventListener('input', ()=> applyFiltersAndRender());
 
-/* ==========================================
+/* ======================================================
    HELPERS
-========================================== */
+====================================================== */
 function normalizeId(v){ return (v ?? "").toString().trim(); }
+
 function getOltNumberFromPon(pon){
-  const m = (pon || "").match(/O(\d+)/i);
+  const m = (pon||"").match(/O(\d+)/i);
   return m ? m[1] : "0";
 }
+
 function parsePonKey(pon){
-  const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i);
+  const m = (pon||"").match(/O(\d+)I(\d+)P(\d+)/i);
   if(!m) return {olt:9999, ip:9999, port:9999};
   return {olt:+m[1], ip:+m[2], port:+m[3]};
 }
+
 function ensureColorForOlt(olt){
   if(!colorByOlt.has(olt)){
     const idx = colorByOlt.size;
-    const h = (idx * 50) % 360;
+    const h = (idx*50)%360;
     colorByOlt.set(olt, `hsl(${h} 65% 45%)`);
   }
   return colorByOlt.get(olt);
 }
 
-/* ==========================================
-   LOADING & FILTERING
-========================================== */
+/* ======================================================
+   LOAD + FILTER
+====================================================== */
 async function loadAndRender(showToast=false){
-  try {
+  try{
     setLoading(true);
     const res = await fetch(BOARD_URL);
     if(!res.ok) throw new Error("HTTP "+res.status);
@@ -155,21 +166,21 @@ async function loadAndRender(showToast=false){
     buildFiltersFromJson(j);
     applyFiltersAndRender();
 
-  } catch(err){
-    console.error(err);
-    alert("Load error: " + err.message);
-  } finally {
+  }catch(e){
+    alert("Load error: "+e.message);
+  }finally{
     setLoading(false);
   }
 }
 
-function setLoading(flag){
-  reloadBtn.disabled = flag;
-  reloadBtn.textContent = flag ? "Loading..." : "🔄 Refresh";
+function setLoading(f){
+  reloadBtn.disabled = f;
+  reloadBtn.textContent = f ? "Loading..." : "🔄 Refresh";
 }
 
 function buildFiltersFromJson(j){
   const winSet=new Set(), oltSet=new Set(), ponSet=new Set();
+
   (j.windows||[]).forEach(w=>{
     winSet.add(w.window||'');
     (w.pons||[]).forEach(p=>{
@@ -177,6 +188,7 @@ function buildFiltersFromJson(j){
       oltSet.add(getOltNumberFromPon(p.pon||''));
     });
   });
+
   populateSelect(windowFilter, ['', ...Array.from(winSet).sort()], "(all)");
   populateSelect(oltFilter, ['', ...Array.from(oltSet).sort((a,b)=>+a-+b)], "(all)");
   populateSelect(ponFilter, ['', ...Array.from(ponSet).sort()], "(all)");
@@ -185,16 +197,19 @@ function buildFiltersFromJson(j){
 function populateSelect(sel, arr, label){
   const prev = sel.value||'';
   sel.innerHTML='';
+
   const o0=document.createElement('option');
   o0.value=''; o0.textContent=label;
   sel.appendChild(o0);
 
-  arr.filter(x=>x!=='').forEach(v=>{
+  arr.filter(v=>v!=='').forEach(v=>{
     const o=document.createElement('option');
-    o.value=v; o.textContent=v; sel.appendChild(o);
+    o.value=v;
+    o.textContent=v;
+    sel.appendChild(o);
   });
 
-  if(prev) sel.value = prev;
+  if(prev) sel.value=prev;
 }
 
 function applyFiltersAndRender(){
@@ -213,19 +228,19 @@ function applyClientFilters(j){
   const out={windows:[]};
 
   (j.windows||[]).forEach(win=>{
-    if(wsel && win.window !== wsel) return;
+    if(wsel && win.window!==wsel) return;
 
     const newWin={window:win.window, pons:[]};
 
     (win.pons||[]).forEach(p=>{
-      if(psel && p.pon !== psel) return;
-      if(oltsel && getOltNumberFromPon(p.pon) !== oltsel) return;
+      if(psel && p.pon!==psel) return;
+      if(oltsel && getOltNumberFromPon(p.pon)!==oltsel) return;
 
-      const newLv = (p.levels||[])
-          .filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0);
+      const newLv=(p.levels||[])
+        .filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0);
 
       if(newLv.length===0 && term){
-        if(!deepSearchMatch(p, term)) return;
+        if(!deepSearchMatch(p,term)) return;
       }
 
       newWin.pons.push({...p, levels:newLv});
@@ -239,7 +254,7 @@ function applyClientFilters(j){
   return out;
 }
 
-function deepSearchMatch(p, term){
+function deepSearchMatch(p,term){
   if(!term) return false;
   for(const lvl of (p.levels||[])){
     for(const sp of (lvl.splitters||[])){
@@ -251,20 +266,18 @@ function deepSearchMatch(p, term){
   return false;
 }
 
-/* ==========================================
-   🔥 FIXED: transformToHierarchy()
-========================================== */
+/* ======================================================
+   HIERARCHY: Network → Window → OLT → PON
+====================================================== */
 function transformToHierarchy(j){
-  const root = { name:'Merotra Network', type:'network', children:[] };
+  const root={ name:'Merotra Network', type:'network', children:[] };
 
-  (j.windows || []).forEach(win => {
+  (j.windows||[]).forEach(win=>{
+    const winNode={ name:win.window, type:'window', children:[] };
 
-    const winNode = { name: win.window, type:'window', children:[] };
+    const oltMap={};
 
-    const oltMap = {};
-
-    (win.pons || []).forEach(p => {
-
+    (win.pons||[]).forEach(p=>{
       const meta = parsePonKey(p.pon);
       const levels = (p.levels||[])
         .map(l=>({
@@ -273,52 +286,42 @@ function transformToHierarchy(j){
             recordId:sp.recordId||'',
             type:sp.type||'',
             users:(sp.users||[]).map(x=>String(x)),
-            total:sp.total || ((sp.users||[]).length || 0)
+            total:sp.total || ((sp.users||[]).length||0)
           }))
         }));
 
-      const ponNode={
-        name: p.pon,
-        type:'pon',
-        meta,
-        levels
-      };
+      const ponNode={ name:p.pon, type:'pon', meta, levels };
 
-      const oltNum = String(meta.olt);
+      const oltNum=String(meta.olt);
       if(!oltMap[oltNum]){
-        oltMap[oltNum] = {
-          name: "OLT-"+oltNum,
-          type:'olt',
-          meta:{olt:oltNum},
-          children:[]
-        };
+        oltMap[oltNum]={ name:`OLT-${oltNum}`, type:'olt', meta:{olt:oltNum}, children:[] };
       }
-
       oltMap[oltNum].children.push(ponNode);
     });
 
-    /* Sort PONs inside OLT */
+    /* sort PONs inside OLT */
     Object.values(oltMap).forEach(oltn=>{
       oltn.children.sort((a,b)=>{
-        if(+a.meta.olt !== +b.meta.olt) return +a.meta.olt - +b.meta.olt;
-        if(+a.meta.ip  !== +b.meta.ip ) return +a.meta.ip  - +b.meta.ip;
+        if(+a.meta.olt!==+b.meta.olt) return +a.meta.olt - +b.meta.olt;
+        if(+a.meta.ip !==+b.meta.ip ) return +a.meta.ip - +b.meta.ip;
         return +a.meta.port - +b.meta.port;
       });
     });
 
-    /* Sort OLT groups */
+    /* sort OLT groups */
     Object.values(oltMap)
-      .sort((a,b)=> (+a.meta.olt) - (+b.meta.olt))
+      .sort((a,b)=>+a.meta.olt - +b.meta.olt)
       .forEach(olt=> winNode.children.push(olt));
 
     root.children.push(winNode);
   });
+
   return root;
 }
 
-/* ==========================================
-   RENDER (Hybrid) — includes FIX for vGap
-========================================== */
+/* ======================================================
+   RENDER (Hybrid) — WITH BALANCED SPLITTER LAYOUT
+====================================================== */
 function renderHybridTree(rootData){
   d3.select('#chart').selectAll('*').remove();
 
@@ -326,48 +329,57 @@ function renderHybridTree(rootData){
   const width = chart.clientWidth;
   const height= chart.clientHeight;
 
-  // hybrid tree + level columns
+  /* top-down tree for Network→Window→OLT→PON */
   const treeRoot = d3.hierarchy(rootData);
-  const nodeCount = countLeaves(rootData);
-  const nodeGap = Math.min(80, Math.max(40, height/(nodeCount+2)));
+  const leaves = countLeaves(rootData);
+  const nodeGap = Math.min(80, Math.max(40, height/(leaves+2)));
 
   const treeLayout = d3.tree().nodeSize([nodeGap, 140]);
   treeLayout(treeRoot);
 
+  /* create svg + g */
   const svg = d3.select("#chart")
-      .append("svg")
-      .attr("width","100%")
-      .attr("height","100%");
+    .append("svg")
+    .attr("width","100%")
+    .attr("height","100%");
 
   const g = svg.append("g").attr("transform","translate(40,40)");
 
-  /* Draw T-R-E-E links */
+  /* --------------------------------------------------
+     TREE LINKS (Network→Window→OLT→PON)
+  --------------------------------------------------- */
   g.selectAll(".hwlink")
     .data(treeRoot.links())
     .enter()
     .append("path")
     .attr("class","link")
-    .attr("fill","none")
     .attr("stroke","#94a3b8")
     .attr("stroke-width",2)
-    .attr("d",d=>`M${d.source.y},${d.source.x} C ${(d.source.y+d.target.y)/2},${d.source.x} ${(d.source.y+d.target.y)/2},${d.target.x} ${d.target.y},${d.target.x}`);
+    .attr("fill","none")
+    .attr("d",d=>`
+      M${d.source.y},${d.source.x}
+      C ${(d.source.y+d.target.y)/2},${d.source.x}
+        ${(d.source.y+d.target.y)/2},${d.target.x}
+        ${d.target.y},${d.target.x}
+    `);
 
-  /* Draw nodes */
+  /* --------------------------------------------------
+     NODE CIRCLES
+  --------------------------------------------------- */
   const n = g.selectAll(".hnode")
-        .data(treeRoot.descendants())
-        .enter().append("g")
-        .attr("class","hnode")
-        .attr("transform",d=>`translate(${d.y},${d.x})`);
+    .data(treeRoot.descendants())
+    .enter()
+    .append("g")
+    .attr("class","hnode")
+    .attr("transform",d=>`translate(${d.y},${d.x})`);
 
   n.append("circle")
-    .attr("r",d=>({
-      network:22, window:18, olt:16, pon:14
-    }[d.data.type] || 10))
+    .attr("r",d=>({network:22,window:18,olt:16,pon:14}[d.data.type]||10))
     .attr("fill",d=>{
       if(d.data.type==='network') return '#1e3a8a';
       if(d.data.type==='window') return '#1d4ed8';
-      if(d.data.type==='olt') return ensureColorForOlt(d.data.meta.olt);
-      if(d.data.type==='pon') return '#0f766e';
+      if(d.data.type==='olt')     return ensureColorForOlt(d.data.meta.olt);
+      if(d.data.type==='pon')     return '#0f766e';
       return '#6b7280';
     })
     .attr("stroke","#fff").attr("stroke-width",2);
@@ -375,13 +387,14 @@ function renderHybridTree(rootData){
   n.append("text")
     .attr("x",d=> d.data.type==='network'?0:18)
     .attr("y",4)
+    .attr("text-anchor",d=> d.data.type==='network'?"middle":"start")
     .attr("font-size","12px")
     .attr("font-weight","600")
-    .attr("text-anchor",d=> d.data.type==='network'? "middle":"start")
     .text(d=>d.data.name);
 
-
-  /* DRAW SPLITTER COLUMNS */
+  /* --------------------------------------------------
+     BALANCED SPLITTER LAYOUT 🤝
+  --------------------------------------------------- */
   const ponNodes = treeRoot.descendants().filter(n=>n.data.type==='pon');
   const levelColWidth = 220;
   const ponColGap = 140;
@@ -389,23 +402,32 @@ function renderHybridTree(rootData){
   const splitterPos=[];
 
   ponNodes.forEach(ponN=>{
-    const p=ponN.data;
+    const p = ponN.data;
     if(!(p.levels||[]).length) return;
 
     const baseX = ponN.y;
     const baseY = ponN.x;
+    const levelCount = p.levels.length;
 
-    p.levels.forEach((lvl, i)=>{
+    p.levels.forEach((lvl,i)=>{
       const colX = baseX + ponColGap + i*levelColWidth;
       const sList=lvl.splitters||[];
       const count=sList.length||1;
 
-      /* DYNAMIC spacing — FIXED */
-      const baseGap=48;
-      const vGap = baseGap + (count-1)*14;
+      /* ---------------------------
+         🔥 SMART BALANCED SPACING
+      ------------------------------*/
+      const maxAllowedHeight = Math.max(220, (height * 0.85) / levelCount);
+      const vGap = Math.max(
+        38,
+        Math.min(
+          140,
+          Math.floor(maxAllowedHeight / (count + 0.2))
+        )
+      );
 
-      const totalH=(count-1)*vGap;
-      const startY=baseY - totalH/2;
+      const totalH = (count-1)*vGap;
+      const startY = baseY - totalH/2;
 
       sList.forEach((sp,si)=>{
         splitterPos.push({
@@ -420,6 +442,7 @@ function renderHybridTree(rootData){
     });
   });
 
+  /* Draw splitter nodes */
   const sg = g.append("g");
 
   sg.selectAll(".splitter")
@@ -433,11 +456,11 @@ function renderHybridTree(rootData){
     .on("click",(ev,d)=>openPopup(d.data,d.pon,findWindowForPon(d.pon)))
     .each(function(d){
       const g2=d3.select(this);
+
       g2.append("circle")
         .attr("r",12)
-        .attr("fill","#10b981")
-        .attr("stroke","#fff")
-        .attr("stroke-width",2);
+        .attr("fill", d.data.total>0 ? "#10b981" : "#6b7280")
+        .attr("stroke","#fff").attr("stroke-width",2);
 
       g2.append("text")
         .attr("x",18).attr("y",4)
@@ -454,48 +477,62 @@ function renderHybridTree(rootData){
       }
     });
 
-  /* LINKS: PON → level1 */
+  /* --------------------------------------------------
+     LINKS: PON → Level 1
+  --------------------------------------------------- */
+  /* --------------------------------------------------
+     LINKS: PON → Level 1
+  --------------------------------------------------- */
   ponNodes.forEach(ponN=>{
-    const p=ponN.data;
-    const pX=ponN.y, pY=ponN.x;
-    const lvl1 = splitterPos.filter(x=>x.pon===p.name && x.level===p.levels[0].level);
+    const p = ponN.data;
+    const pX = ponN.y, pY = ponN.x;
 
-    lvl1.forEach(ch=>{
+    const firstLevel = splitterPos.filter(x =>
+      x.pon === p.name &&
+      x.level === p.levels[0].level
+    );
+
+    firstLevel.forEach(ch=>{
       g.append("path")
-        .attr("d",bezier({x:pX,y:pY},{x:ch.x,y:ch.y}))
-        .attr("stroke",ensureColorForOlt(p.meta.olt))
+        .attr("d", bezier({x:pX,y:pY}, {x:ch.x,y:ch.y}))
+        .attr("stroke", ensureColorForOlt(p.meta.olt))
         .attr("stroke-width",2)
         .attr("fill","none");
     });
   });
 
-  /* LINKS: levelN → levelN+1 */
+  /* --------------------------------------------------
+     LINKS: level N → level N+1 (only if user common)
+  --------------------------------------------------- */
   ponNodes.forEach(ponN=>{
-    const p=ponN.data;
-    const lv=p.levels||[];
-    for(let i=0;i<lv.length-1;i++){
-      const L1=lv[i].level;
-      const L2=lv[i+1].level;
+    const p = ponN.data;
+    const levels = p.levels || [];
 
-      const parents=splitterPos.filter(x=>x.pon===p.name && x.level===L1);
-      const kids=splitterPos.filter(x=>x.pon===p.name && x.level===L2);
+    for(let i=0;i<levels.length-1;i++){
+      const L1 = levels[i].level;
+      const L2 = levels[i+1].level;
 
-      const parentSets=parents.map(pr=> new Set(pr.data.users.map(normalizeId)));
+      const parents = splitterPos.filter(x => x.pon===p.name && x.level===L1);
+      const kids    = splitterPos.filter(x => x.pon===p.name && x.level===L2);
+
+      const parentSets = parents.map(pr => new Set(pr.data.users.map(normalizeId)));
 
       kids.forEach(ch=>{
-        const cSet=new Set(ch.data.users.map(normalizeId));
-        let linked=false;
-        for(let pi=0;pi<parents.length;pi++){
-          let comm=false;
-          for(const u of cSet){ if(parentSets[pi].has(u)){ comm=true; break; }}
+        const cSet = new Set(ch.data.users.map(normalizeId));
+        for(let pi=0; pi<parents.length; pi++){
+          const pr = parents[pi];
+          const pSet = parentSets[pi];
 
-          if(comm){
+          let common = false;
+          for(const u of cSet){
+            if(pSet.has(u)){ common=true; break; }
+          }
+          if(common){
             g.append("path")
-              .attr("d",bezier({x:parents[pi].x,y:parents[pi].y},{x:ch.x,y:ch.y}))
-              .attr("stroke",ch.color)
+              .attr("d", bezier({x:pr.x,y:pr.y}, {x:ch.x,y:ch.y}))
+              .attr("stroke", ch.color)
               .attr("stroke-width",2)
               .attr("fill","none");
-            linked=true;
             break;
           }
         }
@@ -503,26 +540,39 @@ function renderHybridTree(rootData){
     }
   });
 
-  /* ZOOM */
-  const zoom=d3.zoom().scaleExtent([0.25,3]).on("zoom",ev=> g.attr("transform",ev.transform));
+  /* --------------------------------------------------
+     ZOOM + AUTO FIT
+  --------------------------------------------------- */
+  const zoom = d3.zoom()
+     .scaleExtent([0.25,3])
+     .on("zoom", ev => g.attr("transform", ev.transform));
+
   svg.call(zoom);
 
-  /* Fit view */
-  try{
-    const bb=g.node().getBBox();
-    const sx=width/(bb.width+100);
-    const sy=height/(bb.height+100);
-    const s=Math.min(sx,sy,1);
-    const tx=-bb.x*s+20;
-    const ty=-bb.y*s+20;
-    svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(s));
-  }catch(e){}
+  /* Auto-fit the whole view */
+  try {
+    const bb = g.node().getBBox();
+    const sx = width  / (bb.width  + 100);
+    const sy = height / (bb.height + 100);
+    const s  = Math.min(sx, sy, 1);
 
+    const tx = -bb.x * s + 20;
+    const ty = -bb.y * s + 20;
+
+    svg.transition()
+       .duration(500)
+       .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(s));
+  } catch(e){}
+
+  /* Re-apply search highlight */
   applySearchHighlight();
 }
 
+/* ======================================================
+   SMALL HELPERS
+====================================================== */
 function bezier(s,d){
-  const mid=(s.x+d.x)/2;
+  const mid=(s.x + d.x)/2;
   return `M${s.x},${s.y} C${mid},${s.y} ${mid},${d.y} ${d.x},${d.y}`;
 }
 
@@ -541,60 +591,79 @@ function findWindowForPon(pon){
   return '';
 }
 
-/* ==========================================
-   Tooltip + Popup
-========================================== */
+/* ======================================================
+   TOOLTIP + POPUP
+====================================================== */
 function showTooltip(ev,d){
-  tooltip.innerHTML = `<strong>${d.name}</strong><br>Users: ${d.total}`;
+  tooltip.innerHTML =
+    `<strong>${d.name}</strong><br>Users: ${d.total}`;
   tooltip.style.left = (ev.pageX+12)+"px";
   tooltip.style.top  = (ev.pageY+8)+"px";
   tooltip.style.opacity=1;
 }
-function hideTooltip(){ tooltip.style.opacity=0; }
+
+function hideTooltip(){
+  tooltip.style.opacity=0;
+}
 
 function openPopup(sp,pon,win){
   popupModal.style.display='flex';
   popupTitle.textContent = `${sp.type} — Users`;
-  popupPath.textContent = `${win} → ${pon} → ${sp.recordId}`;
-  popupMeta.innerHTML = `<b>Total users:</b> ${sp.total}`;
+  popupPath.textContent  = `${win} → ${pon} → ${sp.recordId}`;
+  popupMeta.innerHTML    = `<b>Total users:</b> ${sp.total}`;
+
   popupUsers.innerHTML =
-    `<thead><tr><th>Sr</th><th>User</th></tr></thead><tbody>`+
+    `<thead><tr><th>Sr</th><th>User ID</th></tr></thead><tbody>`+
     sp.users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')+
     `</tbody>`;
 }
 
-/* ==========================================
-   Search highlight
-========================================== */
+/* ======================================================
+   SEARCH HIGHLIGHT
+====================================================== */
 function applySearchHighlight(){
-  const term=(searchInput.value||'').trim().toLowerCase();
-  const nodes=d3.selectAll("g.splitter");
+  const term = (searchInput.value||'').trim().toLowerCase();
+  const nodes = d3.selectAll("g.splitter");
 
   if(!term){
-    nodes.selectAll("circle").attr("opacity",1).attr("stroke","#fff").attr("stroke-width",2);
-    nodes.selectAll("text").attr("opacity",1);
+    nodes.select("circle")
+         .attr("opacity",1)
+         .attr("stroke","#fff")
+         .attr("stroke-width",2);
+
+    nodes.selectAll("text")
+         .attr("opacity",1);
+
     return;
   }
 
   nodes.each(function(d){
-    const users=d.data.users||[];
-    const hit=users.some(u=>String(u).toLowerCase().includes(term));
-    const g=d3.select(this);
+    const g = d3.select(this);
+    const users = d.data.users || [];
+    const hit = users.some(u => String(u).toLowerCase().includes(term));
+
     if(hit){
-      g.select("circle").attr("stroke","#ffb020").attr("stroke-width",4).attr("opacity",1);
-      g.selectAll("text").attr("opacity",1).style("font-weight","700");
+      g.select("circle")
+       .attr("stroke","#ffb020")
+       .attr("stroke-width",4)
+       .attr("opacity",1);
+
+      g.selectAll("text")
+       .attr("opacity",1)
+       .style("font-weight","700");
     } else {
       g.select("circle").attr("opacity",0.25);
-      g.selectAll("text").attr("opacity",0.3);
+      g.selectAll("text").attr("opacity",0.35);
     }
   });
 }
 
-/* ==========================================
-   Downloads
-========================================== */
+/* ======================================================
+   DOWNLOADS (CSV + SVG)
+====================================================== */
 function downloadCSV(){
   if(popupModal.style.display!=='flex') return;
+
   const rows=[...popupUsers.querySelectorAll("tr")];
   if(!rows.length) return;
 
@@ -605,31 +674,42 @@ function downloadCSV(){
     csv += cols.join(",")+"\n";
   });
 
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  const url=URL.createObjectURL(blob);
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url  = URL.createObjectURL(blob);
+
   const a=document.createElement("a");
   a.href=url; a.download="users.csv"; a.click();
+
   URL.revokeObjectURL(url);
 }
 
 function downloadScreenshot(){
-  const svg=document.querySelector("#chart svg");
+  const svg = document.querySelector("#chart svg");
   if(!svg) return alert("Nothing to save");
-  const xml=new XMLSerializer().serializeToString(svg);
+
+  const xml = new XMLSerializer().serializeToString(svg);
   const blob=new Blob([xml],{type:"image/svg+xml"});
   const url=URL.createObjectURL(blob);
+
   const a=document.createElement("a");
   a.href=url; a.download="merotra-tree.svg"; a.click();
+
   URL.revokeObjectURL(url);
 }
 
-/* ==========================================
+/* ======================================================
    INIT
-========================================== */
+====================================================== */
 loadAndRender(false);
-window.addEventListener('resize',()=> rawJson && applyFiltersAndRender());
+window.addEventListener('resize', ()=>{
+  if(rawJson) applyFiltersAndRender();
+});
 
 </script>
 
 </body>
 </html>
+
+
+
+  
