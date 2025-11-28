@@ -3,637 +3,439 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — PON / Splitter Columns (Final)</title>
+  <title>Merotra Network — Hierarchical View</title>
 
   <!-- D3 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
-  <!-- Your adv.css (external) -->
+  <!-- Your CSS -->
   <link rel="stylesheet" href="adv.css">
 
   <style>
-    /* Small layout helpers kept here to avoid clashing with adv.css */
-    :root{font-family:Inter,system-ui,Arial}
-    body{margin:0;padding:0;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#111827;height:100vh;overflow:hidden}
-    .header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(255,255,255,0.95);box-shadow:0 4px 20px rgba(0,0,0,0.06);position:sticky;top:0;z-index:30}
-    .header-left{display:flex;flex-direction:column;gap:2px}
-    .header-title{font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:8px}
-    .controls-row{display:flex;gap:8px;align-items:center}
-    #chart{width:100%;height:calc(100vh - 64px);overflow:hidden}
-    .tooltip{position:absolute;pointer-events:none;background:rgba(15,23,42,0.92);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;opacity:0;transition:opacity .12s;z-index:60}
-    .filter-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .search-fold { display:flex; gap:8px; align-items:center; }
-    .search-box { display:none; align-items:center; gap:6px; }
-    .highlight { stroke: #ff4d4f !important; stroke-width:3px !important; }
-    @media (max-width:900px) {
-      #chart { height: calc(100vh - 120px); }
-      .header { flex-direction:column; align-items:flex-start; gap:8px; padding-bottom:12px;}
+    /* Extra small styling for the ROOT (rounded box) */
+    .root-box {
+      fill: #0ea5e9;
+      stroke: white;
+      stroke-width: 2;
+      rx: 18;
+      ry: 18;
+    }
+    .root-text {
+      fill: white;
+      font-size: 16px;
+      font-weight: 700;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-left">
-      <div class="header-title">🌐 Merotra Network — Column Levels</div>
-      <div style="font-size:12px;color:#6b7280">Network → Window → OLT → PON → Level 1 → Level 2 → ...</div>
+<div class="header">
+  <div>
+    <div class="header-title">🌐 Merotra Network — Column Layout</div>
+    <div class="header-sub">Network → Window → OLT → PON → Levels</div>
+  </div>
+  <button id="reloadBtn" class="btn">Reload</button>
+</div>
+
+<div id="chart"></div>
+<div id="tooltip" class="tooltip"></div>
+
+<!-- Popup -->
+<div id="popupModal" class="popup-backdrop">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+      <div>
+        <h2 id="popupTitle" style="margin:0;font-size:16px"></h2>
+        <div id="popupPath" style="font-size:12px;color:#475569"></div>
+      </div>
+      <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button>
+    </div>
+    <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div>
+    <div style="max-height:400px;overflow:auto">
+      <table id="popupUsersTable" class="user-table"></table>
     </div>
 
-    <div class="controls-row">
-      <div class="filter-row">
-        <select id="windowFilter" style="padding:6px;border-radius:8px;border:1px solid #e5e7eb">
-          <option value="__all__">All Windows</option>
-        </select>
-        <select id="ponFilter" style="padding:6px;border-radius:8px;border:1px solid #e5e7eb">
-          <option value="__all__">All PONs</option>
-        </select>
-      </div>
-
-      <div class="search-fold">
-        <button id="toggleSearch" class="btn btn-secondary">🔍 Search</button>
-        <div class="search-box" id="searchBox">
-          <input id="searchInput" placeholder="enter user id (partial allowed)" style="padding:6px;border-radius:8px;border:1px solid #e5e7eb" />
-          <button id="runSearch" class="btn">Find</button>
-          <button id="clearSearch" class="btn btn-secondary">Clear</button>
-        </div>
-      </div>
-
-      <button id="reloadBtn" class="btn">Reload</button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button id="btnShot" class="btn btn-shot">📸 Screenshot</button>
+      <button id="btnCsv" class="btn btn-csv">📊 CSV</button>
     </div>
   </div>
-
-  <div id="chart"></div>
-  <div id="tooltip" class="tooltip"></div>
-
-  <!-- Popup -->
-  <div id="popupModal" class="popup-backdrop" style="display:none">
-    <div class="modal-content" role="dialog" aria-modal="true">
-      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-        <div>
-          <h2 id="popupTitle" style="margin:0;font-size:16px"></h2>
-          <div id="popupPath" style="font-size:12px;color:#475569"></div>
-        </div>
-        <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button>
-      </div>
-      <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div>
-      <div style="max-height:400px;overflow:auto">
-        <table id="popupUsersTable" class="user-table"></table>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="btnShot" class="btn">📸 Screenshot</button>
-        <button id="btnCsv" class="btn btn-secondary">📊 CSV</button>
-      </div>
-    </div>
-  </div>
+</div>
 
 <script>
-/* ================== CONFIG ================== */
-const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
+/* =============== CONFIG =============== */
+const BOARD_URL =
+ "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
-/* ================== STATE ================== */
 let rawJson = null;
-const tooltip = document.getElementById('tooltip');
-const windowFilter = document.getElementById('windowFilter');
-const ponFilter = document.getElementById('ponFilter');
-const searchBox = document.getElementById('searchBox');
-const searchInput = document.getElementById('searchInput');
 
-let oltColorMap = {}; // OLT -> color
+/* UI */
+document.getElementById("reloadBtn").onclick = () => loadAndRender(true);
+document.getElementById("popupClose").onclick = () =>
+  (document.getElementById("popupModal").style.display = "none");
+document.getElementById("btnCsv").onclick = downloadCSV;
+document.getElementById("btnShot").onclick = downloadScreenshot;
 
-/* ================== HELPERS ================== */
+/* Helpers */
+function randColor() {
+  const h = Math.floor(Math.random()*360);
+  return `hsl(${h} 65% 45%)`;
+}
 function normalizeId(v){ return (v ?? "").toString().trim(); }
 
-function parsePonForOlt(pon){
-  // pon like O4I5P4 => OLT-4
-  const m = String(pon || "").match(/^O(\d+)/i);
-  if (!m) return "OLT-?";
-  return "OLT-" + m[1];
-}
-
-function randColorForKey(key){
-  if (oltColorMap[key]) return oltColorMap[key];
-  // deterministic-ish color from hash
-  let h = 0;
-  for (let i=0;i<key.length;i++) h = ((h<<5)-h) + key.charCodeAt(i);
-  h = Math.abs(h) % 360;
-  const color = `hsl(${h} 70% 45%)`;
-  oltColorMap[key] = color;
-  return color;
-}
-
-function linkPath(src, dst){
-  // horizontal-ish cubic curve, with control x at midpoint
-  const midX = src.x + (dst.x - src.x) * 0.5;
-  return `M ${src.x} ${src.y} C ${midX} ${src.y} ${midX} ${dst.y} ${dst.x} ${dst.y}`;
-}
-
-/* ================== UI BINDINGS ================== */
-document.getElementById('reloadBtn').addEventListener('click', ()=> loadAndRender(true));
-document.getElementById('popupClose').addEventListener('click', ()=> document.getElementById('popupModal').style.display='none');
-document.getElementById('btnCsv').addEventListener('click', downloadCSV);
-document.getElementById('btnShot').addEventListener('click', downloadScreenshot);
-
-document.getElementById('toggleSearch').addEventListener('click', ()=>{
-  if (searchBox.style.display === 'flex') searchBox.style.display = 'none';
-  else { searchBox.style.display = 'flex'; searchInput.focus(); }
-});
-document.getElementById('runSearch').addEventListener('click', runSearch);
-document.getElementById('clearSearch').addEventListener('click', clearSearch);
-
-windowFilter.addEventListener('change', applyFiltersAndRender);
-ponFilter.addEventListener('change', applyFiltersAndRender);
-
-/* ================== LOAD ================== */
-async function loadAndRender(showToast=false){
+/* Load JSON */
+async function loadAndRender(showMsg = false) {
   try {
-    setLoading(true);
-    const res = await fetch(BOARD_URL);
-    if (!res.ok) throw new Error('Board API fetch failed: ' + res.status);
-    const j = await res.json();
-    rawJson = j;
-    buildFilters(rawJson);
-    renderFromJson(rawJson);
-    if (showToast) console.info('Loaded board:', j.summary || {});
-  } catch (err){
-    console.error(err);
-    alert('Load failed: ' + (err.message || err));
+    const btn = document.getElementById("reloadBtn");
+    btn.textContent = "Loading...";
+    btn.disabled = true;
+
+    const r = await fetch(BOARD_URL);
+    rawJson = await r.json();
+
+    render(rawJson);
+    if(showMsg) console.log("Loaded.");
+  } catch(err) {
+    alert("Load failed: " + err);
   } finally {
-    setLoading(false);
+    const btn = document.getElementById("reloadBtn");
+    btn.textContent = "Reload";
+    btn.disabled = false;
   }
 }
-function setLoading(flag){
-  const btn = document.getElementById('reloadBtn');
-  btn.textContent = flag ? 'Loading...' : 'Reload';
-  btn.disabled = flag;
-}
 
-/* ================== FILTERS ================== */
-function buildFilters(serverJson){
-  // windows
-  const winSet = new Set();
-  const ponSet = new Set();
-  if (serverJson && Array.isArray(serverJson.windows)){
-    serverJson.windows.forEach(w => {
-      winSet.add(w.window);
-      (w.pons||[]).forEach(p=> ponSet.add(p.pon));
-    });
-  }
-  // populate selects
-  windowFilter.innerHTML = '<option value="__all__">All Windows</option>';
-  Array.from(winSet).sort().forEach(w => {
-    const opt = document.createElement('option'); opt.value = w; opt.textContent = w; windowFilter.appendChild(opt);
-  });
-  ponFilter.innerHTML = '<option value="__all__">All PONs</option>';
-  Array.from(ponSet).sort().forEach(p => {
-    const opt = document.createElement('option'); opt.value = p; opt.textContent = p; ponFilter.appendChild(opt);
-  });
-}
+/* ======== RENDER ======================================= */
+function render(j) {
+  const chart = document.getElementById("chart");
+  chart.innerHTML = "";
 
-function applyFiltersAndRender(){
-  if (!rawJson) return;
-  renderFromJson(rawJson);
-}
+  const svg = d3.select("#chart")
+                .append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%");
 
-/* ================== RENDER (columns) ================== */
-function renderFromJson(serverJson){
-  const chart = document.getElementById('chart');
-  chart.innerHTML = '';
+  const g = svg.append("g");
 
-  if (!serverJson || !Array.isArray(serverJson.windows) || serverJson.windows.length===0){
-    chart.innerHTML = '<div style="padding:20px;color:#6b7280">No data</div>';
-    return;
-  }
+  const zoom = d3.zoom().scaleExtent([0.4, 2])
+    .on("zoom", e => g.attr("transform", e.transform));
 
-  // build filtered data shape:
-  const selWin = windowFilter.value;
-  const selPon = ponFilter.value;
-
-  const windows = (serverJson.windows || []).filter(w => (selWin === '__all__' || w.window === selWin))
-    .map(w => {
-      const pons = (w.pons || []).filter(p => (selPon === '__all__' || p.pon === selPon));
-      return { window: w.window, pons };
-    });
-
-  // setup svg
-  const svg = d3.select('#chart').append('svg').attr('width','100%').attr('height','100%').style('background','transparent');
-  const g = svg.append('g');
-  const zoom = d3.zoom().scaleExtent([0.35, 2]).on('zoom', (evt) => g.attr('transform', evt.transform));
   svg.call(zoom);
 
-  // layout params
-  const colGap = 220;      // horizontal gap between main columns
-  const oltColWidth = 120; // space allocated for OLT column
-  const ponColWidth = 160; // PON column
-  const levelColWidth = 260; // each level column width
-  const nodeRadius = 12;
-  const vGap = 56;
-  const leftPad = 24;
-  const topPad = 20;
-  const sectionGap = 40;
+  /* layout settings */
+  const colW = 220;
+  const nodeGapY = 60;
+  const padX = 80;
+  let curY = 80;
 
-  let currentY = topPad;
+  /* ---- ROOT NODE ---- */
+  const rootX = padX;
+  const rootY = curY;
 
-  // root column header label "Merotra Network" leftmost for whole chart
-  g.append('text')
-    .attr('x', leftPad)
-    .attr('y', currentY + 12)
-    .text('Merotra Network')
-    .attr('font-weight','800')
-    .attr('font-size',14)
-    .attr('fill','#0f172a');
+  g.append("rect")
+    .attr("class","root-box")
+    .attr("x", rootX - 70)
+    .attr("y", rootY - 25)
+    .attr("width", 200)
+    .attr("height", 50);
 
-  currentY += 30;
+  g.append("text")
+    .attr("x", rootX + 30)
+    .attr("y", rootY + 5)
+    .attr("class","root-text")
+    .text("Merotra Network");
 
-  // For each window block (stacked vertically)
-  windows.forEach(win => {
-    const winName = win.window;
-    const pons = (win.pons || []);
+  /* Window column = next column right */
+  const winColX = rootX + colW;
+  const oltColX = winColX + colW;
+  const ponColX = oltColX + colW;
 
-    // Draw Window label as column header (placed left of OLT column)
-    g.append('text')
-      .attr('x', leftPad + colGap) // window column is second column (after root)
-      .attr('y', currentY + 12)
-      .text(winName)
-      .attr('font-weight','700')
-      .attr('font-size',13)
-      .attr('fill','#0f172a');
+  /* Each window is a child of root */
+  j.windows.forEach(win => {
+    /* Window node */
+    const wx = winColX;
+    const wy = curY;
 
-    // For each PON in window, we create a horizontal row (columns)
-    pons.forEach((ponObj, pIndex) => {
-      const ponName = ponObj.pon || 'PON';
-      const levels = (ponObj.levels || []).slice().sort((a,b)=> (a.level||0) - (b.level||0));
+    g.append("circle")
+      .attr("cx", wx)
+      .attr("cy", wy)
+      .attr("r", 18)
+      .attr("fill", "#0ea5e9")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 2);
 
-      // compute counts to size vertically
-      const counts = levels.map(l => (l.splitters||[]).length || 0);
-      const maxNodes = Math.max(1, ...counts);
-      const blockHeight = Math.max((maxNodes - 1)*vGap + 80, 90);
-      const blockTop = currentY;
-      const centerY = blockTop + blockHeight/2;
+    g.append("text")
+      .attr("x", wx + 26)
+      .attr("y", wy + 4)
+      .text(win.window)
+      .attr("font-size", 13)
+      .attr("fill", "#0f172a");
 
-      // x positions:
-      // columns order: Root (leftPad) | Window (leftPad + colGap) | OLT (leftPad + colGap + colGap/2) | PON (added) | levels...
-      const rootX = leftPad;
-      const winX = leftPad + colGap;
-      const oltX = winX + (colGap/2);
-      const ponX = winX + oltColWidth;
-      const levelStartX = ponX + ponColWidth;
+    /* Link root → window */
+    g.append("path")
+      .attr("d",
+        `M${rootX+100} ${rootY} C ${rootX+150} ${rootY}, ${wx-60} ${wy}, ${wx-20} ${wy}`)
+      .attr("stroke", randColor())
+      .attr("stroke-width", 2)
+      .attr("fill", "none");
 
-      // Draw root label for each PON row (only once visually leftmost small dot)
-      g.append('circle')
-        .attr('cx', rootX)
-        .attr('cy', centerY)
-        .attr('r', 6)
-        .attr('fill', '#1e3a8a');
+    /* For each PON, but now preceded with an OLT node */
 
-      // Draw Window label (only once in column; but we place a small marker per row to connect)
-      g.append('circle')
-        .attr('cx', winX)
-        .attr('cy', centerY)
-        .attr('r', 6)
-        .attr('fill', '#1d4ed8');
+    // Group PONs per OLT number
+    const oltGroups = {}; // {olt: [pon,...]}
+    win.pons.forEach(p=>{
+      let oltNum = p.pon.slice(1,2); // EXTRACT OLT FROM "O4I5P4"
+      if(!oltGroups[oltNum]) oltGroups[oltNum] = [];
+      oltGroups[oltNum].push(p);
+    });
 
-      // OLT node (circle) and label "OLT-X"
-      const oltLabel = parsePonForOlt(ponName);
-      const oltNodeX = oltX;
-      const oltNodeY = centerY;
-      g.append('circle')
-        .attr('cx', oltNodeX)
-        .attr('cy', oltNodeY)
-        .attr('r', nodeRadius+4)
-        .attr('fill', '#0f766e')
-        .attr('stroke','#fff')
-        .attr('stroke-width',2);
+    let winBlockHeight =
+      Object.keys(oltGroups).reduce((sum,k)=> sum + (oltGroups[k].length * nodeGapY + 80), 0);
 
-      g.append('text')
-        .attr('x', oltNodeX + nodeRadius + 8)
-        .attr('y', oltNodeY + 4)
-        .text(oltLabel)
-        .attr('font-size',12)
-        .attr('fill','#0f172a');
+    let winStartY = wy - winBlockHeight/2;
+    if(winStartY < curY) winStartY = curY; 
 
-      // PON node
-      const ponNodeX = ponX;
-      const ponNodeY = centerY;
-      g.append('circle')
-        .attr('cx', ponNodeX)
-        .attr('cy', ponNodeY)
-        .attr('r', nodeRadius+4)
-        .attr('fill', '#0f766e')
-        .attr('stroke','#fff')
-        .attr('stroke-width',2);
+    Object.keys(oltGroups).forEach(oltNum => {
+      const group = oltGroups[oltNum];
 
-      g.append('text')
-        .attr('x', ponNodeX + nodeRadius + 8)
-        .attr('y', ponNodeY + 4)
-        .text(ponName + (ponObj.totalUsers ? ` (${ponObj.totalUsers})` : ''))
-        .attr('font-size',12)
-        .attr('fill','#0f172a');
+      /* OLT Node */
+      const ox = oltColX;
+      const oy = winStartY;
 
-      // Build level columns positions and node positions for splitters (sheet-order preserved)
-      const levelPositions = []; // [ [{s,x,y}, ...], ... ]
-      levels.forEach((lvl, li) => {
-        const splitters = lvl.splitters || [];
-        const colX = levelStartX + li * levelColWidth;
-        const count = Math.max(1, splitters.length);
-        const totalHeight = (count - 1) * vGap;
-        const startY = centerY - (totalHeight/2);
-        const arr = [];
-        for (let si=0; si<splitters.length; si++){
-          const s = splitters[si];
-          const x = colX;
-          const y = startY + si * vGap;
-          arr.push({ s, x, y });
-        }
-        levelPositions.push(arr);
-      });
+      g.append("circle")
+        .attr("cx", ox)
+        .attr("cy", oy)
+        .attr("r", 16)
+        .attr("fill", "#22c55e")
+        .attr("stroke","#fff")
+        .attr("stroke-width",2);
 
-      // draw splitters (circles + labels)
-      levelPositions.forEach((arr, li) => {
-        arr.forEach(node => {
-          const s = node.s;
-          const c = randColorForKey(parsePonForOlt(ponName)); // color by OLT
-          const circle = g.append('circle')
-            .attr('cx', node.x)
-            .attr('cy', node.y)
-            .attr('r', nodeRadius)
-            .attr('fill', '#10b981')
-            .attr('stroke','#fff')
-            .attr('stroke-width',2)
-            .style('cursor','pointer')
-            .on('mousemove', (event) => showTooltip(event, s, node.x, node.y))
-            .on('mouseout', ()=> hideTooltip())
-            .on('click', ()=> openPopup(s, ponName, winName));
+      g.append("text")
+        .attr("x", ox + 22)
+        .attr("y", oy + 4)
+        .text("OLT-" + oltNum)
+        .attr("font-size", 12)
+        .attr("fill","#0f172a");
 
-          // label to right
-          const label = (s.type ? `${s.type}` : '') + (s.total ? ` (${s.total})` : '');
-          g.append('text')
-            .attr('x', node.x + nodeRadius + 8)
-            .attr('y', node.y + 4)
-            .text(label)
-            .attr('font-size',11)
-            .attr('fill','#0f172a');
+      /* Link window → OLT */
+      g.append("path")
+        .attr("d",
+          `M${wx+20} ${wy} C ${wx+70} ${wy}, ${ox-70} ${oy}, ${ox-20} ${oy}`)
+        .attr("stroke", randColor())
+        .attr("stroke-width", 2)
+        .attr("fill","none");
 
-          if (s.recordId) {
-            g.append('text')
-              .attr('x', node.x)
-              .attr('y', node.y + nodeRadius + 14)
-              .text(s.recordId)
-              .attr('font-size',10)
-              .attr('fill','#64748b')
-              .attr('text-anchor','middle');
-          }
+      /* Render PON under this OLT */
+      group.forEach(pon => {
+        const px = ponColX;
+        const py = winStartY;
 
-        });
-      });
+        // Pon node
+        g.append("circle")
+          .attr("cx", px)
+          .attr("cy", py)
+          .attr("r", 14)
+          .attr("fill","#0f766e")
+          .attr("stroke","#fff")
+          .attr("stroke-width",2);
 
-      // LINKS:
-      // 1) Root -> Window: small line (we'll draw a thin link from rootX->winX for clarity)
-      g.append('path')
-        .attr('d', linkPath({x:rootX, y:centerY}, {x:winX, y:centerY}))
-        .attr('fill','none')
-        .attr('stroke','#94a3b8')
-        .attr('stroke-width',1.2)
-        .attr('stroke-opacity',0.9);
+        g.append("text")
+          .attr("x", px + 22)
+          .attr("y", py + 4)
+          .text(pon.pon)
+          .attr("font-size", 12)
+          .attr("fill","#0f172a");
 
-      // 2) Window -> OLT
-      g.append('path')
-        .attr('d', linkPath({x:winX, y:centerY}, {x:oltX, y:centerY}))
-        .attr('fill','none')
-        .attr('stroke','#94a3b8')
-        .attr('stroke-width',1.4)
-        .attr('stroke-opacity',0.95);
+        /* Link OLT → PON */
+        g.append("path")
+          .attr("d",
+            `M${ox+20} ${oy} C ${ox+80} ${oy}, ${px-80} ${py}, ${px-20} ${py}`)
+          .attr("stroke", randColor())
+          .attr("stroke-width", 2)
+          .attr("fill","none");
 
-      // 3) OLT -> PON (single)
-      const oltBranchColor = randColorForKey(oltLabel);
-      g.append('path')
-        .attr('d', linkPath({x:oltNodeX, y:oltNodeY}, {x:ponNodeX, y:ponNodeY}))
-        .attr('fill','none')
-        .attr('stroke', oltBranchColor)
-        .attr('stroke-width',2.2)
-        .attr('stroke-opacity',0.95)
-        .attr('class','link');
+        /* Render levels horizontally (same as old layout) */
+        drawLevels(g, px, py, pon);
 
-      // 4) PON -> Level1: always connect PON to every level1 splitter (even if zero users)
-      if (levelPositions.length >= 1) {
-        const lvl1 = levelPositions[0];
-        lvl1.forEach(child => {
-          const path = linkPath({x:ponNodeX, y:ponNodeY}, {x:child.x, y:child.y});
-          g.append('path')
-            .attr('d', path)
-            .attr('fill','none')
-            .attr('stroke', oltBranchColor)
-            .attr('stroke-width', 2)
-            .attr('stroke-opacity', 0.95)
-            .attr('class','link');
-        });
-      }
+        winStartY += nodeGapY + 40;
+      }); // pon
 
-      // 5) levelN -> levelN+1: connect child to FIRST previous-level parent that shares users (only adjacent)
-      for (let li=0; li < levelPositions.length - 1; li++){
-        const parents = levelPositions[li];
-        const children = levelPositions[li+1];
+      winStartY += 40;
+    }); // olt groups
 
-        // parent sets
-        const parentSets = parents.map(p => new Set((p.s.users||[]).map(normalizeId)));
+    curY += winBlockHeight + 160;
+  });
 
-        children.forEach(child => {
-          const childSet = new Set((child.s.users||[]).map(normalizeId));
-          let linked = false;
-          for (let pi=0; pi<parents.length; pi++){
-            const pset = parentSets[pi];
-            // check any intersection
-            let common = false;
-            for (const u of childSet) { if (pset.has(u)) { common = true; break; } }
-            if (common) {
-              // draw link parent->child (color by OLT)
-              const pnode = parents[pi];
-              g.append('path')
-                .attr('d', linkPath({x:pnode.x, y:pnode.y}, {x:child.x, y:child.y}))
-                .attr('fill','none')
-                .attr('stroke', oltBranchColor)
-                .attr('stroke-width', 2)
-                .attr('stroke-opacity', 0.95)
-                .attr('class','link');
-              linked = true;
-              break;
-            }
-          }
-          // if no parent matched -> do NOT draw (per rule)
-        });
-      }
-
-      // advance Y for next PON block
-      currentY += blockHeight + 12;
-    }); // end pons loop
-
-    // after all pons in window, add space
-    currentY += sectionGap;
-  }); // end windows loop
-
-  // fit to view
   fitToView(svg.node(), g.node());
 }
 
-/* fit to view */
-function fitToView(svgNode, gNode){
+/* Draw splitter levels: SAME AS OLD WORKING VERSION */
+function drawLevels(g, ponX, ponY, ponObj) {
+  const colW = 220;
+  const nodeGapY = 60;
+  const r = 12;
+
+  const levels = [...ponObj.levels].sort((a,b)=>a.level-b.level);
+  const baseX = ponX + colW;  
+  const baseY = ponY;
+
+  let prevPositions = null;
+
+  levels.forEach((lvl, idx)=>{
+    const x = baseX + idx*colW;
+    const sArr = lvl.splitters || [];
+
+    const totalHeight = (sArr.length-1)*nodeGapY;
+    let startY = baseY - totalHeight/2;
+
+    const positions = [];
+
+    sArr.forEach((s,i)=>{
+      const y = startY + i*nodeGapY;
+      positions.push({x,y,s});
+
+      g.append("circle")
+        .attr("cx",x).attr("cy",y)
+        .attr("r",r)
+        .attr("fill","#10b981")
+        .attr("stroke","#fff")
+        .attr("stroke-width",2)
+        .style("cursor","pointer")
+        .on("mousemove",ev=> showTooltip(ev,s))
+        .on("mouseout",hideTooltip)
+        .on("click",()=>openPopup(s, ponObj.pon, ""));
+      
+      g.append("text")
+        .attr("x",x+r+8)
+        .attr("y",y+4)
+        .attr("font-size",11)
+        .attr("fill","#0f172a")
+        .text((s.type||"") + ` (${s.total})`);
+    });
+
+    if(idx===0){
+      // connect PON → Level1 (all)
+      positions.forEach(p=>{
+        g.append("path")
+          .attr("d", linkPath({x:ponX,y:ponY}, {x:p.x,y:p.y}))
+          .attr("stroke", randColor())
+          .attr("stroke-width",2)
+          .attr("fill","none");
+      });
+    } else {
+      // connect to previous by "first common user"
+      const parent = prevPositions;
+
+      const parentSets = parent.map(p=> new Set((p.s.users||[]).map(normalizeId)));
+
+      positions.forEach(child=>{
+        const cSet = new Set((child.s.users||[]).map(normalizeId));
+        for(let k=0;k<parent.length;k++){
+          const pSet = parentSets[k];
+          let common = false;
+          for(const u of cSet){
+            if(pSet.has(u)){ common = true; break; }
+          }
+          if(common){
+            g.append("path")
+              .attr("d", linkPath(
+                {x:parent[k].x, y:parent[k].y},
+                {x:child.x, y:child.y}
+              ))
+              .attr("stroke", randColor())
+              .attr("stroke-width",2)
+              .attr("fill","none");
+            break;
+          }
+        }
+      });
+    }
+
+    prevPositions = positions;
+  });
+}
+
+/* link path */
+function linkPath(a,b){
+  const mx = a.x + (b.x-a.x)*0.5;
+  return `M${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`;
+}
+
+/* Fit */
+function fitToView(svgNode, gNode) {
   try {
-    const bbox = gNode.getBBox();
-    const svgW = svgNode.clientWidth || window.innerWidth;
-    const svgH = svgNode.clientHeight || window.innerHeight - 80;
-    if (!isFinite(bbox.width) || bbox.width === 0) return;
-    const scale = Math.min(1.0, Math.min(svgW / (bbox.width + 140), svgH / (bbox.height + 120)));
-    const tx = -bbox.x * scale + 20;
-    const ty = -bbox.y * scale + 20;
-    d3.select(svgNode).transition().duration(500).call(
+    const b = gNode.getBBox();
+    const W = svgNode.clientWidth;
+    const H = svgNode.clientHeight;
+    const scale = Math.min(1, Math.min(W/(b.width+200), H/(b.height+200)));
+    const tx = -b.x*scale + 40;
+    const ty = -b.y*scale + 40;
+    d3.select(svgNode).call(
       d3.zoom().transform,
-      d3.zoomIdentity.translate(tx, ty).scale(scale)
+      d3.zoomIdentity.translate(tx,ty).scale(scale)
     );
   } catch(e){}
 }
 
-/* ================== Tooltip & Popup ================== */
-function showTooltip(event, splitterObj, x, y){
-  const t = tooltip;
-  t.style.left = (event.pageX + 12) + 'px';
-  t.style.top = (event.pageY + 8) + 'px';
-  const users = Array.isArray(splitterObj.users) ? splitterObj.users.length : 0;
-  t.innerHTML = `<strong>${splitterObj.type || splitterObj.recordId || 'Splitter'}</strong><br/>Record: ${splitterObj.recordId||'-'}<br/>Users: <strong>${users}</strong>`;
+/* Tooltip / Popup (same as old) */
+function showTooltip(ev,s){
+  const t = document.getElementById("tooltip");
+  t.style.left = ev.pageX+10+"px";
+  t.style.top = ev.pageY+10+"px";
   t.style.opacity = 1;
+  t.innerHTML =
+    `<strong>${s.type}</strong><br>
+     Record: ${s.recordId}<br>
+     Users: ${s.total}`;
 }
-function hideTooltip(){ tooltip.style.opacity = 0; }
-
-function openPopup(splitterObj, ponName, winName){
-  const modal = document.getElementById('popupModal');
-  document.getElementById('popupTitle').textContent = `${splitterObj.type || 'Splitter'} — Users`;
-  document.getElementById('popupPath').textContent = `${winName} → ${ponName} → ${splitterObj.recordId || ''}`;
-  document.getElementById('popupMeta').innerHTML = `<div><strong>Total users:</strong> ${splitterObj.total || (splitterObj.users ? splitterObj.users.length : 0)}</div>`;
-  const tbl = document.getElementById('popupUsersTable');
-  const users = Array.isArray(splitterObj.users) ? splitterObj.users : [];
-  tbl.innerHTML = `<thead><tr><th>Sr</th><th>User ID</th></tr></thead><tbody>${users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')}</tbody>`;
-  modal.style.display = 'flex';
+function hideTooltip(){
+  document.getElementById("tooltip").style.opacity = 0;
 }
 
-/* ================== SEARCH ================== */
-function runSearch(){
-  const q = normalizeId(searchInput.value || '');
-  if (!q) { alert('Enter some text to search'); return; }
-  // highlight all splitters containing q (partial match allowed)
-  // we will iterate through svg text nodes (recordId labels and also circle bindings impossible to read directly),
-  // simplest approach: re-render and then find splitters by scanning rawJson
-  if (!rawJson) return;
-  const matches = []; // {pon, win, splitter}
-  rawJson.windows.forEach(win => {
-    (win.pons||[]).forEach(pon => {
-      (pon.levels||[]).forEach(lvl => {
-        (lvl.splitters||[]).forEach(s => {
-          const found = (s.users || []).some(u => normalizeId(u).includes(q));
-          if (found) matches.push({win: win.window, pon: pon.pon, splitter: s});
-        });
-      });
-    });
-  });
-  if (matches.length === 0) {
-    alert('No matching users found in JSON.');
-    return;
-  }
-  // re-render and then highlight by opening popup for first match and visually mark circles
-  renderFromJson(rawJson);
-  // Wait a tick to ensure svg present
-  setTimeout(()=> {
-    // color strokes of matched splitters by matching recordId/text positions:
-    // we'll match by recordId & type & total to be safe.
-    const svg = document.querySelector('#chart svg');
-    if (!svg) return;
-    // find all circles and label text nodes; we will mark circles next to labels where label text includes recordId or type or total
-    const texts = Array.from(svg.querySelectorAll('text'));
-    const circles = Array.from(svg.querySelectorAll('circle'));
-    // create small index: for each text node, find sibling circle within small x distance
-    const matchedCircles = [];
-    matches.forEach(m => {
-      // create matching signature
-      const sigParts = [
-        m.splitter.recordId ? String(m.splitter.recordId) : '',
-        m.splitter.type ? String(m.splitter.type) : '',
-        m.splitter.total ? String(m.splitter.total) : ''
-      ].filter(Boolean);
-      const sig = sigParts.join(' ');
-      // find text nodes that contain any sig part
-      const foundText = texts.find(t => {
-        const txt = (t.textContent||'').trim();
-        if (!txt) return false;
-        // match record id exact OR type substring OR total in parentheses
-        if (m.splitter.recordId && txt.includes(String(m.splitter.recordId))) return true;
-        if (m.splitter.type && txt.includes(m.splitter.type)) return true;
-        if (m.splitter.total && txt.includes(`(${m.splitter.total})`)) return true;
-        return false;
-      });
-      if (foundText) {
-        // find nearest circle by x,y proximity
-        const tx = foundText.getAttribute('x')*1;
-        const ty = foundText.getAttribute('y')*1;
-        let best = null; let bestDist = 1e9;
-        circles.forEach(c => {
-          const cx = c.getAttribute('cx')*1;
-          const cy = c.getAttribute('cy')*1;
-          const d = Math.hypot(cx - tx, cy - ty);
-          if (d < bestDist) { bestDist = d; best = c; }
-        });
-        if (best) {
-          best.classList.add('highlight');
-          matchedCircles.push(best);
-        }
-      }
-    });
-
-    // info: open popup for first match
-    if (matches[0]) openPopup(matches[0].splitter, matches[0].pon, matches[0].win);
-
-  }, 80);
+function openPopup(s,pon){
+  const m = document.getElementById("popupModal");
+  document.getElementById("popupTitle").textContent =
+    `${s.type} — Users`;
+  document.getElementById("popupPath").textContent = `${pon} → ${s.recordId}`;
+  const users = s.users || [];
+  document.getElementById("popupMeta").innerHTML =
+    `<strong>Total:</strong> ${users.length}`;
+  const tbl = document.getElementById("popupUsersTable");
+  tbl.innerHTML =
+    `<thead><tr><th>Sr</th><th>User</th></tr></thead>`+
+    `<tbody>`+
+    users.map((u,i)=> `<tr><td>${i+1}</td><td>${u}</td></tr>`).join("")+
+    `</tbody>`;
+  m.style.display="flex";
 }
 
-function clearSearch(){
-  searchInput.value = '';
-  // remove highlight classes
-  const svg = document.querySelector('#chart svg');
-  if (!svg) return;
-  Array.from(svg.querySelectorAll('circle.highlight')).forEach(c => c.classList.remove('highlight'));
-  document.getElementById('popupModal').style.display = 'none';
-}
-
-/* ================== DOWNLOADS ================== */
 function downloadCSV(){
-  const modal = document.getElementById('popupModal');
-  if (!modal) return;
-  const tbl = document.getElementById('popupUsersTable');
-  if (!tbl) return;
-  const rows = Array.from(tbl.querySelectorAll('tr'));
-  if (!rows.length) return;
-  let csv = '';
-  rows.forEach(r => {
-    const cols = Array.from(r.querySelectorAll('th,td')).map(c => `"${(c.textContent||'').replace(/"/g,'""')}"`);
-    csv += cols.join(',') + '\n';
+  const tbl = document.getElementById("popupUsersTable");
+  if(!tbl) return;
+  let csv="";
+  tbl.querySelectorAll("tr").forEach(r=>{
+    const cols=[...r.children].map(c=> `"${c.textContent}"`);
+    csv+=cols.join(",")+"\n";
   });
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'splitter-users.csv'; a.click();
-  URL.revokeObjectURL(url);
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="splitter.csv";
+  a.click();
 }
 
 function downloadScreenshot(){
-  const svg = document.querySelector('#chart svg');
-  if (!svg) return alert('No chart to screenshot');
-  const serializer = new XMLSerializer();
-  const source = serializer.serializeToString(svg);
-  const svgBlob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
-  const url = URL.createObjectURL(svgBlob);
-  const a = document.createElement('a'); a.href = url; a.download = 'merotra-tree.svg'; a.click();
-  URL.revokeObjectURL(url);
+  const svg=document.querySelector("#chart svg");
+  const src=new XMLSerializer().serializeToString(svg);
+  const blob=new Blob([src],{type:"image/svg+xml"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="network.svg";
+  a.click();
 }
 
-/* ================== INIT ================== */
-loadAndRender(false);
-window.addEventListener('resize', ()=> { if (rawJson) renderFromJson(rawJson); });
-
+/* Init */
+loadAndRender();
 </script>
+
 </body>
 </html>
