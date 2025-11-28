@@ -621,6 +621,14 @@ function buildHierarchy(board) {
     URL.revokeObjectURL(url);
   }
 
+function isSubset(aSet, bSet){
+  for (const x of aSet) {
+    if (!bSet.has(x)) return false;
+  }
+  return true;
+}
+
+  
 </script>
 </body>
 </html>
