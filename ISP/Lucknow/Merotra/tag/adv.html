@@ -5,761 +5,951 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Merotra — PON / Splitter Columns</title>
 
+  <!-- external styles (your adv.css) -->
+  <link rel="stylesheet" href="adv.css">
+
   <!-- D3 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
-  <!-- keep adv.css as requested (must be available next to this file or hosted) -->
-  <link rel="stylesheet" href="adv.css">
+  <!-- html2canvas for popup screenshot -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
   <style>
-    /* small overrides and additions */
-    body { margin:0; padding:0; font-family: Inter, system-ui, Arial, sans-serif; }
-    .header { padding: 10px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; background: rgba(255,255,255,0.9); position:sticky; top:0; z-index:40; }
-    .header-left { display:flex; gap:12px; align-items:center;}
-    .header-title{ font-weight:800; font-size:1.05rem; display:flex; gap:8px; align-items:center; }
-    .header-sub { font-size:0.85rem; color:#6b7280; font-weight:600; }
-    #chart { width:100%; height: calc(100vh - 64px); background: transparent; overflow:hidden; }
-    .tooltip { position:absolute; pointer-events:none; z-index:60; display:block; }
-    .controls-backdrop{ z-index:80; }
-    /* small floating search box */
-    .search-box {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      z-index: 70;
-      background: rgba(255,255,255,0.98);
-      border-radius: 10px;
-      padding: 8px;
-      box-shadow: 0 6px 20px rgba(2,6,23,0.12);
-      display:flex;
-      gap:6px;
-      align-items:center;
-    }
-    .search-box input { padding:6px 8px; border-radius:8px; border:1px solid #e5e7eb; width:180px; }
-    .search-box button { padding:6px 10px; border-radius:8px; border:none; background:#2563eb; color:white; cursor:pointer; }
-
-    /* highlight node */
-    .highlight-node {
-      stroke: #f59e0b !important;
-      stroke-width: 6px !important;
-      filter: drop-shadow(0 0 8px rgba(245,158,11,0.55));
-    }
-
-    /* link default stroke override removed. we'll set stroke inline with !important from JS */
-    /* small responsive tweak */
-    @media (max-width:720px){
-      .search-box input { width:120px; }
-    }
-
+    /* Small local tweaks (kept minimal; adv.css does rest) */
+    body { margin:0; padding:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; gap:12px; background:rgba(255,255,255,0.95); box-shadow:0 4px 20px rgba(0,0,0,0.06); position:sticky; top:0; z-index:40;}
+    .title { font-weight:800; display:flex; gap:8px; align-items:center; }
+    .controls { display:flex; gap:8px; align-items:center; }
+    #chartWrap { width:100%; height:calc(100vh - 64px); background:transparent; overflow:hidden; position:relative; }
+    #chartSVG { width:100%; height:100%; display:block; }
+    .colLabel { font-size:12px; font-weight:700; fill:#0f172a; }
+    .node-circle { stroke:#fff; stroke-width:2px; cursor:pointer; }
+    .node-text { font-size:11px; pointer-events:none; fill:#0f172a; }
+    .link { fill:none; stroke-width:2.2px; opacity:0.95; }
+    .link.dim { opacity:0.18; }
+    .highlight { filter: drop-shadow(0 6px 14px rgba(250,204,21,0.35)); stroke:#f59e0b !important; stroke-width:4px !important; }
+    .searchToggle { position:fixed; right:18px; bottom:18px; z-index:60; border-radius:999px; width:48px;height:48px; display:flex;align-items:center;justify-content:center;background:#2563eb;color:#fff;cursor:pointer;box-shadow:0 10px 30px rgba(37,99,235,0.18); }
+    .searchPanel { position:fixed; right:18px; bottom:78px; z-index:60; width:320px; max-width:92vw; background:rgba(255,255,255,0.98); border-radius:12px; padding:10px; box-shadow:0 20px 60px rgba(15,23,42,0.18); display:none; }
+    .searchRow { display:flex; gap:6px; align-items:center; }
+    .searchRow input { flex:1; padding:8px 10px; border-radius:8px; border:1px solid #e5e7eb; font-size:14px; }
+    .pill { padding:6px 8px; border-radius:999px; background:#eef2ff; color:#1e40af; font-weight:700; font-size:13px; cursor:pointer; }
+    .filterBar { display:flex; gap:8px; align-items:center; }
+    .filterBox { background:#fff; border:1px solid #e5e7eb; padding:8px; border-radius:8px; max-height:42vh; overflow:auto; min-width:160px; }
+    .smallBtn { padding:6px 8px; border-radius:8px; border:none; cursor:pointer; background:#2563eb; color:white; font-weight:600; }
+    .info-card { position:fixed; left:18px; bottom:18px; z-index:61; background:rgba(255,255,255,0.98); padding:12px; border-radius:12px; box-shadow:0 20px 60px rgba(15,23,42,0.18); display:none; min-width:220px; max-width:86vw; }
+    .info-row { font-size:13px; margin:6px 0; color:#0f172a; }
+    /* responsiveness tweaks */
+    @media (max-width:800px){ .filterBar{ flex-wrap:wrap } .searchPanel{ right:10px; bottom:70px; } }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-left">
-      <div class="header-title">🌐 Merotra Network</div>
-      <div class="header-sub">Window → PON → Level columns (splitters)</div>
+  <div class="topbar">
+    <div class="title">
+      <div style="font-size:16px">🌐 Merotra Network</div>
+      <div style="font-size:12px;color:#6b7280;">Columns: Window → PON → split-level columns</div>
     </div>
 
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="controlsBtn" class="btn btn-secondary">Filters</button>
-      <button id="reloadBtn" class="btn">Reload</button>
+    <div class="controls">
+      <div class="filterBar">
+        <div class="filterBox" id="windowFilterBox" style="min-width:120px"></div>
+        <div class="filterBox" id="ponFilterBox" style="min-width:160px"></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="smallBtn" id="applyFilters">Apply</button>
+          <button class="smallBtn" id="resetFilters" style="background:#6b7280">Reset</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div id="chart"></div>
-  <div id="tooltip" class="tooltip" style="opacity:0;"></div>
-
-  <!-- search box (floating bottom-right) -->
-  <div class="search-box" id="searchBox">
-    <input id="searchInput" placeholder="Search user id (e.g. 52200...)" />
-    <button id="searchBtn">Search</button>
-    <button id="clearSearchBtn" style="background:#6b7280;margin-left:6px">Clear</button>
+  <div id="chartWrap">
+    <svg id="chartSVG"></svg>
   </div>
 
-  <!-- POPUP (kept mostly same) -->
-  <div id="popupModal" class="popup-backdrop">
+  <!-- search toggle -->
+  <div class="searchToggle" id="searchToggle" title="Search users">🔍</div>
+
+  <!-- search panel -->
+  <div class="searchPanel" id="searchPanel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <strong>Find user ID</strong>
+      <div style="display:flex;gap:6px">
+        <button id="searchPrev" class="pill" style="display:none">◀ Prev</button>
+        <button id="searchNext" class="pill" style="display:none">Next ▶</button>
+      </div>
+    </div>
+    <div class="searchRow" style="margin-bottom:8px">
+      <input id="searchInput" placeholder="Enter user id (partial ok)" />
+      <select id="matchMode" style="padding:8px;border-radius:8px;border:1px solid #e5e7eb">
+        <option value="contains">Contains</option>
+        <option value="starts">Starts with</option>
+        <option value="exact">Exact</option>
+      </select>
+      <button id="doSearch" class="smallBtn">Search</button>
+      <button id="clearSearch" class="smallBtn" style="background:#ef4444;margin-left:6px">Clear</button>
+    </div>
+    <div style="font-size:12px;color:#6b7280">Default: stay until new search. Matching nodes highlighted and sequential pan with Next/Prev.</div>
+  </div>
+
+  <!-- info card (shows when a node clicked or search focused) -->
+  <div class="info-card" id="infoCard">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong id="infoTitle">Splitter</strong>
+      <button id="infoClose" style="background:#e5e7eb;border:none;padding:6px;border-radius:8px;cursor:pointer">Close</button>
+    </div>
+    <div id="infoBody" style="margin-top:8px"></div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button id="infoShot" class="smallBtn" style="background:#10b981">📸 Shot</button>
+      <button id="infoCsv" class="smallBtn" style="background:#f59e0b">📊 CSV</button>
+    </div>
+  </div>
+
+  <!-- popup modal (re-using small popup for listing users like your old UI) -->
+  <div id="popupModal" class="popup-backdrop" style="display:none">
     <div class="modal-content">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
         <div>
           <h2 id="popupTitle" style="margin:0;font-size:16px"></h2>
           <div id="popupPath" style="font-size:12px;color:#475569"></div>
         </div>
-        <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button>
+        <button id="popupCloseBtn" class="btn" style="height:30px">Close</button>
       </div>
+
       <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div>
-      <div id="popupLinks" style="margin-bottom:8px"></div>
+
       <h3 style="margin:8px 0 6px;font-size:14px">Users</h3>
-      <div style="max-height:300px;overflow:auto">
+      <div class="user-table-container">
         <table id="popupUsersTable" class="user-table"></table>
       </div>
+
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="btnShot" class="btn">📸 Screenshot</button>
-        <button id="btnCsv" class="btn btn-secondary">📊 CSV</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTROLS (filters) -->
-  <div id="controlsModal" class="controls-backdrop">
-    <div class="controls-modal">
-      <h3 style="margin:0 0 8px">Filters</h3>
-
-      <div style="margin-bottom:10px">
-        <div style="font-weight:600;font-size:13px">Windows</div>
-        <div id="windowFilters" class="checkbox-grid"></div>
-        <div style="text-align:center;margin-top:6px;font-size:12px;color:#64748b">
-          <a href="#" onclick="selectAll('window');return false">Select All</a> |
-          <a href="#" onclick="deselectAll('window');return false">Deselect All</a>
-        </div>
-      </div>
-
-      <div style="margin-bottom:10px">
-        <div style="font-weight:600;font-size:13px">PONs</div>
-        <div id="ponFilters" class="checkbox-grid pon-grid"></div>
-        <div style="text-align:center;margin-top:6px;font-size:12px;color:#64748b">
-          <a href="#" onclick="selectAll('pon');return false">Select All</a> |
-          <a href="#" onclick="deselectAll('pon');return false">Deselect All</a>
-        </div>
-      </div>
-
-      <div style="margin-bottom:10px">
-        <div style="font-weight:600;font-size:13px">Splitter Types</div>
-        <div id="typeFilters" class="checkbox-grid"></div>
-        <div style="text-align:center;margin-top:6px;font-size:12px;color:#64748b">
-          <a href="#" onclick="selectAll('type');return false">Select All</a> |
-          <a href="#" onclick="deselectAll('type');return false">Deselect All</a>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <button id="applyFiltersBtn" class="btn" style="flex:1">Apply</button>
-        <button id="controlsClose" class="btn btn-secondary" style="flex:1">Close</button>
+        <button id="btnShot" class="btn btn-shot">📸 Screenshot</button>
+        <button id="btnCsv" class="btn btn-csv">📊 CSV</button>
       </div>
     </div>
   </div>
 
 <script>
-/* ---------------- CONFIG ---------------- */
+/* ------------------------------------------------------------------
+  Config
+------------------------------------------------------------------ */
 const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
+const svg = d3.select("#chartSVG");
+const width = document.getElementById("chartWrap").clientWidth;
+const height = document.getElementById("chartWrap").clientHeight;
 
-/* ---------------- STATE ---------------- */
 let rawJson = null;
-let filters = { windows: [], pons: [], types: [] };
-let allWindowNames = [];
-let allPons = [];
-let allTypes = [];
-let svg, g;
-let zoom;
-const tooltip = document.getElementById("tooltip");
+let filteredJson = null;
+
+/* ------------------------------------------------------------------
+  UI nodes
+------------------------------------------------------------------ */
+const searchToggle = document.getElementById("searchToggle");
+const searchPanel = document.getElementById("searchPanel");
+const doSearchBtn = document.getElementById("doSearch");
+const searchInput = document.getElementById("searchInput");
+const matchModeEl = document.getElementById("matchMode");
+const searchNext = document.getElementById("searchNext");
+const searchPrev = document.getElementById("searchPrev");
+const clearSearch = document.getElementById("clearSearch");
+const infoCard = document.getElementById("infoCard");
+const infoTitle = document.getElementById("infoTitle");
+const infoBody = document.getElementById("infoBody");
+const infoClose = document.getElementById("infoClose");
+const applyFiltersBtn = document.getElementById("applyFilters");
+const resetFiltersBtn = document.getElementById("resetFilters");
+const windowFilterBox = document.getElementById("windowFilterBox");
+const ponFilterBox = document.getElementById("ponFilterBox");
+
 const popupModal = document.getElementById("popupModal");
+const popupCloseBtn = document.getElementById("popupCloseBtn");
 const popupTitleEl = document.getElementById("popupTitle");
-const popupPathEl  = document.getElementById("popupPath");
-const popupMetaEl  = document.getElementById("popupMeta");
-const popupLinksEl = document.getElementById("popupLinks");
+const popupPathEl = document.getElementById("popupPath");
+const popupMetaEl = document.getElementById("popupMeta");
 const popupUsersTbl = document.getElementById("popupUsersTable");
-let highlightedNodes = [];
+const btnShot = document.getElementById("btnShot");
+const btnCsv = document.getElementById("btnCsv");
 
-/* ---------------- UI hooks ---------------- */
-document.getElementById("reloadBtn").addEventListener("click", ()=> loadAndRender(true));
-document.getElementById("controlsBtn").addEventListener("click", ()=> { controlsModal.style.display='flex'; });
-document.getElementById("controlsClose").addEventListener("click", ()=> { controlsModal.style.display='none'; });
-document.getElementById("popupClose").addEventListener("click", ()=> { popupModal.style.display='none'; });
-document.getElementById("applyFiltersBtn").addEventListener("click", applyFiltersFromUI);
-document.getElementById("btnShot").addEventListener("click", ()=> alert("Screenshot from popup only — use page screenshot for full chart."));
-document.getElementById("btnCsv").addEventListener("click", ()=> alert("CSV export available per splitter popup."));
-document.getElementById("searchBtn").addEventListener("click", performSearch);
-document.getElementById("clearSearchBtn").addEventListener("click", clearSearch);
-window.addEventListener("resize", ()=> { if (rawJson) renderChart(rawJson); });
+/* ------------------------------------------------------------------
+  Zoom / pan group
+------------------------------------------------------------------ */
+svg.attr("viewBox", `0 0 ${Math.max(width,1200)} ${Math.max(height,700)}`);
+const g = svg.append("g").attr("transform", "translate(0,0)");
+const zoom = d3.zoom().scaleExtent([0.4, 3]).on("zoom", (e)=> g.attr("transform", e.transform));
+svg.call(zoom);
 
-/* ---------------- Boot ---------------- */
-loadAndRender(false);
+/* ------------------------------------------------------------------
+  Small helpers
+------------------------------------------------------------------ */
+const normalizeId = v => (v??"").toString().trim();
+function uidKey(u){ return normalizeId(u).toLowerCase(); }
 
-/* ---------------- Load JSON from server ---------------- */
-async function loadAndRender(showToast) {
+function parsePon(pon) {
+  const m = (pon||"").match(/O(\d+)I(\d+)P(\d+)/i);
+  if (!m) return { olt:9999, ip:9999, port:9999 };
+  return { olt:+m[1], ip:+m[2], port:+m[3] };
+}
+
+/* ------------------------------------------------------------------
+  Fetch & transform: We will accept the JSON you specified
+  and keep structure: windows -> pons -> levels (array of {level, splitters})
+------------------------------------------------------------------ */
+async function loadBoard() {
   try {
-    setLoading(true);
+    showLoading(true);
     const res = await fetch(BOARD_URL);
-    if (!res.ok) throw new Error("Board API fetch failed: "+res.status);
-    const data = await res.json();
-    rawJson = data;
-    prepareFilters(data);
-    const filtered = applyFiltersToJson(data, filters);
-    renderChart(filtered);
-    if (showToast && data.summary) console.info("Processed:", data.summary.processedRows, "Skipped:", data.summary.skippedRows);
+    if (!res.ok) throw new Error("Board fetch failed: "+res.status);
+    const json = await res.json();
+    rawJson = json;
+    filteredJson = json; // start unfiltered
+    populateFilterBoxes(json);
+    render();
   } catch (err) {
     console.error(err);
     alert("Error loading board: " + (err.message || err));
   } finally {
-    setLoading(false);
+    showLoading(false);
   }
 }
 
-function setLoading(flag){
-  const btn = document.getElementById("reloadBtn");
-  btn.textContent = flag ? "Loading..." : "Reload";
-  btn.disabled = flag;
-}
+/* ------------------------------------------------------------------
+  Build index maps to help quick search & linking
+------------------------------------------------------------------ */
+function buildIndexes(board) {
+  // We'll compute:
+  // - nodeList: array of { id: unique, window, pon, levelIndex (1..), splitterIndexInCell, recordId, users[], type }
+  // - mapping by user -> [nodeIds]
+  const nodes = [];
+  const userToNodes = new Map();
+  const ponOrder = []; // keep PON order for windows
+  if (!board || !Array.isArray(board.windows)) return { nodes, userToNodes, ponOrder };
 
-/* ---------------- Filters ---------------- */
-function prepareFilters(data) {
-  allWindowNames = Array.isArray(data.windows) ? data.windows.map(w=>w.window) : [];
-  allPons = [];
-  const typesSet = new Set();
-  (data.windows || []).forEach(win => {
-    (win.pons || []).forEach(p=>{
-      allPons.push(p.pon);
-      (p.levels || []).forEach(l=>{
-        (l.splitters||[]).forEach(s=>{
-          if (s.type) typesSet.add(s.type);
+  board.windows.forEach(win => {
+    const windowName = win.window;
+    (win.pons || []).forEach(pon => {
+      const ponName = pon.pon;
+      (pon.levels || []).forEach((lvObj, lvIdx) => {
+        const levelNum = lvObj.level;
+        (lvObj.splitters || []).forEach((sp, spIdx) => {
+          const nid = `${windowName}||${ponName}||L${levelNum}||${spIdx}||${sp.recordId || ""}`;
+          const node = {
+            id: nid,
+            window: windowName,
+            pon: ponName,
+            level: levelNum,
+            levelIndex: lvIdx,
+            splitIdx: spIdx,
+            recordId: sp.recordId || "",
+            type: sp.type || "",
+            users: (sp.users||[]).map(u=>normalizeId(u)),
+            total: sp.total || (sp.users ? sp.users.length : 0),
+            raw: sp
+          };
+          nodes.push(node);
+          (sp.users||[]).forEach(u => {
+            const k = uidKey(u);
+            if (!userToNodes.has(k)) userToNodes.set(k, []);
+            userToNodes.get(k).push(nid);
+          });
         });
       });
     });
   });
-  allPons = Array.from(new Set(allPons)).sort();
-  allTypes = Array.from(typesSet).sort();
 
-  // initial filters: select all
-  filters.windows = Array.from(allWindowNames);
-  filters.pons = Array.from(allPons);
-  filters.types = Array.from(allTypes);
+  return { nodes, userToNodes };
+}
 
-  // render filter UI
-  const winDiv = document.getElementById("windowFilters");
-  const ponDiv = document.getElementById("ponFilters");
-  const typeDiv = document.getElementById("typeFilters");
-  winDiv.innerHTML = ""; ponDiv.innerHTML = ""; typeDiv.innerHTML = "";
-
-  allWindowNames.forEach(w=>{
-    const el = document.createElement("div"); el.className="checkbox-item";
-    el.innerHTML = `<label><input type="checkbox" value="${w}" checked> <span>${w}</span></label>`;
-    winDiv.appendChild(el);
+/* ------------------------------------------------------------------
+  Populate filters UI
+------------------------------------------------------------------ */
+function populateFilterBoxes(json) {
+  windowFilterBox.innerHTML = "";
+  ponFilterBox.innerHTML = "";
+  if (!json || !Array.isArray(json.windows)) return;
+  const windows = json.windows.map(w=>w.window);
+  windows.forEach(w => {
+    const id = `win_${escapeId(w)}`;
+    const el = document.createElement("div");
+    el.innerHTML = `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" value="${w}" checked id="${id}"/> <span style="font-weight:600">${w}</span></label>`;
+    windowFilterBox.appendChild(el);
   });
 
-  allPons.forEach(p=>{
-    const el = document.createElement("div"); el.className="checkbox-item";
-    el.innerHTML = `<label><input type="checkbox" value="${p}" checked> <span>${p}</span></label>`;
-    ponDiv.appendChild(el);
+  const allPons = [];
+  json.windows.forEach(w => (w.pons||[]).forEach(p => allPons.push({window:w.window, pon:p.pon})));
+  allPons.sort((a,b) => {
+    const pa = parsePon(a.pon), pb = parsePon(b.pon);
+    if (pa.olt !== pb.olt) return pa.olt - pb.olt;
+    if (pa.ip !== pb.ip) return pa.ip - pb.ip;
+    return pa.port - pb.port;
   });
 
-  allTypes.forEach(t=>{
-    const el = document.createElement("div"); el.className="checkbox-item";
-    el.innerHTML = `<label><input type="checkbox" value="${t}" checked> <span>${t}</span></label>`;
-    typeDiv.appendChild(el);
+  allPons.forEach(pp => {
+    const id = `pon_${escapeId(pp.pon)}`;
+    const el = document.createElement("div");
+    el.innerHTML = `<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" value="${pp.pon}" checked data-window="${pp.window}" id="${id}"/> <span>${pp.pon} <small style="color:#6b7280;margin-left:6px">(${pp.window})</small></span></label>`;
+    ponFilterBox.appendChild(el);
   });
 }
 
-function selectAll(type){
-  const sel = document.querySelectorAll(`#${type}Filters input[type="checkbox"]`);
-  sel.forEach(ch=>ch.checked=true);
-}
-function deselectAll(type){
-  const sel = document.querySelectorAll(`#${type}Filters input[type="checkbox"]`);
-  sel.forEach(ch=>ch.checked=false);
+function escapeId(s){ return (s||"").replace(/[^a-z0-9]/ig,'_'); }
+
+/* ------------------------------------------------------------------
+  Apply filters
+------------------------------------------------------------------ */
+function getActiveFilters() {
+  const windows = Array.from(windowFilterBox.querySelectorAll("input:checked")).map(i => i.value);
+  const pons = Array.from(ponFilterBox.querySelectorAll("input:checked")).map(i => i.value);
+  return { windows, pons };
 }
 
-function applyFiltersFromUI(){
-  filters.windows = Array.from(document.querySelectorAll("#windowFilters input:checked")).map(i => i.value);
-  filters.pons = Array.from(document.querySelectorAll("#ponFilters input:checked")).map(i => i.value);
-  filters.types = Array.from(document.querySelectorAll("#typeFilters input:checked")).map(i => i.value);
-  controlsModal.style.display='none';
-  const filtered = applyFiltersToJson(rawJson, filters);
-  renderChart(filtered);
-}
-
-function applyFiltersToJson(json, filters){
-  if (!json || !Array.isArray(json.windows)) return { windows: [] };
-  const out = { windows: [] };
-  json.windows.forEach(win=>{
-    if (!filters.windows.includes(win.window)) return;
-    const copy = { window: win.window, pons: [] };
-    (win.pons || []).forEach(p=>{
+/* ------------------------------------------------------------------
+  Render: draws column layout + circles + links
+------------------------------------------------------------------ */
+function render() {
+  if (!rawJson) return;
+  // apply basic filters
+  const filters = getActiveFilters();
+  const board = { windows: [] };
+  rawJson.windows.forEach(w => {
+    if (!filters.windows.includes(w.window)) return;
+    const nw = { window: w.window, pons: [] };
+    (w.pons || []).forEach(p => {
       if (!filters.pons.includes(p.pon)) return;
-      // filter splitter types inside levels
-      const lv = [];
-      (p.levels || []).forEach(level=>{
-        const splitters = (level.splitters || []).filter(s => filters.types.includes(s.type));
-        if (splitters.length) {
-          lv.push({ level: level.level, splitters: splitters });
-        }
-      });
-      if (lv.length) copy.pons.push({ pon: p.pon, levels: lv });
+      // remove empty levels (per your request)
+      const levels = (p.levels || []).filter(lv => Array.isArray(lv.splitters) && lv.splitters.length > 0);
+      if (levels.length === 0) return;
+      nw.pons.push({ pon: p.pon, levels });
     });
-    if (copy.pons.length) out.windows.push(copy);
+    if (nw.pons.length) board.windows.push(nw);
   });
-  return out;
+
+  filteredJson = board;
+  const idx = buildIndexes(board);
+  drawColumnsAndLinks(board, idx);
+  // store index in window for search/pan
+  window._MEROTRA_INDEX = idx;
 }
 
-/* ---------------- Chart rendering ---------------- */
+/* ------------------------------------------------------------------
+  layout algorithm:
+   - columns: window, pon, level1..levelN (N = max levels across this PON set)
+   - for each column we compute Y positions for nodes:
+       * window column: one label per window (y based on number of PONs)
+       * pon column: each pon is one node (y depends on its pon index in its window)
+       * level columns: nodes are stacked; to reduce crossing we group nodes that connect to same parents close together
+------------------------------------------------------------------ */
+function drawColumnsAndLinks(board, idx) {
+  g.selectAll("*").remove();
+  if (!board || !Array.isArray(board.windows) || board.windows.length === 0) return;
 
-function renderChart(board) {
-  // clear existing
-  d3.select("#chart").selectAll("*").remove();
-  const chart = document.getElementById("chart");
-  const width = chart.clientWidth || Math.max(window.innerWidth-40, 900);
-  const height = chart.clientHeight || Math.max(window.innerHeight-120, 480);
-
-  svg = d3.select("#chart").append("svg")
-    .attr("width", width).attr("height", height)
-    .style("overflow","visible");
-
-  zoom = d3.zoom().scaleExtent([0.4, 3]).on("zoom", (event) => {
-    g.attr("transform", event.transform);
-  });
-  svg.call(zoom);
-
-  g = svg.append("g").attr("transform","translate(40,40)");
-
-  // Data model building: columns
-  // columns: 0 => windows label, 1 => pons, 2 => level1 splitters, 3 => level2 ...
-  // We'll flatten for layout: compute maximum levels across PONs to determine columns
-  const windows = board.windows || [];
-  // determine maxLevels
-  let maxLevels = 0;
-  windows.forEach(w=>{
-    (w.pons || []).forEach(p=>{
-      const lvCount = (p.levels || []).length;
-      if (lvCount > maxLevels) maxLevels = lvCount;
+  // compute global max levels
+  let maxLevel = 0;
+  board.windows.forEach(w => {
+    w.pons.forEach(p => {
+      const localMax = (p.levels || []).reduce((m, lv) => Math.max(m, lv.level || 0), 0);
+      maxLevel = Math.max(maxLevel, localMax);
     });
   });
-  // columns count = 2 (window + pon) + maxLevels
-  const colCount = 2 + maxLevels; // col 0 window, col1 pon, col2 level1, ...
 
-  // horizontal spacing
-  const colSpacing = Math.max(220, Math.round((width-160) / Math.max(4, colCount)));
-  // vertical accumulate locations per column
-  const columns = Array.from({length: colCount}, ()=>({ nodes: [], nextY: 0 }));
+  // define columns: 0 = Window, 1 = PON, then 2.. = Level1..LevelN
+  const colCount = 2 + maxLevel;
+  const svgW = Math.max(document.getElementById("chartWrap").clientWidth, 900);
+  const svgH = Math.max(document.getElementById("chartWrap").clientHeight, 520);
+  svg.attr("viewBox", `0 0 ${svgW} ${svgH}`);
 
-  // Build nodes list with references for linking
-  // Node structure: {id, type:'window'|'pon'|'splitter', label, users:Set, col, childrenIds:[], meta: {...}, parentRefs:[]}
-  const nodesById = new Map();
+  const colX = d3.range(colCount).map(i => 40 + i * Math.max(240, Math.floor((svgW-120)/(colCount-1)))); // left padding 40
+  // vertical padding per column
+  const colPaddingTop = 40;
+  const colPaddingBottom = 60;
 
-  // helper to unique id
-  const makeId = (prefix, key) => `${prefix}::${key}`;
+  // Build per-column node arrays with positions
+  const colNodes = d3.range(colCount).map(()=>[]); // each entry: {id, label, type(window/pon/splitter), window, pon, level, users, raw}
 
-  // Colors per PON branch (assign color per pon)
-  const ponColors = {};
-  const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
-  const allPonList = [];
-  windows.forEach(w=> (w.pons||[]).forEach(p=> allPonList.push(p.pon)));
-  const uniqPonList = Array.from(new Set(allPonList)).sort();
-  uniqPonList.forEach((pon, i) => ponColors[pon] = colorScale(i));
+  // Window column: one per window (show once only)
+  board.windows.forEach((w, wi) => {
+    const label = w.window;
+    // position placeholder; we'll compute Y later to distribute nicely by total pons in that window
+    colNodes[0].push({ id: `win::${label}`, label, type: "window", window: label, raw: w });
+  });
 
-  // populate windows and pons
-  windows.forEach((win, wi)=>{
-    const winId = makeId('win', win.window);
-    const winNode = { id: winId, type: 'window', label: win.window, users: new Set(), col: 0, childrenIds: [] , meta: { raw: win } };
-    nodesById.set(winId, winNode);
-    columns[0].nodes.push(winNode);
+  // PON column: each pon node
+  board.windows.forEach((w, wi) => {
+    w.pons.forEach((p, pi) => {
+      colNodes[1].push({ id: `pon::${p.pon}`, label: p.pon, type: "pon", window: w.window, pon: p.pon, raw: p });
+    });
+  });
 
-    (win.pons || []).forEach((p, pi)=>{
-      const ponId = makeId('pon', p.pon);
-      const ponNode = { id: ponId, type: 'pon', label: p.pon, users: new Set(), col: 1, childrenIds: [], parentId: winId, meta: { raw: p } };
-      nodesById.set(ponId, ponNode);
-      columns[1].nodes.push(ponNode);
-      // link window->pon
-      winNode.childrenIds.push(ponId);
-
-      // levels -> splitters
-      (p.levels || []).forEach((level, li)=>{
-        const colIndex = 2 + li;
-        if (!columns[colIndex]) columns[colIndex] = { nodes: [], nextY: 0 };
-        (level.splitters || []).forEach((sp, si)=>{
-          // ensure splitter unique id (recordId may be empty in sample). Use recordId + index fallback
-          const rid = sp.recordId || `noid_${p.pon}_${level.level}_${si}`;
-          const splitKey = `${p.pon}::L${level.level}::${rid}::${si}`;
-          const spId = makeId('split', splitKey);
-          const usersSet = new Set((sp.users || []).map(u => String(u)));
-          const spNode = { id: spId, type: 'splitter', label: (sp.type||"splitter") + (rid ? ` (${rid})` : ''), shortLabel: sp.type || "", recordId: rid, users: usersSet, col: colIndex, childrenIds: [], parentRefs: [], meta: { raw: sp, pon: p.pon, level: level.level } };
-          nodesById.set(spId, spNode);
-          columns[colIndex].nodes.push(spNode);
-          // add pon -> level1 parent linkage (PON children are level1 splitters)
-          if (colIndex === 2) {
-            ponNode.childrenIds.push(spId);
-            spNode.parentRefs.push(ponId);
-            // add to pon & win users
-            usersSet.forEach(u => { ponNode.users.add(u); winNode.users.add(u); });
-          } else {
-            // for splitters at level>1 we will determine parentRefs below (only previous level)
-            usersSet.forEach(u => { ponNode.users.add(u); winNode.users.add(u); });
-          }
+  // Level columns
+  // We'll place splitters in column index = 1 + levelNumber
+  board.windows.forEach(w => {
+    w.pons.forEach(p => {
+      (p.levels||[]).forEach(lv => {
+        const levelNum = lv.level;
+        const colIdx = 1 + levelNum; // level 1 -> col 2
+        (lv.splitters||[]).forEach((sp, sIdx) => {
+          const nid = `${w.window}||${p.pon}||L${levelNum}||${sIdx}||${sp.recordId||""}`;
+          colNodes[colIdx].push({
+            id: nid,
+            label: sp.recordId ? `${sp.recordId} — ${sp.type}` : sp.type || "splitter",
+            shortLabel: sp.recordId || sp.type || "spl",
+            type: "splitter",
+            window: w.window,
+            pon: p.pon,
+            level: levelNum,
+            users: (sp.users||[]).map(x=>normalizeId(x)),
+            total: sp.total || (sp.users ? sp.users.length : 0),
+            raw: sp
+          });
         });
       });
     });
   });
 
-  // Now determine parents for levels >1: connect to previous column's splitters only if share at least one user
-  for (let col = 3; col < columns.length; col++) {
-    const prevNodes = columns[col-1].nodes.filter(n=>n.type === 'splitter');
-    const currNodes = columns[col].nodes.filter(n=>n.type === 'splitter');
-    // for each curr node find prev nodes with intersection
-    currNodes.forEach(curr => {
-      prevNodes.forEach(prev => {
-        // only consider prev and curr under same PON (important)
-        if (prev.meta && curr.meta && prev.meta.pon && curr.meta.pon && prev.meta.pon !== curr.meta.pon) return;
-        // intersection
-        let found = false;
-        for (const u of curr.users) { if (prev.users.has(u)) { found = true; break; } }
-        if (found) {
-          curr.parentRefs.push(prev.id);
-          prev.childrenIds.push(curr.id);
-        }
+  // Compute Y positions per column:
+  // Strategy: distribute nodes evenly; but try to cluster children near parents
+  const positions = {}; // id -> {x,y}
+
+  // Helper to evenly space nodes vertically with center alignment
+  function distributeVertical(nodesArr, top, bottom) {
+    const n = nodesArr.length;
+    const avail = Math.max(1, bottom - top);
+    if (n === 0) return nodesArr.map(()=>top + avail/2);
+    if (n === 1) return [top + avail/2];
+    const gap = avail / (n);
+    return nodesArr.map((d,i)=> Math.round(top + gap*(i) + gap/2 - gap/2 ));
+  }
+
+  // Window column Y: distribute using number of pons in window as weight
+  const winCounts = board.windows.map(w=> w.pons.length);
+  const totalWindowWeight = d3.sum(winCounts);
+  // We'll simply space by cumulative pons to align pon nodes under window roughly
+  let running = 0;
+  const windowYS = [];
+  const totalPonCount = d3.sum(board.windows, w => w.pons.length) || 1;
+  // compute centers based on pon blocks
+  let ponIndex = 0;
+  board.windows.forEach((w, wi) => {
+    const blockSize = Math.max(1, w.pons.length);
+    // compute center of block in the vertical space
+    // We'll map pon positions later, so for windows just distribute equally by index
+    const y = Math.round(colPaddingTop + (wi + 0.5) * ( (svgH - colPaddingTop - colPaddingBottom) / board.windows.length ));
+    windowYS.push(y);
+  });
+  colNodes[0].forEach((n,i) => { positions[n.id] = { x: colX[0], y: windowYS[i] }; });
+
+  // PON column: group pons by window and space their pons in a local block under the window
+  // Build map window -> list of pon nodes and compute Y positions by block
+  const ponByWindow = {};
+  colNodes[1].forEach(pn => {
+    if (!ponByWindow[pn.window]) ponByWindow[pn.window] = [];
+    ponByWindow[pn.window].push(pn);
+  });
+
+  // for each window, find its windowY and distribute its pons around it
+  const ponYs = [];
+  board.windows.forEach((w, wi) => {
+    const wnId = `win::${w.window}`;
+    const windowY = positions[wnId] ? positions[wnId].y : (colPaddingTop + (wi+0.5) * ((svgH-colPaddingTop-colPaddingBottom)/board.windows.length));
+    const pons = ponByWindow[w.window] || [];
+    const blockHeight = Math.max( Math.min(400, (pons.length * 44)), 44 );
+    const top = Math.max(colPaddingTop, windowY - blockHeight/2);
+    const bottom = Math.min(svgH - colPaddingBottom, windowY + blockHeight/2);
+    const ys = distributeVertical(pons, top, bottom);
+    pons.forEach((pn, i) => { positions[pn.id] = { x: colX[1], y: ys[i] }; });
+  });
+
+  // For level columns, we cluster splitters by their parent(s).
+  // We'll create map by pon + previous level parent id to group children
+  // First compute helper maps: previous-level nodes keyed by pon+level
+  const prevLevelMap = {}; // key = pon + '::L' + level -> array of node objects
+  for (let c = 2; c < colCount; c++) {
+    colNodes[c].forEach(node => {
+      const key = `${node.pon}::L${node.level}`;
+      if (!prevLevelMap[key]) prevLevelMap[key] = [];
+      prevLevelMap[key].push(node);
+    });
+  }
+
+  // We'll place level-by-level left to right.
+  for (let c = 2; c < colCount; c++) {
+    const nodesThis = colNodes[c];
+    // group nodes by pon
+    const byPon = d3.group(nodesThis, d=>d.pon);
+    // for each pon, compute top/bottom segment centered around pon position
+    byPon.forEach((nodesArr, pon) => {
+      // find pon y
+      const ponId = `pon::${pon}`;
+      const centerY = positions[ponId] ? positions[ponId].y : Math.round((svgH-colPaddingTop-colPaddingBottom)/2);
+      // compute block height proportional to number of nodes, but clipped
+      const blockHeight = Math.max( Math.min(800, nodesArr.length * 40 + 20), 40 );
+      const top = Math.max(colPaddingTop, centerY - blockHeight/2);
+      const bottom = Math.min(svgH - colPaddingBottom, centerY + blockHeight/2);
+      // but we also want to cluster children of the same previous-level parents together:
+      // Build parent keys (previous level nodes that connect to these nodes)
+      // Keep sheet-order as required (splitters order must be sheet order -> nodesThis already comes in sheet order)
+      const nodesInPon = nodesArr; // preserve order
+      const ys = distributeVertical(nodesInPon, top, bottom);
+      nodesInPon.forEach((n, i) => {
+        positions[n.id] = { x: colX[c], y: ys[i] };
       });
     });
   }
 
-  // Layout: compute y positions per column trying to align children under parents
-  // We'll compute y positions in pixels. vertical spacing:
-  const rowSpacing = 36;
-  const colX = i => i * colSpacing;
-
-  // First, for column 0 (windows), just stack windows
-  columns.forEach((col, ci) => {
-    col.nextY = 0;
-  });
-
-  // Stack windows
-  columns[0].nodes.forEach(n => {
-    n.x = colX(0);
-    n.y = columns[0].nextY;
-    columns[0].nextY += rowSpacing;
-  });
-
-  // Stack PONs under their window: we'll group pons by window and place them close to the window y
-  // Build mapping window -> its y positions average
-  const winToPons = {};
-  columns[1].nodes.forEach(pon => {
-    const winId = pon.parentId;
-    if (!winToPons[winId]) winToPons[winId] = [];
-    winToPons[winId].push(pon);
-  });
-  // For each window, position its pons starting near window.y
-  columns[1].nodes.forEach(pon => {
-    const win = nodesById.get(pon.parentId);
-    // start position = window.y or last used
-    const arr = winToPons[pon.parentId];
-    // compute index in arr
-    const idx = arr.indexOf(pon);
-    const startY = (win.y || 0) + (idx * rowSpacing);
-    pon.x = colX(1);
-    // ensure not overlapping previously set positions in col
-    let candidateY = startY;
-    // if candidateY < current nextY for column, allow it — but also keep column nextY max to ensure free space
-    pon.y = candidateY;
-    columns[1].nextY = Math.max(columns[1].nextY, candidateY + rowSpacing);
-  });
-
-  // For column 2 (level1 splitters): place children vertically under their pon parents averaged
-  function placeColumnFromParents(colIndex) {
-    const col = columns[colIndex];
-    // Attempt to place each node at average y of its parents (if any)
-    col.nodes.forEach(n => {
-      if (n.type !== 'splitter') return;
-      if (n.parentRefs && n.parentRefs.length) {
-        let sum = 0, cnt = 0;
-        n.parentRefs.forEach(pid => {
-          const p = nodesById.get(pid);
-          if (p && typeof p.y === 'number') { sum += p.y; cnt++; }
-        });
-        if (cnt>0) n.y = sum / cnt;
-        else n.y = col.nextY;
-      } else {
-        // if no parents (rare), stack in column
-        n.y = col.nextY;
-      }
-      n.x = colX(colIndex);
-      col.nextY = Math.max(col.nextY, n.y + rowSpacing);
-    });
-    // After initial pass, ensure nodes do not overlap: sort by y and if overlap, push down
-    col.nodes = col.nodes.sort((a,b)=> (a.y||0)-(b.y||0));
-    for (let i=0;i<col.nodes.length;i++){
-      const n = col.nodes[i];
-      if (i===0) continue;
-      const prev = col.nodes[i-1];
-      if (n.y - prev.y < rowSpacing - 4) {
-        n.y = prev.y + rowSpacing;
-      }
+  // Now draw columns labels (only once for Window and PON; we will not show "Level N" labels per requirement)
+  // Clear g
+  // draw vertical dotted column separators for visual columns
+  const colGroup = g.append("g").attr("class","cols");
+  colX.forEach((x, i) => {
+    // draw faint vertical dotted lines except leftmost
+    if (i>0) {
+      colGroup.append("line")
+        .attr("x1", x - 120)
+        .attr("y1", 16)
+        .attr("x2", x - 120)
+        .attr("y2", svgH - 8)
+        .attr("stroke", "#e6edf3")
+        .attr("stroke-dasharray", "4 6")
+        .attr("stroke-width", 1);
     }
-    // update column nextY
-    const last = col.nodes[col.nodes.length-1];
-    if (last) col.nextY = last.y + rowSpacing;
-  }
+  });
 
-  // place level1 (colIndex=2) based on pon parents
-  placeColumnFromParents(2);
-  // place further columns sequentially
-  for (let c=3; c<columns.length; c++){
-    placeColumnFromParents(c);
-  }
+  // Draw Window labels (left column)
+  const leftCol = g.append("g").attr("class","leftcol");
+  colNodes[0].forEach(n => {
+    const p = positions[n.id];
+    leftCol.append("text")
+      .attr("x", p.x - 60)
+      .attr("y", p.y)
+      .attr("class","colLabel")
+      .attr("text-anchor","end")
+      .text(n.label);
+  });
 
-  // Now re-adjust overall vertical offset to center content vertically
-  const maxY = Math.max(...columns.map(c=>c.nextY));
-  const topOffset = Math.max(20, (height - 80 - maxY)/2);
-  columns.forEach(col => col.nodes.forEach(n => n.y += topOffset));
+  // Draw PON nodes
+  const ponGroup = g.append("g").attr("class","pons");
+  colNodes[1].forEach(n => {
+    const p = positions[n.id];
+    // small circle
+    ponGroup.append("circle")
+      .attr("cx", p.x)
+      .attr("cy", p.y)
+      .attr("r", 12)
+      .attr("fill", "#0f766e")
+      .attr("stroke","#fff")
+      .attr("stroke-width",2);
+    // label to left
+    ponGroup.append("text")
+      .attr("x", p.x - 18)
+      .attr("y", p.y + 4)
+      .attr("text-anchor","end")
+      .attr("class","node-text")
+      .text(n.label);
+  });
 
-  // Draw grid vertical column separators (dotted)
-  for (let ci = 0; ci < colCount; ci++) {
-    const x = colX(ci);
-    g.append("line")
-      .attr("x1", x)
-      .attr("x2", x)
-      .attr("y1", 0)
-      .attr("y2", Math.max(700, columns.reduce((m,c)=>Math.max(m,c.nextY),0)))
-      .attr("stroke", "#e6eef9")
-      .attr("stroke-dasharray", "3,6")
-      .attr("stroke-width", 1);
+  // Draw splitter nodes
+  const nodeMap = new Map(); // id -> node object (with pos)
+  for (let c = 2; c < colCount; c++) {
+    const ng = g.append("g").attr("class", `col-${c}`);
+    colNodes[c].forEach(n => {
+      const pos = positions[n.id];
+      if (!pos) return;
+      nodeMap.set(n.id, Object.assign({}, n, { x: pos.x, y: pos.y }));
+      // circle
+      ng.append("circle")
+        .attr("cx", pos.x)
+        .attr("cy", pos.y)
+        .attr("r", 12)
+        .attr("fill", n.total > 0 ? "#10b981" : "#6b7280")
+        .attr("class", "node-circle")
+        .attr("data-id", n.id)
+        .on("click", (ev) => { ev.stopPropagation(); showInfoForNode(n); });
+      // label (right of circle for left→right)
+      ng.append("text")
+        .attr("x", pos.x + 18)
+        .attr("y", pos.y + 4)
+        .attr("class","node-text")
+        .text(n.shortLabel || n.label || "");
+    });
   }
 
   // Draw links:
-  // 1) Window -> PON (always)
-  // 2) PON -> level1 splitters (always)
-  // 3) levelN -> levelN+1 only if they share users (we already computed parentRefs for that)
-  // Draw links branch-colored by PON color. We will store each link element for z-order.
-  const linksLayer = g.append("g").attr("class","links");
-  const nodesLayer = g.append("g").attr("class","nodes");
+  // 1) Window -> PON : single neat line per pon to its window
+  const linkGroup = g.append("g").attr("class","links");
+  // colors for branches: generate based on PON (so each PON branch shares a hue)
+  const ponIds = colNodes[1].map(p=>p.id);
+  const colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(ponIds);
 
-  function drawCurve(x1,y1,x2,y2, color, opacity=1) {
-    // small horizontal bezier curve
-    const dx = Math.max(30, (x2 - x1) / 2);
-    return `M ${x1} ${y1} C ${x1+dx} ${y1} , ${x2-dx} ${y2} , ${x2} ${y2}`;
-  }
-
-  // helper: get color for a link belonging to a pon
-  function linkColorForPon(pon) {
-    return ponColors[pon] || "#94a3b8";
-  }
-
-  // Window -> PON
-  columns[1].nodes.forEach(ponNode => {
-    const winNode = nodesById.get(ponNode.parentId);
-    if (!winNode) return;
-    const col1 = winNode.x, col2 = ponNode.x;
-    const pcolor = linkColorForPon(ponNode.label);
-    linksLayer.append("path")
-      .attr("d", drawCurve(winNode.x, winNode.y, ponNode.x, ponNode.y))
-      .attr("fill","none")
-      .attr("stroke", pcolor)
-      .attr("stroke-width", 2)
-      .attr("stroke-opacity", 0.9)
-      .attr("style", `stroke:${pcolor} !important`);
+  colNodes[1].forEach(pn => {
+    const winId = `win::${pn.window}`;
+    const winPos = positions[winId];
+    const ponPos = positions[pn.id];
+    if (!winPos || !ponPos) return;
+    const path = makeCurvePath(winPos.x + 24, winPos.y, ponPos.x - 12, ponPos.y);
+    linkGroup.append("path")
+      .attr("d", path)
+      .attr("class","link")
+      .attr("stroke", colorScale(pn.id))
+      .attr("stroke-dasharray", "6 0")
+      .attr("stroke-width", 3)
+      .attr("opacity", 0.95);
   });
 
-  // PON -> level1 splitters
-  columns[1].nodes.forEach(ponNode=>{
-    const children = ponNode.childrenIds || [];
-    children.forEach(cid=>{
-      const child = nodesById.get(cid);
-      if (!child) return;
-      const pcolor = linkColorForPon(ponNode.label);
-      linksLayer.append("path")
-        .attr("d", drawCurve(ponNode.x, ponNode.y, child.x, child.y))
-        .attr("fill","none")
-        .attr("stroke", pcolor)
-        .attr("stroke-width", 1.8)
-        .attr("stroke-opacity", 0.95)
-        .attr("style", `stroke:${pcolor} !important`);
-    });
+  // 2) PON -> Level1: connect every level1 splitter of the pon to the pon (always)
+  // then for level k>1: connect each splitter to previous-level splitters that share users only (if none share -> no link)
+  // We'll create a map from id -> node entry for quick lookup
+  const nodeById = {};
+  nodeMap.forEach(v => nodeById[v.id] = v);
+
+  // PON -> level1
+  colNodes[2] && colNodes[2].forEach(sp => {
+    const spObj = nodeById[sp.id];
+    if (!spObj) return;
+    const ponId = `pon::${spObj.pon}`;
+    const pPos = positions[ponId];
+    const sPos = { x: spObj.x, y: spObj.y };
+    if (!pPos) return;
+    const path = makeCurvePath(pPos.x + 12, pPos.y, sPos.x - 12, sPos.y);
+    linkGroup.append("path")
+      .attr("d", path)
+      .attr("class","link")
+      .attr("stroke", colorScale(ponId))
+      .attr("data-from", ponId)
+      .attr("data-to", spObj.id)
+      .attr("opacity", 0.95);
   });
 
-  // levelN -> levelN+1 (only where parentRefs exist)
-  for (let c = 3; c < columns.length; c++) {
-    const currNodes = columns[c].nodes.filter(n=>n.type==='splitter');
-    currNodes.forEach(n=>{
-      (n.parentRefs || []).forEach(pid => {
-        const parent = nodesById.get(pid);
-        if (!parent) return;
-        const pcolor = linkColorForPon(n.meta.pon || parent.meta.pon || parent.label);
-        linksLayer.append("path")
-          .attr("d", drawCurve(parent.x, parent.y, n.x, n.y))
-          .attr("fill","none")
-          .attr("stroke", pcolor)
-          .attr("stroke-width", 1.6)
-          .attr("stroke-opacity", 0.95)
-          .attr("style", `stroke:${pcolor} !important`);
+  // level k>1 links: from any node in level k-1 (same pon) to node in level k if they share users
+  for (let c = 3; c < colCount; c++) {
+    // for each splitter node in col c
+    colNodes[c].forEach(sp => {
+      const nodeCurr = nodeById[sp.id];
+      if (!nodeCurr) return;
+      // find candidates in previous column c-1 with same pon
+      const prevCol = colNodes[c-1].filter(x => x.pon === sp.pon);
+      let linked = false;
+      prevCol.forEach(prev => {
+        const prevNode = nodeById[prev.id];
+        if (!prevNode) return;
+        // check intersection
+        const setPrev = new Set((prevNode.users||[]).map(uidKey));
+        const setCurr = new Set((nodeCurr.users||[]).map(uidKey));
+        let ov = 0;
+        for (const u of setCurr) if (setPrev.has(u)) ov++;
+        if (ov > 0) {
+          // draw link prev -> curr (colored by parent prev id to create branch coloring)
+          const path = makeCurvePath(prevNode.x + 12, prevNode.y, nodeCurr.x - 12, nodeCurr.y);
+          linkGroup.append("path")
+            .attr("d", path)
+            .attr("class","link")
+            .attr("stroke", colorScale(prev.id || prevNode.pon))
+            .attr("data-from", prev.id)
+            .attr("data-to", nodeCurr.id)
+            .attr("opacity", 0.95);
+          linked = true;
+        }
       });
+      // if no prev had intersection => no link (as requested)
     });
   }
 
-  // Node drawing (circles + labels)
-  // Windows (col 0) - larger circle
-  columns[0].nodes.forEach(n=>{
-    nodesLayer.append("circle")
-      .attr("cx", n.x).attr("cy", n.y).attr("r", 20)
-      .attr("fill", "#1d4ed8").attr("stroke","#fff").attr("stroke-width",2);
-    nodesLayer.append("text")
-      .attr("x", n.x + 28).attr("y", n.y + 4)
-      .text(n.label).attr("font-size", 12).attr("font-weight",700);
+  // reduce line crossing heuristic: bring children nearer to parents by re-adjusting y if they connect to a single parent
+  // simple pass: if a node has a single parent, snap its y to be near the parent within its block
+  const allLinks = [];
+  linkGroup.selectAll("path").each(function() {
+    const el = d3.select(this);
+    const from = el.attr("data-from"), to = el.attr("data-to");
+    if (from && to && nodeById[from] && nodeById[to]) {
+      allLinks.push({ from: nodeById[from], to: nodeById[to], el });
+    }
+  });
+  // map to find children counts
+  const parentToChildren = new Map();
+  allLinks.forEach(l => {
+    const key = l.from.id;
+    if (!parentToChildren.has(key)) parentToChildren.set(key, []);
+    parentToChildren.get(key).push(l.to);
+  });
+  // snap
+  parentToChildren.forEach((children, parentId)=>{
+    if (children.length === 1) {
+      const child = children[0];
+      // move child y slightly towards parent y (30% of distance)
+      const newY = child.y - (child.y - parentIdToY(parentId)) * 0.33;
+      // update circle & text positions directly
+      g.selectAll("circle.node-circle").filter(function(){ return d3.select(this).attr("data-id")===child.id; })
+      // might not exist; adjust via nodeMap drawings
+      positions[child.id].y = newY;
+    }
   });
 
-  // PON nodes
-  columns[1].nodes.forEach(n=>{
-    nodesLayer.append("circle")
-      .attr("cx", n.x).attr("cy", n.y).attr("r", 16)
-      .attr("fill", "#0f766e").attr("stroke","#fff").attr("stroke-width",2);
-    nodesLayer.append("text")
-      .attr("x", n.x + 24).attr("y", n.y + 4)
-      .text(n.label).attr("font-size", 11).attr("font-weight",600);
+  // re-draw circles/text positions after snapping (simple but OK)
+  g.selectAll("circle.node-circle").each(function() {
+    const el = d3.select(this);
+    const id = el.attr("data-id");
+    if (!id || !positions[id]) return;
+    el.attr("cy", positions[id].y).attr("cx", positions[id].x);
+  });
+  g.selectAll("text.node-text").each(function() {
+    const el = d3.select(this);
+    // find nearest circle by text x relationship (we used +18)
+    const txt = el.text();
+    // try to align by proximity: find node whose shortLabel or recordId matches
   });
 
-  // Splitter nodes in other columns (small circles)
-  for (let ci = 2; ci < columns.length; ci++) {
-    columns[ci].nodes.forEach(n=>{
-      const fill = "#10b981";
-      const circle = nodesLayer.append("circle")
-        .attr("cx", n.x).attr("cy", n.y).attr("r", 10)
-        .attr("fill", fill).attr("stroke","#fff").attr("stroke-width",2)
-        .attr("data-nodeid", n.id)
-        .style("cursor","pointer")
-        .on("mousemove", (event)=> showTooltip(event, n))
-        .on("mouseout", ()=> hideTooltip())
-        .on("click", ()=> openSplitterPopup(n));
-      // label right side
-      nodesLayer.append("text")
-        .attr("x", n.x + 14).attr("y", n.y + 4)
-        .text(`${n.shortLabel || n.meta.raw.type || 'split'} (${n.meta.raw.total||n.users.size||0})`)
-        .attr("font-size", 11)
-        .style("cursor","pointer")
-        .on("click", ()=> openSplitterPopup(n));
+  // finally: redraw links paths based on current positions (in case of snapping)
+  linkGroup.selectAll("path").each(function() {
+    const el = d3.select(this);
+    const from = el.attr("data-from");
+    const to = el.attr("data-to");
+    // if it's window->pon link, from id is win::..., to is pon::...
+    if (from && to && positions[from] && positions[to]) {
+      const path = makeCurvePath(positions[from].x + 24, positions[from].y, positions[to].x - 12, positions[to].y);
+      el.attr("d", path);
+    }
+  });
 
-      // store circle selection for highlighting
-      n._circle = circle;
-    });
-  }
-
-  // Fit view: center and scale to fit full content
-  fitToView(svg, g);
-
-  // Done
+  // store node positions for search/pan actions
+  window._MEROTRA_POS = positions;
+  window._MEROTRA_NODEMAP = nodeById;
 }
 
-/* ---------------- Helper: tooltip & popup ---------------- */
-
-function showTooltip(event, node) {
-  const html = `<strong>${node.meta.raw.type || node.shortLabel || 'Splitter'}</strong><br/>PON: ${node.meta.pon}<br/>Users: <strong>${node.meta.raw.total || node.users.size}</strong>`;
-  tooltip.innerHTML = html;
-  tooltip.style.left = (event.pageX + 12) + "px";
-  tooltip.style.top  = (event.pageY + 8) + "px";
-  tooltip.style.opacity = 1;
+/* helper to extract parent y from id (pon id or node id) */
+function parentIdToY(pid) {
+  if (window._MEROTRA_POS && window._MEROTRA_POS[pid]) return window._MEROTRA_POS[pid].y;
+  // fallback: try to find matching node
+  return (svg.attr("height")||400)/2;
 }
 
-function hideTooltip() {
-  tooltip.style.opacity = 0;
+/* cubic bezier horizontal curve for nicer lines (left->right)
+   from (x1,y1) to (x2,y2) */
+function makeCurvePath(x1, y1, x2, y2) {
+  const dx = Math.max(40, (x2 - x1) * 0.5);
+  const c1x = x1 + dx;
+  const c2x = x2 - dx;
+  return `M ${x1},${y1} C ${c1x},${y1} ${c2x},${y2} ${x2},${y2}`;
 }
 
-function openSplitterPopup(node) {
-  const total = node.meta.raw.total || node.users.size || (node.meta.raw.users ? node.meta.raw.users.length : 0);
-  popupTitleEl.textContent = `${node.meta.raw.type || node.shortLabel} — Users (${total})`;
-  popupPathEl.textContent = `${node.meta.pon} → Level ${node.meta.level || ''}`;
-  popupMetaEl.innerHTML = `<div><strong>Record:</strong> ${node.recordId || '-'}</div><div><strong>Total users:</strong> ${total}</div>`;
-  let linksHtml = "";
-  popupLinksEl.innerHTML = linksHtml;
-  buildUserTableFromSplitter(node);
-  popupModal.style.display = 'flex';
-}
-
-function buildUserTableFromSplitter(node) {
-  const rawUsers = (node.meta.raw.users || Array.from(node.users || []));
-  popupUsersTbl.innerHTML = `
-    <thead>
-      <tr><th style="width:36px">Sr</th><th>User ID</th></tr>
-    </thead>
-    <tbody></tbody>
+/* ------------------------------------------------------------------
+  INFO / POPUP
+------------------------------------------------------------------ */
+function showInfoForNode(node) {
+  infoTitle.textContent = node.shortLabel || node.recordId || (node.type||"Splitter");
+  infoBody.innerHTML = `
+    <div class="info-row"><strong>Window:</strong> ${escapeHtml(node.window)}</div>
+    <div class="info-row"><strong>PON:</strong> ${escapeHtml(node.pon)}</div>
+    <div class="info-row"><strong>Level:</strong> ${escapeHtml(node.level || "")}</div>
+    <div class="info-row"><strong>Record:</strong> ${escapeHtml(node.recordId || "")}</div>
+    <div class="info-row"><strong>Type:</strong> ${escapeHtml(node.type || "")}</div>
+    <div class="info-row"><strong>Users:</strong> ${node.total || (node.users||[]).length || 0}</div>
   `;
+  infoCard.style.display = "block";
+}
+
+infoClose.onclick = ()=> infoCard.style.display = "none";
+
+/* Popup user list for a node (click via old popup) */
+function showPopupForNode(node) {
+  popupModal.style.display = "flex";
+  popupTitleEl.textContent = (node.recordId ? node.recordId + " — " : "") + (node.raw.type || "");
+  popupPathEl.textContent = `${node.window} → ${node.pon} → L${node.level}`;
+  popupMetaEl.innerHTML = `<div><strong>Users:</strong> ${node.total || (node.users||[]).length}</div>`;
+  // users table
+  const users = node.users || [];
+  popupUsersTbl.innerHTML = `<thead><tr><th>Sr</th><th>User ID</th></tr></thead><tbody></tbody>`;
   const tbody = popupUsersTbl.querySelector("tbody");
-  rawUsers.forEach((uid, idx) => {
+  users.forEach((u,i) => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${idx+1}</td><td>${uid}</td>`;
+    tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(u)}</td>`;
     tbody.appendChild(tr);
   });
 }
 
-/* ---------------- Search ---------------- */
+popupCloseBtn.onclick = ()=> popupModal.style.display = "none";
 
-function performSearch(){
-  const q = document.getElementById("searchInput").value.trim();
+/* ------------------------------------------------------------------
+  Search: highlight all matches, sequential pan through results (B)
+------------------------------------------------------------------ */
+let searchResults = [];
+let searchIndex = -1;
+
+searchToggle.onclick = () => {
+  searchPanel.style.display = (searchPanel.style.display === "block") ? "none" : "block";
+  if (searchPanel.style.display === "block") searchInput.focus();
+};
+
+clearSearch.onclick = () => {
+  searchInput.value = "";
+  clearHighlights();
+};
+
+doSearchBtn.onclick = runSearch;
+searchInput.onkeydown = (e) => { if (e.key === "Enter") runSearch(); };
+
+searchNext.onclick = ()=> {
+  if (!searchResults.length) return;
+  searchIndex = (searchIndex + 1) % searchResults.length;
+  focusSearchResult(searchIndex);
+};
+searchPrev.onclick = ()=> {
+  if (!searchResults.length) return;
+  searchIndex = (searchIndex - 1 + searchResults.length) % searchResults.length;
+  focusSearchResult(searchIndex);
+};
+
+function runSearch() {
+  const q = searchInput.value.trim();
   if (!q) return;
-  clearSearch(); // remove previous highlights
-  // find all nodes with this user
-  const allCircles = document.querySelectorAll('circle[data-nodeid]');
-  const matches = [];
-  allCircles.forEach(c => {
-    const id = c.getAttribute('data-nodeid');
-    const node = findNodeById(id);
-    if (!node) return;
-    const users = new Set(node.meta.raw.users || Array.from(node.users || []));
-    if (users.has(q)) {
-      matches.push({ node, circle: c });
-    }
-  });
-  if (matches.length === 0) {
-    alert("No matching user found in current filtered view.");
+  clearHighlights();
+  const mode = matchModeEl.value || "contains";
+  const idx = window._MEROTRA_INDEX;
+  if (!idx) return;
+
+  // find nodes containing user ids that match q according to mode
+  const matchedNodeIds = new Set();
+  // if mode is exact or starts, first try key-based fast lookup
+  if (mode === "exact") {
+    const k = uidKey(q);
+    const list = idx.userToNodes.get(k) || [];
+    list.forEach(id => matchedNodeIds.add(id));
+  } else {
+    // fallback scan all nodes and their users
+    idx.nodes.forEach(n=>{
+      for (const u of n.users || []) {
+        const uu = uidKey(u);
+        if ((mode==="starts" && uu.startsWith(uidKey(q))) || (mode==="contains" && uu.includes(uidKey(q)))) {
+          matchedNodeIds.add(n.id);
+          break;
+        }
+      }
+    });
+  }
+
+  const arr = Array.from(matchedNodeIds);
+  if (arr.length === 0) {
+    alert("No matches found");
     return;
   }
-  // highlight all matches and pan to first
-  matches.forEach(m=>{
-    m.circle.classList.add("highlight-node");
-    highlightedNodes.push(m.circle);
+
+  // highlight all matched circles (and their connecting links)
+  arr.forEach(id => {
+    // circle
+    g.selectAll("circle.node-circle").filter(function(){
+      return d3.select(this).attr("data-id") === id;
+    }).classed("highlight", true).attr("stroke", "#f59e0b").attr("stroke-width", 4);
   });
-  // pan/zoom to first match
-  const first = matches[0].node;
-  centerOnPoint(first.x, first.y);
+
+  searchResults = arr;
+  searchIndex = 0;
+
+  // show next/prev buttons if multiple
+  if (searchResults.length > 1) {
+    searchNext.style.display = "inline-block";
+    searchPrev.style.display = "inline-block";
+  } else {
+    searchNext.style.display = "none";
+    searchPrev.style.display = "none";
+  }
+
+  // focus first result
+  focusSearchResult(0);
 }
 
-function clearSearch(){
-  highlightedNodes.forEach(c => c.classList.remove("highlight-node"));
-  highlightedNodes = [];
-  document.getElementById("searchInput").value = "";
-}
-
-/* ---------------- Utilities ---------------- */
-
-function findNodeById(id) {
-  // the render chart stored nodes in nodesById local in renderChart; we can't access it here.
-  // Simpler: find circle element and map back to attached datum (we attached nothing).
-  const el = document.querySelector(`circle[data-nodeid="${id}"]`);
-  if (!el) return null;
-  // reconstruct info from nearby label & attributes via DOM? Instead, store a mapping once in global.
-  // We'll maintain a global map at first render for search: hack: when circle created we set window._nodeMap
-  return window._nodeMap && window._nodeMap[id] ? window._nodeMap[id] : null;
-}
-
-function centerOnPoint(x, y) {
-  // transform to zoom such that point approx centered
-  if (!svg || !g) return;
-  const svgEl = svg.node();
-  const width = svgEl.clientWidth, height = svgEl.clientHeight;
-  const scale = 1.2;
-  const tx = (width/2) - (x * scale) - 40;
-  const ty = (height/2) - (y * scale) - 40;
-  svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
-}
-
-function fitToView(svgEl, gEl) {
-  try {
-    const bounds = gEl.node().getBBox();
-    const fullWidth = svgEl.node().clientWidth;
-    const fullHeight = svgEl.node().clientHeight;
-    const widthScale = fullWidth / (bounds.width + 160);
-    const heightScale = fullHeight / (bounds.height + 160);
-    const scale = Math.min(1.6, Math.max(0.5, Math.min(widthScale, heightScale)));
-    const tx = -(bounds.x)*scale + 40;
-    const ty = -(bounds.y)*scale + 40;
-    svgEl.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
-  } catch (e) {
-    // fallback: center
-    svg.transition().duration(200).call(zoom.transform, d3.zoomIdentity.translate(40,40).scale(1));
+function focusSearchResult(i) {
+  if (!searchResults || !searchResults.length) return;
+  const id = searchResults[i];
+  const pos = (window._MEROTRA_POS || {})[id];
+  if (!pos) return;
+  // pan+zoom so that pos appears centered (we'll do a smooth transition)
+  const svgNode = svg.node();
+  const svgRect = svgNode.getBoundingClientRect();
+  const k = 1.2; // scale target
+  const tx = svgRect.width/2 - pos.x * k;
+  const ty = svgRect.height/2 - pos.y * k;
+  svg.transition().duration(700).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k));
+  // show info for this node
+  const node = window._MEROTRA_NODEMAP[id];
+  if (node) {
+    showInfoForNode(node);
+    // highlight (already highlighted)
   }
 }
 
-/* ---------------- Tiny hack to expose nodeMap for search/popups ----------------
-   We'll set window._nodeMap in renderChart so findNodeById can access
-*/
-(function attachGlobalNodeMap(){
-  // set a placeholder; renderChart will set it
-  window._nodeMap = window._nodeMap || {};
-})();
+/* clear highlights */
+function clearHighlights() {
+  searchResults = [];
+  searchIndex = -1;
+  g.selectAll("circle.node-circle").classed("highlight", false).attr("stroke-width",2).attr("stroke","#fff");
+  searchNext.style.display = "none";
+  searchPrev.style.display = "none";
+}
 
-/* -------------- End -------------- */
+/* ------------------------------------------------------------------
+  Filters apply
+------------------------------------------------------------------ */
+applyFiltersBtn.onclick = () => { render(); };
+resetFiltersBtn.onclick = () => {
+  // check all filters
+  windowFilterBox.querySelectorAll("input").forEach(i=>i.checked=true);
+  ponFilterBox.querySelectorAll("input").forEach(i=>i.checked=true);
+  render();
+};
+
+/* ------------------------------------------------------------------
+  util
+------------------------------------------------------------------ */
+function escapeHtml(s){ return (s==null?"":String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showLoading(flag) {
+  const btn = document.getElementById("applyFilters");
+  if (flag) btn.textContent = "Loading...";
+  else btn.textContent = "Apply";
+}
+
+/* ------------------------------------------------------------------
+  Init
+------------------------------------------------------------------ */
+loadBoard();
+
+/* keep clicks outside to close panels/info */
+document.addEventListener("click", (ev)=>{
+  // if clicked outside searchPanel and toggle not target -> close panel
+  if (!searchPanel.contains(ev.target) && !searchToggle.contains(ev.target)) {
+    searchPanel.style.display = "none";
+  }
+  // clicking outside info card hides it
+  if (!infoCard.contains(ev.target)) {
+    // don't auto hide if user clicked on a node (handled separately)
+  }
+});
+
+/* popup screenshot / csv actions (simple) */
+btnShot && (btnShot.onclick = () => {
+  const modalContent = document.querySelector("#popupModal .modal-content");
+  if (!modalContent) return;
+  html2canvas(modalContent).then(canvas => {
+    const link = document.createElement("a");
+    link.download = `merotra-popup-${(new Date()).toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+});
+btnCsv && (btnCsv.onclick = () => {
+  const tbody = popupUsersTbl.querySelector("tbody");
+  if (!tbody) return;
+  let csv = "Sr,UserID\n";
+  Array.from(tbody.querySelectorAll("tr")).forEach(tr => {
+    const cols = tr.querySelectorAll("td");
+    csv += `${cols[0].innerText},${cols[1].innerText}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `merotra-users-${(new Date()).toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
 </script>
 </body>
 </html>
