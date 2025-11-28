@@ -1,4 +1,3 @@
-
 </DOCUMENT>
 
 <DOCUMENT filename="html.txt">
@@ -10,15 +9,14 @@
   <title>Merotra — Hierarchical PON Tree (Balanced Layout)</title> 
  
   <script src="https://d3js.org/d3.v7.min.js"></script> 
-  <!-- keep your adv.css as supplied --> 
-  <link rel="stylesheet" href="adv.css"> 
+  <link rel="stylesheet" href="css.txt"> 
  
   <style> 
-    /* minimal page-specific tweaks (kept tiny on top of adv.css) */ 
     :root{font-family:Inter,system-ui,Arial} 
     body{margin:0;padding:0;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#111827} 
     #chart { width:100%; height: calc(100vh - 64px); overflow:hidden; } 
     .toolbar { display:flex; gap:8px; align-items:center } 
+    .search-folded { background: #2563eb; color: #fff; border-radius: 999px; padding: 6px 12px; border: none; cursor: pointer; } 
     .search-input { width:220px; padding:6px 10px; border-radius:8px; border:1px solid #e5e7eb; display:none } 
     @media (max-width:760px){ .search-input{ width:140px } } 
   </style> 
@@ -35,13 +33,13 @@
       <button id="filtersToggle" class="btn btn-secondary">Filters</button> 
       <button id="searchFold" class="search-folded">🔍 Search</button> 
       <input id="searchInput" class="search-input" placeholder="Search user id or part..." /> 
-      <button id="rotationBtn" class="btn btn-secondary">Rotate</button> 
+      <button id="rotationBtn" class="btn btn-secondary">🔄 Rotate</button> 
       <button id="reloadBtn" class="btn">Refresh</button> 
     </div> 
   </div> 
  
   <div id="chart"></div> 
-  <div id="tooltip" class="tooltip"></div> 
+  <div id="tooltip" style="position:absolute;background:rgba(0,0,0,0.7);color:white;padding:4px 8px;border-radius:4px;display:none;z-index:50"></div> 
  
   <!-- Popup --> 
   <div id="popupModal" class="popup-backdrop" style="display:none"> 
@@ -54,7 +52,7 @@
         <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button> 
       </div> 
       <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div> 
-      <div style="max-height:60vh;overflow:auto"> 
+      <div class="user-table-container"> 
         <table id="popupUsersTable" class="user-table"></table> 
       </div> 
       <div style="display:flex;gap:8px;margin-top:8px"> 
@@ -69,20 +67,27 @@
     <div class="modal-content"> 
       <h2 style="margin:0 0 16px">Filters</h2> 
       <div class="filterBox"> 
-        <h3>Window</h3> 
+        <div style="display:flex;gap:4px;margin-bottom:8px"> 
+          <button class="btn btn-secondary smallBtn" onclick="selectAllSection('windowFilter')">Select All Windows</button> 
+          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection('windowFilter')">Deselect All Windows</button> 
+        </div> 
         <div id="windowFilter" class="checkbox-item"></div> 
       </div> 
       <div class="filterBox"> 
-        <h3>OLT</h3> 
+        <div style="display:flex;gap:4px;margin-bottom:8px"> 
+          <button class="btn btn-secondary smallBtn" onclick="selectAllSection('oltFilter')">Select All OLTs</button> 
+          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection('oltFilter')">Deselect All OLTs</button> 
+        </div> 
         <div id="oltFilter" class="checkbox-item"></div> 
       </div> 
       <div class="filterBox"> 
-        <h3>PON</h3> 
+        <div style="display:flex;gap:4px;margin-bottom:8px"> 
+          <button class="btn btn-secondary smallBtn" onclick="selectAllSection('ponFilter')">Select All PONs</button> 
+          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection('ponFilter')">Deselect All PONs</button> 
+        </div> 
         <div id="ponFilter" class="checkbox-item"></div> 
       </div> 
       <div style="display:flex;gap:8px;margin-top:12px"> 
-        <button id="selectAll" class="btn btn-secondary">Select All</button> 
-        <button id="deselectAll" class="btn btn-secondary">Deselect All</button> 
         <button id="applyFilters" class="btn">Apply</button> 
         <button id="clearFilters" class="btn btn-secondary">Clear</button> 
       </div> 
@@ -90,11 +95,7 @@
   </div> 
  
 <script> 
-/* ========================================== 
-   CONFIG & GLOBALS (unchanged behaviour) 
-   ========================================== */ 
-const BOARD_URL = 
- "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board"; 
+const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board"; 
  
 let rawJson = null; 
 let colorByOlt = new Map(); 
@@ -112,8 +113,6 @@ const filtersModal = document.getElementById('filtersModal');
 const windowFilter = document.getElementById('windowFilter'); 
 const oltFilter = document.getElementById('oltFilter'); 
 const ponFilter = document.getElementById('ponFilter'); 
-const selectAll = document.getElementById('selectAll'); 
-const deselectAll = document.getElementById('deselectAll'); 
 const applyFilters = document.getElementById('applyFilters'); 
 const clearFilters = document.getElementById('clearFilters'); 
  
@@ -127,39 +126,49 @@ let currentRotation = 0;
  
 document.getElementById('btnShot').addEventListener('click', downloadScreenshot); 
 document.getElementById('btnCsv').addEventListener('click', downloadCSV); 
-popupClose.addEventListener('click', ()=> popupModal.style.display='none'); 
+popupClose.addEventListener('click', () => popupModal.style.display = 'none'); 
  
-reloadBtn.addEventListener('click', ()=> loadAndRender(true)); 
-filtersToggle.addEventListener('click', ()=> filtersModal.style.display='flex'); 
-applyFilters.addEventListener('change', applyFiltersAndRender); 
+reloadBtn.addEventListener('click', () => loadAndRender(true)); 
+filtersToggle.addEventListener('click', () => { 
+  filtersModal.style.display = 'flex'; 
+  buildFilterCheckboxes(); 
+}); 
+applyFilters.addEventListener('click', () => { 
+  updateFilterStateFromCheckboxes(); 
+  filtersModal.style.display = 'none'; 
+  applyFiltersAndRender(); 
+}); 
 clearFilters.addEventListener('click', () => { 
   filterState = { windows: new Set(), olts: new Set(), pons: new Set() }; 
   buildFilterCheckboxes(); 
   applyFiltersAndRender(); 
 }); 
-selectAll.addEventListener('click', () => selectAllCheckboxes(true)); 
-deselectAll.addEventListener('click', () => selectAllCheckboxes(false)); 
  
-searchFold.addEventListener('click', ()=> { 
+searchFold.addEventListener('click', () => { 
   if (searchInput.style.display === 'none') { 
-    searchInput.style.display='inline-block'; 
+    searchInput.style.display = 'inline-block'; 
     searchInput.focus(); 
   } else { 
-    searchInput.style.display='none'; 
-    searchInput.value=''; 
+    searchInput.style.display = 'none'; 
+    searchInput.value = ''; 
     applyFiltersAndRender(); 
   } 
 }); 
-searchInput.addEventListener('input', ()=> applyFiltersAndRender()); 
+searchInput.addEventListener('input', () => applyFiltersAndRender()); 
 rotationBtn.addEventListener('click', () => { 
   currentRotation = (currentRotation + 90) % 360; 
   const svg = document.querySelector("#chart svg"); 
-  if(svg) svg.style.transform = `rotate(${currentRotation}deg)`; 
+  if (svg) svg.style.transform = `rotate(${currentRotation}deg)`; 
 }); 
  
-/* ========================================== 
-   Helpers (unchanged) 
-   ========================================== */ 
+function selectAllSection(sectionId) { 
+  document.getElementById(sectionId).querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true); 
+} 
+ 
+function deselectAllSection(sectionId) { 
+  document.getElementById(sectionId).querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false); 
+} 
+ 
 function normalizeId(v){ return (v ?? "").toString().trim(); } 
 function getOltNumberFromPon(pon){ 
   const m = (pon || "").match(/O(\d+)/i); 
@@ -179,9 +188,6 @@ function ensureColorForOlt(olt){
   return colorByOlt.get(String(olt)); 
 } 
  
-/* ========================================== 
-   Load / Filter / Transform (unchanged logic) 
-   ========================================== */ 
 async function loadAndRender(showToast=false){ 
   try { 
     setLoading(true); 
@@ -192,7 +198,6 @@ async function loadAndRender(showToast=false){
     rawJson = j; 
  
     colorByOlt = new Map(); 
-    buildFilterCheckboxes(); 
     applyFiltersAndRender(); 
  
     if(showToast) console.info('Board loaded', j.summary || {}); 
@@ -217,25 +222,23 @@ function buildFilterCheckboxes(){
       oltSet.add(getOltNumberFromPon(p.pon||'')); 
     }); 
   }); 
-  [windowFilter,oltFilter,ponFilter].forEach(c=>c.innerHTML=''); 
-  Array.from(winSet).sort().forEach(v=>{ 
+  populateCheckboxes(windowFilter, Array.from(winSet).sort(), filterState.windows); 
+  populateCheckboxes(oltFilter, Array.from(oltSet).sort((a,b)=>+a-+b), filterState.olts); 
+  populateCheckboxes(ponFilter, Array.from(ponSet).sort(), filterState.pons); 
+} 
+function populateCheckboxes(container, arr, selectedSet){ 
+  container.innerHTML = ''; 
+  arr.forEach(v=>{ 
     const label = document.createElement('label'); 
-    label.innerHTML = `<input type="checkbox" value="${v}" ${filterState.windows.has(v)?'checked':''}> ${v}`; 
-    windowFilter.appendChild(label); 
-  }); 
-  Array.from(oltSet).sort((a,b)=>+a-+b).forEach(v=>{ 
-    const label = document.createElement('label'); 
-    label.innerHTML = `<input type="checkbox" value="${v}" ${filterState.olts.has(v)?'checked':''}> ${v}`; 
-    oltFilter.appendChild(label); 
-  }); 
-  Array.from(ponSet).sort().forEach(v=>{ 
-    const label = document.createElement('label'); 
-    label.innerHTML = `<input type="checkbox" value="${v}" ${filterState.pons.has(v)?'checked':''}> ${v}`; 
-    ponFilter.appendChild(label); 
+    label.innerHTML = `<input type="checkbox" value="${v}" ${selectedSet.has(v) ? 'checked' : ''}> ${v}`; 
+    container.appendChild(label); 
   }); 
 } 
-function selectAllCheckboxes(select){ 
-  document.querySelectorAll('#filtersModal input[type="checkbox"]').forEach(cb => cb.checked = select); 
+ 
+function updateFilterStateFromCheckboxes(){ 
+  filterState.windows = new Set(Array.from(windowFilter.querySelectorAll('input:checked')).map(input => input.value)); 
+  filterState.olts = new Set(Array.from(oltFilter.querySelectorAll('input:checked')).map(input => input.value)); 
+  filterState.pons = new Set(Array.from(ponFilter.querySelectorAll('input:checked')).map(input => input.value)); 
 } 
  
 function applyFiltersAndRender(){ 
@@ -246,28 +249,26 @@ function applyFiltersAndRender(){
 } 
  
 function applyClientFilters(j){ 
-  const wsel = filterState.windows; 
-  const oltsel = filterState.olts; 
-  const psel = filterState.pons; 
-  const term=(searchInput.value||'').trim().toLowerCase(); 
+  const term = (searchInput.value || '').trim().toLowerCase(); 
  
-  const out={windows:[]}; 
-  (j.windows||[]).forEach(win=>{ 
-    if(wsel.size > 0 && !wsel.has(win.window)) return; 
-    const newWin={window:win.window, pons:[]}; 
-    (win.pons||[]).forEach(p=>{ 
-      if(psel.size > 0 && !psel.has(p.pon)) return; 
-      if(oltsel.size > 0 && !oltsel.has(getOltNumberFromPon(p.pon))) return; 
-      const newLv = (p.levels||[]).filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0); 
-      if(newLv.length===0 && term){ 
-        if(!deepSearchMatch(p, term)) return; 
+  const out = {windows: []}; 
+  (j.windows || []).forEach(win => { 
+    if (filterState.windows.size > 0 && !filterState.windows.has(win.window)) return; 
+    const newWin = {window: win.window, pons: []}; 
+    (win.pons || []).forEach(p => { 
+      if (filterState.pons.size > 0 && !filterState.pons.has(p.pon)) return; 
+      if (filterState.olts.size > 0 && !filterState.olts.has(getOltNumberFromPon(p.pon))) return; 
+      const newLv = (p.levels || []).filter(l => Array.isArray(l.splitters) && l.splitters.length > 0); 
+      if (newLv.length === 0 && term){ 
+        if (!deepSearchMatch(p, term)) return; 
       } 
-      newWin.pons.push({...p, levels:newLv}); 
+      newWin.pons.push({...p, levels: newLv}); 
     }); 
-    if(newWin.pons.length>0) out.windows.push(newWin); 
+    if (newWin.pons.length > 0) out.windows.push(newWin); 
   }); 
   return out; 
 } 
+ 
 function deepSearchMatch(p, term){ 
   if(!term) return false; 
   for(const lvl of (p.levels||[])){ 
@@ -280,10 +281,6 @@ function deepSearchMatch(p, term){
   return false; 
 } 
  
-/* ========================================== 
-   transformToHierarchy() - produce tree up to PON 
-   (unchanged semantics) 
-   ========================================== */ 
 function transformToHierarchy(j){ 
   const root = { name:'Merotra Network', type:'network', children:[] }; 
  
@@ -310,7 +307,6 @@ function transformToHierarchy(j){
       oltMap[oltNum].children.push(ponNode); 
     }); 
  
-    // sort PONs inside each OLT by (OLT,IP,Port) 
     Object.values(oltMap).forEach(oltn=>{ 
       oltn.children.sort((a,b)=>{ 
         if(+a.meta.olt !== +b.meta.olt) return +a.meta.olt - +b.meta.olt; 
@@ -325,33 +321,24 @@ function transformToHierarchy(j){
   return root; 
 } 
  
-/* ========================================== 
-   RENDER (balanced placement + crossing minimization) 
-   - This is the improved algorithm you asked for. 
-   ========================================== */ 
 function renderBalancedTree(rootData){ 
-  // clear 
   d3.select('#chart').selectAll('*').remove(); 
  
   const chartEl = document.getElementById('chart'); 
   const width = chartEl.clientWidth || window.innerWidth; 
   const height = chartEl.clientHeight || (window.innerHeight - 60); 
  
-  // create d3.hierarchy for network->window->olt->pon 
   const treeRoot = d3.hierarchy(rootData); 
  
-  // choose vertical node gap based on leaf count (keeps things dense but not overlapped) 
   const leafCount = Math.max(1, countLeaves(rootData)); 
   const nodeGap = Math.max(36, Math.min(90, Math.floor(height / (leafCount + 3)))); 
  
-  const treeLayout = d3.tree().nodeSize([nodeGap, 160]); // [x(vertical), y(horizontal)] 
+  const treeLayout = d3.tree().nodeSize([nodeGap, 160]); 
   treeLayout(treeRoot); 
  
-  // create svg and group 
   const svg = d3.select("#chart").append("svg").attr("width","100%").attr("height","100%"); 
   const g = svg.append("g").attr("transform","translate(40,40)"); 
  
-  // tree links (network->window->olt->pon) 
   g.selectAll(".hwlink") 
     .data(treeRoot.links()) 
     .enter() 
@@ -361,13 +348,11 @@ function renderBalancedTree(rootData){
     .attr("stroke","#94a3b8") 
     .attr("stroke-width",2) 
     .attr("d", d => { 
-      // smooth horizontal bezier between source (y,x) and target 
       const sx = d.source.y, sy = d.source.x, tx = d.target.y, ty = d.target.x; 
       const midX = (sx + tx) / 2; 
       return `M${sx},${sy} C ${midX},${sy} ${midX},${ty} ${tx},${ty}`; 
     }); 
  
-  // draw hierarchical nodes (network/window/olt/pon) 
   const nodes = treeRoot.descendants(); 
   const nodeG = g.selectAll(".hnode") 
     .data(nodes) 
@@ -394,20 +379,16 @@ function renderBalancedTree(rootData){
     .attr("text-anchor", d=> d.data.type==='network'? "middle":"start") 
     .text(d=>d.data.name); 
  
-  // find PON nodes for constructing their level columns 
+  nodeG.raise(); 
+ 
   const ponNodes = treeRoot.descendants().filter(n => n.data && n.data.type === 'pon'); 
  
-  // layout parameters for columns (tweakable) 
-  const levelColWidth = 220;   // horizontal gap per level 
-  const ponColGap = 140;       // gap between pon column and first level 
-  const minVGap = 44;          // minimum vertical gap between splitters 
-  const growthPerItem = 12;    // how much vertical gap increases with more items 
+  const levelColWidth = 220; 
+  const ponColGap = 140; 
+  const minVGap = 44; 
+  const growthPerItem = 12; 
  
-  // We'll compute splitter positions per PON using a balanced algorithm: 
-  // 1) Compute max splitters across levels for this PON -> determines base vGap. 
-  // 2) For each level, re-order splitters to align with parent-level indices (greedy matching). 
-  // 3) Place splitters centered on the PON's vertical position with computed vGap. 
-  const allSplitterPositions = []; // collect {pon, level, idx, x, y, data, color} 
+  const allSplitterPositions = []; 
  
   ponNodes.forEach(ponN => { 
     const p = ponN.data; 
@@ -417,38 +398,26 @@ function renderBalancedTree(rootData){
  
     if(levels.length === 0) return; 
  
-    // compute max number of splitters across levels for this PON 
     const maxCount = Math.max(...levels.map(l => (l.splitters || []).length, 1), 1); 
  
-    // dynamic vGap — larger when any level is large 
     const vGap = Math.max(minVGap, minVGap + (maxCount - 1) * growthPerItem); 
  
-    // Preprocess: keep the original sheet order for level0; for subsequent levels we will reorder to minimize crossings. 
-    // Build parent index mapping for greedy ordering: 
-    // For level 0 we simply take sheet order. 
     const levelSplitters = levels.map(l => Array.isArray(l.splitters) ? l.splitters.slice() : []); 
  
-    // helper to compute user sets 
     const userSetOf = sp => new Set((sp.users || []).map(u => normalizeId(u))); 
  
-    // We'll compute ordering for each level (starting from level 0) 
     const orderedLevels = []; 
     if(levelSplitters.length >= 1) { 
-      // level 0: sheet order 
       orderedLevels.push(levelSplitters[0].map((s, i) => ({s, origIndex: i}))); 
-      // subsequent levels: 
       for(let li = 1; li < levelSplitters.length; li++){ 
         const parents = orderedLevels[li-1]; 
         const parentSets = parents.map(pObj => userSetOf(pObj.s)); 
         const children = levelSplitters[li].map((s, idx) => ({s, origIndex: idx})); 
  
-        // For each child, find best parent (first parent with any overlap), and use parent's index as key 
-        // If multiple parents, use first match. If no parent, give them a large key to push later. 
         const childWithKey = children.map(ch => { 
           const chSet = userSetOf(ch.s); 
           let foundParentIndex = null; 
           for(let pi = 0; pi < parentSets.length; pi++){ 
-            // fast intersection check 
             for(const u of chSet){ 
               if(parentSets[pi].has(u)){ foundParentIndex = pi; break; } 
             } 
@@ -457,7 +426,6 @@ function renderBalancedTree(rootData){
           return { ch, key: (foundParentIndex === null ? 9999 : foundParentIndex) }; 
         }); 
  
-        // sort by key, but preserve sheet order within same key 
         childWithKey.sort((a,b) => { 
           if(a.key !== b.key) return a.key - b.key; 
           return a.ch.origIndex - b.ch.origIndex; 
@@ -466,18 +434,14 @@ function renderBalancedTree(rootData){
       } 
     } 
  
-    // Now we have orderedLevels: list per level of splitter objects in an order that tries to minimize crossing. 
-    // Place them vertically centered on baseY with vGap spacing. We use an extra small vertical offset per level index (stagger) 
-    // to reduce overlap of connecting curves. 
     orderedLevels.forEach((arr, li) => { 
       const count = Math.max(1, arr.length); 
       const totalH = (count - 1) * vGap; 
       const startY = baseY - totalH / 2; 
-      // small stagger offset for alternate levels (reduces curve overlap) 
       const stagger = (li % 2 === 0) ? 0 : Math.min(12, Math.floor(vGap/6)); 
  
       arr.forEach((obj, si) => { 
-        const sx = baseX + ponColGap + li * levelColWidth + (li % 2 === 0 ? 0 : 6); // tiny horizontal nudge for odd levels 
+        const sx = baseX + ponColGap + li * levelColWidth + (li % 2 === 0 ? 0 : 6); 
         const sy = startY + si * vGap + stagger; 
         allSplitterPositions.push({ 
           pon: p.name, 
@@ -492,7 +456,6 @@ function renderBalancedTree(rootData){
     }); 
   }); 
  
-  // draw splitters 
   const sg = g.append("g").attr("class","splitters-group"); 
  
   const splitterNodes = sg.selectAll(".splitter") 
@@ -516,7 +479,7 @@ function renderBalancedTree(rootData){
       .attr("font-size",11).attr("fill","#0f172a") 
       .text(`${d.data.type}${d.data.total ? ` (${d.data.total})` : ''}`) 
       .style("font-weight",600) 
-      .each(function(){ // ellipsis if too long 
+      .each(function(){ 
         const t = d3.select(this); 
         const txt = t.text(); 
         if (txt.length > 28) t.text(txt.slice(0,26) + '…'); 
@@ -529,10 +492,7 @@ function renderBalancedTree(rootData){
     } 
   }); 
  
-  // LINKS SECTION 
-  // 1) PON -> level1 (always) 
-  const ponNodesByName = {}; 
-  treeRoot.descendants().filter(n => n.data && n.data.type === 'pon').forEach(n => { ponNodesByName[n.data.name] = n; }); 
+  sg.selectAll("text").raise(); 
  
   ponNodes.forEach(ponN => { 
     const p = ponN.data; 
@@ -551,7 +511,6 @@ function renderBalancedTree(rootData){
     }); 
   }); 
  
-  // 2) levelN -> levelN+1: connect each child splitter to first previous-level splitter that shares any user 
   ponNodes.forEach(ponN => { 
     const p = ponN.data; 
     const lv = p.levels || []; 
@@ -567,7 +526,6 @@ function renderBalancedTree(rootData){
         const chSet = new Set((ch.data.users || []).map(normalizeId)); 
         let linked = false; 
         for(let pi=0; pi<parents.length; pi++){ 
-          // check intersection 
           let hasCommon = false; 
           for(const u of chSet){ if(parentSets[pi].has(u)){ hasCommon = true; break; } } 
           if(hasCommon){ 
@@ -582,16 +540,13 @@ function renderBalancedTree(rootData){
             break; 
           } 
         } 
-        // if not linked, no path (per rule) 
       }); 
     } 
   }); 
  
-  // ZOOM 
   const zoom = d3.zoom().scaleExtent([0.25, 3]).on("zoom", ev => g.attr("transform", ev.transform)); 
   svg.call(zoom); 
  
-  // fit to view nicely 
   try { 
     const bb = g.node().getBBox(); 
     const sx = width/(bb.width + 120); 
@@ -600,17 +555,14 @@ function renderBalancedTree(rootData){
     const tx0 = -bb.x * s0 + 20; 
     const ty0 = -bb.y * s0 + 20; 
     svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx0,ty0).scale(s0)); 
-  } catch(e) { /* ignore */ } 
+  } catch(e) {} 
  
-  // apply search highlight after everything drawn 
   applySearchHighlight(); 
 } 
  
-/* path helpers */ 
 function pathBezier(src, dst){ 
   const sx = src.x, sy = src.y, tx = dst.x, ty = dst.y; 
   const midX = sx + (tx - sx) * 0.5; 
-  // gentle S-curve; reduces intersections better 
   return `M ${sx} ${sy} C ${midX} ${sy} ${midX} ${ty} ${tx} ${ty}`; 
 } 
 function countLeaves(node){ 
@@ -627,16 +579,13 @@ function findWindowForPon(pon){
   return ''; 
 } 
  
-/* ========================================== 
-   Tooltip / Popup (unchanged) 
-   ========================================== */ 
 function showTooltip(ev, d){ 
   tooltip.innerHTML = `<strong>${d.name || d.type || ''}</strong><br>Users: ${d.total || (d.users?d.users.length:0)}`; 
   tooltip.style.left = (ev.pageX+12)+"px"; 
   tooltip.style.top  = (ev.pageY+8)+"px"; 
-  tooltip.style.opacity = 1; 
+  tooltip.style.display = 'block'; 
 } 
-function hideTooltip(){ tooltip.style.opacity = 0; } 
+function hideTooltip(){ tooltip.style.display = 'none'; } 
  
 function openPopup(sp, pon, win){ 
   popupModal.style.display = 'flex'; 
@@ -650,9 +599,6 @@ function openPopup(sp, pon, win){
     `</tbody>`; 
 } 
  
-/* ========================================== 
-   Search & Highlight (unchanged) 
-   ========================================== */ 
 function applySearchHighlight(){ 
   const term=(searchInput.value||'').trim().toLowerCase(); 
   const nodes = d3.selectAll("g.splitter"); 
@@ -677,22 +623,20 @@ function applySearchHighlight(){
   }); 
 } 
  
-/* ========================================== 
-   Downloads (unchanged) 
-   ========================================== */ 
 function downloadCSV(){ 
   if(popupModal.style.display!=='flex') return; 
-  const rows=[...popupUsers.querySelectorAll("tr")]; 
+  const rows = [...popupUsers.querySelectorAll("tr")]; 
   if(!rows.length) return; 
-  let csv=''; 
-  rows.forEach(r=>{ 
-    const cols=[...r.querySelectorAll("th,td")].map(c=>`"${(c.textContent||'').replace(/"/g,'""')}"`); 
+  let csv = ''; 
+  rows.forEach(r => { 
+    const cols = [...r.querySelectorAll("th,td")].map(c => `"${(c.textContent||'').replace(/"/g,'""')}"`); 
     csv += cols.join(",") + "\n"; 
   }); 
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"}); 
   const url = URL.createObjectURL(blob); 
   const a = document.createElement('a'); a.href = url; a.download = 'users.csv'; a.click(); URL.revokeObjectURL(url); 
 } 
+ 
 function downloadScreenshot(){ 
   const svg = document.querySelector("#chart svg"); 
   if(!svg) return alert("Nothing to save"); 
@@ -702,10 +646,8 @@ function downloadScreenshot(){
   const a = document.createElement('a'); a.href = url; a.download = 'merotra-tree.svg'; a.click(); URL.revokeObjectURL(url); 
 } 
  
-/* INIT */ 
 loadAndRender(false); 
-window.addEventListener('resize', ()=> rawJson && applyFiltersAndRender()); 
- 
+window.addEventListener('resize', () => rawJson && applyFiltersAndRender()); 
 </script> 
  
 </body> 
