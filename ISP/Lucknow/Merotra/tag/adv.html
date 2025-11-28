@@ -1,16 +1,13 @@
 </DOCUMENT>
-
 <DOCUMENT filename="html.txt">
-<!doctype html> 
-<html lang="en"> 
-<head> 
-  <meta charset="utf-8" /> 
-  <meta name="viewport" content="width=device-width,initial-scale=1" /> 
-  <title>Merotra — Hierarchical PON Tree (Balanced Layout)</title> 
- 
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Merotra — Hierarchical PON Tree (Balanced Layout)</title> 
   <script src="https://d3js.org/d3.v7.min.js"></script> 
   <link rel="stylesheet" href="css.txt"> 
- 
   <style> 
     :root{font-family:Inter,system-ui,Arial} 
     body{margin:0;padding:0;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#111827} 
@@ -21,635 +18,625 @@
     @media (max-width:760px){ .search-input{ width:140px } } 
   </style> 
 </head> 
- 
 <body> 
- 
-  <div class="header"> 
-    <div> 
-      <div class="header-title">Auto populated fiber network</div> 
-    </div> 
- 
-    <div class="toolbar"> 
+   
+     
+      Auto populated fiber network 
+     
+     
       <button id="filtersToggle" class="btn btn-secondary">Filters</button> 
       <button id="searchFold" class="search-folded">🔍 Search</button> 
-      <input id="searchInput" class="search-input" placeholder="Search user id or part..." /> 
+       
       <button id="rotationBtn" class="btn btn-secondary">🔄 Rotate</button> 
       <button id="reloadBtn" class="btn">Refresh</button> 
-    </div> 
-  </div> 
- 
-  <div id="chart"></div> 
-  <div id="tooltip" style="position:absolute;background:rgba(0,0,0,0.7);color:white;padding:4px 8px;border-radius:4px;display:none;z-index:50"></div> 
- 
-  <!-- Popup --> 
-  <div id="popupModal" class="popup-backdrop" style="display:none"> 
-    <div class="modal-content"> 
-      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px"> 
-        <div> 
-          <h2 id="popupTitle" style="margin:0;font-size:16px"></h2> 
-          <div id="popupPath" style="font-size:12px;color:#475569"></div> 
-        </div> 
+     
+   
+   
+   
+   
+   
+     
+       
+         
+           
+           
+         
         <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button> 
-      </div> 
-      <div id="popupMeta" style="font-size:13px;color:#334155;margin-bottom:8px"></div> 
-      <div class="user-table-container"> 
-        <table id="popupUsersTable" class="user-table"></table> 
-      </div> 
-      <div style="display:flex;gap:8px;margin-top:8px"> 
+       
+       
+       
+         
+       
+       
         <button id="btnShot" class="btn">📸 Screenshot</button> 
         <button id="btnCsv" class="btn btn-secondary">📊 CSV</button> 
-      </div> 
-    </div> 
-  </div> 
- 
-  <!-- Filters Popup --> 
-  <div id="filtersModal" class="popup-backdrop" style="display:none"> 
-    <div class="modal-content"> 
-      <h2 style="margin:0 0 16px">Filters</h2> 
-      <div class="filterBox"> 
-        <div style="display:flex;gap:4px;margin-bottom:8px"> 
-          <button class="btn btn-secondary smallBtn" onclick="selectAllSection('windowFilter')">Select All Windows</button> 
-          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection('windowFilter')">Deselect All Windows</button> 
-        </div> 
-        <div id="windowFilter" class="checkbox-item"></div> 
-      </div> 
-      <div class="filterBox"> 
-        <div style="display:flex;gap:4px;margin-bottom:8px"> 
-          <button class="btn btn-secondary smallBtn" onclick="selectAllSection('oltFilter')">Select All OLTs</button> 
-          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection('oltFilter')">Deselect All OLTs</button> 
-        </div> 
-        <div id="oltFilter" class="checkbox-item"></div> 
-      </div> 
-      <div class="filterBox"> 
-        <div style="display:flex;gap:4px;margin-bottom:8px"> 
-          <button class="btn btn-secondary smallBtn" onclick="selectAllSection('ponFilter')">Select All PONs</button> 
-          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection('ponFilter')">Deselect All PONs</button> 
-        </div> 
-        <div id="ponFilter" class="checkbox-item"></div> 
-      </div> 
-      <div style="display:flex;gap:8px;margin-top:12px"> 
+       
+     
+   
+   
+   
+     
+      Filters 
+       
+         
+          <button class="btn btn-secondary smallBtn" onclick="selectAllSection(&#x27;windowFilter&#x27;)">Select All Windows</button> 
+          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection(&#x27;windowFilter&#x27;)">Deselect All Windows</button> 
+         
+         
+       
+       
+         
+          <button class="btn btn-secondary smallBtn" onclick="selectAllSection(&#x27;oltFilter&#x27;)">Select All OLTs</button> 
+          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection(&#x27;oltFilter&#x27;)">Deselect All OLTs</button> 
+         
+         
+       
+       
+         
+          <button class="btn btn-secondary smallBtn" onclick="selectAllSection(&#x27;ponFilter&#x27;)">Select All PONs</button> 
+          <button class="btn btn-secondary smallBtn" onclick="deselectAllSection(&#x27;ponFilter&#x27;)">Deselect All PONs</button> 
+         
+         
+       
+       
         <button id="applyFilters" class="btn">Apply</button> 
         <button id="clearFilters" class="btn btn-secondary">Clear</button> 
-      </div> 
-    </div> 
-  </div> 
- 
-<script> 
-const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board"; 
- 
-let rawJson = null; 
-let colorByOlt = new Map(); 
- 
-const tooltip = document.getElementById('tooltip'); 
-const reloadBtn = document.getElementById('reloadBtn'); 
-const popupModal = document.getElementById('popupModal'); 
-const popupClose = document.getElementById('popupClose'); 
-const popupTitle = document.getElementById('popupTitle'); 
-const popupPath  = document.getElementById('popupPath'); 
-const popupMeta  = document.getElementById('popupMeta'); 
-const popupUsers = document.getElementById('popupUsersTable'); 
- 
-const filtersModal = document.getElementById('filtersModal'); 
-const windowFilter = document.getElementById('windowFilter'); 
-const oltFilter = document.getElementById('oltFilter'); 
-const ponFilter = document.getElementById('ponFilter'); 
-const applyFilters = document.getElementById('applyFilters'); 
-const clearFilters = document.getElementById('clearFilters'); 
- 
-const searchFold = document.getElementById('searchFold'); 
-const searchInput = document.getElementById('searchInput'); 
-const filtersToggle = document.getElementById('filtersToggle'); 
-const rotationBtn = document.getElementById('rotationBtn'); 
- 
-let filterState = { windows: new Set(), olts: new Set(), pons: new Set() }; 
-let currentRotation = 0; 
- 
-document.getElementById('btnShot').addEventListener('click', downloadScreenshot); 
-document.getElementById('btnCsv').addEventListener('click', downloadCSV); 
-popupClose.addEventListener('click', () => popupModal.style.display = 'none'); 
- 
-reloadBtn.addEventListener('click', () => loadAndRender(true)); 
-filtersToggle.addEventListener('click', () => { 
-  filtersModal.style.display = 'flex'; 
-  buildFilterCheckboxes(); 
-}); 
-applyFilters.addEventListener('click', () => { 
-  updateFilterStateFromCheckboxes(); 
-  filtersModal.style.display = 'none'; 
-  applyFiltersAndRender(); 
-}); 
-clearFilters.addEventListener('click', () => { 
-  filterState = { windows: new Set(), olts: new Set(), pons: new Set() }; 
-  buildFilterCheckboxes(); 
-  applyFiltersAndRender(); 
-}); 
- 
-searchFold.addEventListener('click', () => { 
-  if (searchInput.style.display === 'none') { 
-    searchInput.style.display = 'inline-block'; 
-    searchInput.focus(); 
-  } else { 
-    searchInput.style.display = 'none'; 
-    searchInput.value = ''; 
-    applyFiltersAndRender(); 
-  } 
-}); 
-searchInput.addEventListener('input', () => applyFiltersAndRender()); 
-rotationBtn.addEventListener('click', () => { 
-  currentRotation = (currentRotation + 90) % 360; 
-  const svg = document.querySelector("#chart svg"); 
-  if (svg) svg.style.transform = `rotate(${currentRotation}deg)`; 
-}); 
- 
-function selectAllSection(sectionId) { 
-  document.getElementById(sectionId).querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true); 
-} 
- 
-function deselectAllSection(sectionId) { 
-  document.getElementById(sectionId).querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false); 
-} 
- 
-function normalizeId(v){ return (v ?? "").toString().trim(); } 
-function getOltNumberFromPon(pon){ 
-  const m = (pon || "").match(/O(\d+)/i); 
-  return m ? m[1] : "0"; 
-} 
-function parsePonKey(pon){ 
-  const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i); 
-  if(!m) return {olt:9999, ip:9999, port:9999}; 
-  return {olt:+m[1], ip:+m[2], port:+m[3]}; 
-} 
-function ensureColorForOlt(olt){ 
-  if(!colorByOlt.has(String(olt))){ 
-    const idx = colorByOlt.size; 
-    const h = (idx * 50) % 360; 
-    colorByOlt.set(String(olt), `hsl(${h} 65% 45%)`); 
-  } 
-  return colorByOlt.get(String(olt)); 
-} 
- 
-async function loadAndRender(showToast=false){ 
-  try { 
-    setLoading(true); 
-    const res = await fetch(BOARD_URL); 
-    if(!res.ok) throw new Error("HTTP "+res.status); 
- 
-    const j = await res.json(); 
-    rawJson = j; 
- 
-    colorByOlt = new Map(); 
-    applyFiltersAndRender(); 
- 
-    if(showToast) console.info('Board loaded', j.summary || {}); 
-  } catch(err){ 
-    console.error(err); 
-    alert("Load error: " + err.message); 
-  } finally { 
-    setLoading(false); 
-  } 
-} 
-function setLoading(flag){ 
-  reloadBtn.disabled = flag; 
-  reloadBtn.textContent = flag ? "Loading..." : "Refresh"; 
-} 
- 
-function buildFilterCheckboxes(){ 
-  const winSet=new Set(), oltSet=new Set(), ponSet=new Set(); 
-  (rawJson.windows||[]).forEach(w=>{ 
-    winSet.add(w.window||''); 
-    (w.pons||[]).forEach(p=>{ 
-      ponSet.add(p.pon||''); 
-      oltSet.add(getOltNumberFromPon(p.pon||'')); 
-    }); 
-  }); 
-  populateCheckboxes(windowFilter, Array.from(winSet).sort(), filterState.windows); 
-  populateCheckboxes(oltFilter, Array.from(oltSet).sort((a,b)=>+a-+b), filterState.olts); 
-  populateCheckboxes(ponFilter, Array.from(ponSet).sort(), filterState.pons); 
-} 
-function populateCheckboxes(container, arr, selectedSet){ 
-  container.innerHTML = ''; 
-  arr.forEach(v=>{ 
-    const label = document.createElement('label'); 
-    label.innerHTML = `<input type="checkbox" value="${v}" ${selectedSet.has(v) ? 'checked' : ''}> ${v}`; 
-    container.appendChild(label); 
-  }); 
-} 
- 
-function updateFilterStateFromCheckboxes(){ 
-  filterState.windows = new Set(Array.from(windowFilter.querySelectorAll('input:checked')).map(input => input.value)); 
-  filterState.olts = new Set(Array.from(oltFilter.querySelectorAll('input:checked')).map(input => input.value)); 
-  filterState.pons = new Set(Array.from(ponFilter.querySelectorAll('input:checked')).map(input => input.value)); 
-} 
- 
-function applyFiltersAndRender(){ 
-  if(!rawJson) return; 
-  const filtered = applyClientFilters(rawJson); 
-  const root = transformToHierarchy(filtered); 
-  renderBalancedTree(root); 
-} 
- 
-function applyClientFilters(j){ 
-  const term = (searchInput.value || '').trim().toLowerCase(); 
- 
-  const out = {windows: []}; 
-  (j.windows || []).forEach(win => { 
-    if (filterState.windows.size > 0 && !filterState.windows.has(win.window)) return; 
-    const newWin = {window: win.window, pons: []}; 
-    (win.pons || []).forEach(p => { 
-      if (filterState.pons.size > 0 && !filterState.pons.has(p.pon)) return; 
-      if (filterState.olts.size > 0 && !filterState.olts.has(getOltNumberFromPon(p.pon))) return; 
-      const newLv = (p.levels || []).filter(l => Array.isArray(l.splitters) && l.splitters.length > 0); 
-      if (newLv.length === 0 && term){ 
-        if (!deepSearchMatch(p, term)) return; 
-      } 
-      newWin.pons.push({...p, levels: newLv}); 
-    }); 
-    if (newWin.pons.length > 0) out.windows.push(newWin); 
-  }); 
-  return out; 
-} 
- 
-function deepSearchMatch(p, term){ 
-  if(!term) return false; 
-  for(const lvl of (p.levels||[])){ 
-    for(const sp of (lvl.splitters||[])){ 
-      for(const u of (sp.users||[])){ 
-        if(String(u).toLowerCase().includes(term)) return true; 
-      } 
-    } 
-  } 
-  return false; 
-} 
- 
-function transformToHierarchy(j){ 
-  const root = { name:'Merotra Network', type:'network', children:[] }; 
- 
-  (j.windows || []).forEach(win => { 
-    const winNode = { name: win.window, type:'window', children:[] }; 
-    const oltMap = {}; 
-    (win.pons || []).forEach(p => { 
-      const meta = parsePonKey(p.pon); 
-      const levels = (p.levels||[]) 
-        .map(l=>({ 
-          level:l.level, 
-          splitters:(l.splitters||[]).map(sp=>({ 
-            recordId:sp.recordId||'', 
-            type:sp.type||'', 
-            users:(sp.users||[]).map(x=>String(x)), 
-            total:sp.total || ((sp.users||[]).length || 0) 
-          })) 
-        })); 
-      const ponNode={ name: p.pon, type:'pon', meta, levels }; 
-      const oltNum = String(meta.olt); 
-      if(!oltMap[oltNum]){ 
-        oltMap[oltNum] = { name: "OLT-"+oltNum, type:'olt', meta:{olt:oltNum}, children:[] }; 
-      } 
-      oltMap[oltNum].children.push(ponNode); 
-    }); 
- 
-    Object.values(oltMap).forEach(oltn=>{ 
-      oltn.children.sort((a,b)=>{ 
-        if(+a.meta.olt !== +b.meta.olt) return +a.meta.olt - +b.meta.olt; 
-        if(+a.meta.ip  !== +b.meta.ip ) return +a.meta.ip  - +b.meta.ip; 
-        return +a.meta.port - +b.meta.port; 
-      }); 
-    }); 
- 
-    Object.values(oltMap).sort((a,b)=> (+a.meta.olt)-(+b.meta.olt)).forEach(olt=> winNode.children.push(olt)); 
-    root.children.push(winNode); 
-  }); 
-  return root; 
-} 
- 
-function renderBalancedTree(rootData){ 
-  d3.select('#chart').selectAll('*').remove(); 
- 
-  const chartEl = document.getElementById('chart'); 
-  const width = chartEl.clientWidth || window.innerWidth; 
-  const height = chartEl.clientHeight || (window.innerHeight - 60); 
- 
-  const treeRoot = d3.hierarchy(rootData); 
- 
-  const leafCount = Math.max(1, countLeaves(rootData)); 
-  const nodeGap = Math.max(36, Math.min(90, Math.floor(height / (leafCount + 3)))); 
- 
-  const treeLayout = d3.tree().nodeSize([nodeGap, 160]); 
-  treeLayout(treeRoot); 
- 
-  const svg = d3.select("#chart").append("svg").attr("width","100%").attr("height","100%"); 
-  const g = svg.append("g").attr("transform","translate(40,40)"); 
- 
-  g.selectAll(".hwlink") 
-    .data(treeRoot.links()) 
-    .enter() 
-    .append("path") 
-    .attr("class","link hwlink") 
-    .attr("fill","none") 
-    .attr("stroke","#94a3b8") 
-    .attr("stroke-width",2) 
-    .attr("d", d => { 
-      const sx = d.source.y, sy = d.source.x, tx = d.target.y, ty = d.target.x; 
-      const midX = (sx + tx) / 2; 
-      return `M${sx},${sy} C ${midX},${sy} ${midX},${ty} ${tx},${ty}`; 
-    }); 
- 
-  const nodes = treeRoot.descendants(); 
-  const nodeG = g.selectAll(".hnode") 
-    .data(nodes) 
-    .enter().append("g") 
-    .attr("class","hnode") 
-    .attr("transform", d=>`translate(${d.y},${d.x})`); 
- 
-  nodeG.append("circle") 
-    .attr("r", d => ({network:22, window:18, olt:16, pon:14}[d.data.type] || 10)) 
-    .attr("fill", d => { 
-      if(d.data.type==='network') return '#1e3a8a'; 
-      if(d.data.type==='window') return '#1d4ed8'; 
-      if(d.data.type==='olt') return ensureColorForOlt(d.data.meta.olt); 
-      if(d.data.type==='pon') return '#0f766e'; 
-      return '#6b7280'; 
-    }) 
-    .attr("stroke","#fff").attr("stroke-width",2); 
- 
-  nodeG.append("text") 
-    .attr("x", d=> d.data.type==='network'?0:18) 
-    .attr("y", 4) 
-    .attr("font-size","12px") 
-    .attr("font-weight","600") 
-    .attr("text-anchor", d=> d.data.type==='network'? "middle":"start") 
-    .text(d=>d.data.name); 
- 
-  nodeG.raise(); 
- 
-  const ponNodes = treeRoot.descendants().filter(n => n.data && n.data.type === 'pon'); 
- 
-  const levelColWidth = 220; 
-  const ponColGap = 140; 
-  const minVGap = 44; 
-  const growthPerItem = 12; 
- 
-  const allSplitterPositions = []; 
- 
-  ponNodes.forEach(ponN => { 
-    const p = ponN.data; 
-    const baseX = ponN.y; 
-    const baseY = ponN.x; 
-    const levels = (p.levels || []); 
- 
-    if(levels.length === 0) return; 
- 
-    const maxCount = Math.max(...levels.map(l => (l.splitters || []).length, 1), 1); 
- 
-    const vGap = Math.max(minVGap, minVGap + (maxCount - 1) * growthPerItem); 
- 
-    const levelSplitters = levels.map(l => Array.isArray(l.splitters) ? l.splitters.slice() : []); 
- 
-    const userSetOf = sp => new Set((sp.users || []).map(u => normalizeId(u))); 
- 
-    const orderedLevels = []; 
-    if(levelSplitters.length >= 1) { 
-      orderedLevels.push(levelSplitters[0].map((s, i) => ({s, origIndex: i}))); 
-      for(let li = 1; li < levelSplitters.length; li++){ 
-        const parents = orderedLevels[li-1]; 
-        const parentSets = parents.map(pObj => userSetOf(pObj.s)); 
-        const children = levelSplitters[li].map((s, idx) => ({s, origIndex: idx})); 
- 
-        const childWithKey = children.map(ch => { 
-          const chSet = userSetOf(ch.s); 
-          let foundParentIndex = null; 
-          for(let pi = 0; pi < parentSets.length; pi++){ 
-            for(const u of chSet){ 
-              if(parentSets[pi].has(u)){ foundParentIndex = pi; break; } 
-            } 
-            if(foundParentIndex !== null) break; 
-          } 
-          return { ch, key: (foundParentIndex === null ? 9999 : foundParentIndex) }; 
-        }); 
- 
-        childWithKey.sort((a,b) => { 
-          if(a.key !== b.key) return a.key - b.key; 
-          return a.ch.origIndex - b.ch.origIndex; 
-        }); 
-        orderedLevels.push(childWithKey.map(x => x.ch)); 
-      } 
-    } 
- 
-    orderedLevels.forEach((arr, li) => { 
-      const count = Math.max(1, arr.length); 
-      const totalH = (count - 1) * vGap; 
-      const startY = baseY - totalH / 2; 
-      const stagger = (li % 2 === 0) ? 0 : Math.min(12, Math.floor(vGap/6)); 
- 
-      arr.forEach((obj, si) => { 
-        const sx = baseX + ponColGap + li * levelColWidth + (li % 2 === 0 ? 0 : 6); 
-        const sy = startY + si * vGap + stagger; 
-        allSplitterPositions.push({ 
-          pon: p.name, 
-          level: levels[li].level, 
-          idx: si, 
-          x: sx, 
-          y: sy, 
-          data: obj.s, 
-          color: ensureColorForOlt(p.meta.olt) 
-        }); 
-      }); 
-    }); 
-  }); 
- 
-  const sg = g.append("g").attr("class","splitters-group"); 
- 
-  const splitterNodes = sg.selectAll(".splitter") 
-    .data(allSplitterPositions) 
-    .enter() 
-    .append("g") 
-    .attr("class","splitter") 
-    .attr("transform", d=>`translate(${d.x},${d.y})`) 
-    .style("cursor","pointer") 
-    .on("mousemove",(ev,d)=> showTooltip(ev, {name:d.data.type || d.data.recordId, total:d.data.total})) 
-    .on("mouseout", hideTooltip) 
-    .on("click", (ev,d)=> openPopup(d.data, d.pon, findWindowForPon(d.pon))); 
- 
-  splitterNodes.each(function(d){ 
-    const g2 = d3.select(this); 
-    g2.append("circle").attr("r", 12) 
-      .attr("fill", d.data.total && d.data.total>0 ? "#10b981" : "#6b7280") 
-      .attr("stroke","#fff").attr("stroke-width",2); 
- 
-    g2.append("text").attr("x", 18).attr("y", 4) 
-      .attr("font-size",11).attr("fill","#0f172a") 
-      .text(`${d.data.type}${d.data.total ? ` (${d.data.total})` : ''}`) 
-      .style("font-weight",600) 
-      .each(function(){ 
-        const t = d3.select(this); 
-        const txt = t.text(); 
-        if (txt.length > 28) t.text(txt.slice(0,26) + '…'); 
-      }); 
- 
-    if(d.data.recordId){ 
-      g2.append("text").attr("x",0).attr("y",22) 
-        .attr("font-size",10).attr("text-anchor","middle").attr("fill","#64748b") 
-        .text(d.data.recordId); 
-    } 
-  }); 
- 
-  sg.selectAll("text").raise(); 
- 
-  ponNodes.forEach(ponN => { 
-    const p = ponN.data; 
-    const pX = ponN.y, pY = ponN.x; 
-    const level0 = (p.levels && p.levels[0]) ? p.levels[0].level : null; 
-    if(level0 === null) return; 
- 
-    const lvl1Positions = allSplitterPositions.filter(s => s.pon === p.name && s.level === level0); 
-    lvl1Positions.forEach(child => { 
-      g.append("path") 
-        .attr("d", pathBezier({x:pX,y:pY},{x:child.x,y:child.y})) 
-        .attr("stroke", ensureColorForOlt(p.meta.olt)) 
-        .attr("stroke-width", 2) 
-        .attr("fill", "none") 
-        .attr("stroke-opacity", 0.95); 
-    }); 
-  }); 
- 
-  ponNodes.forEach(ponN => { 
-    const p = ponN.data; 
-    const lv = p.levels || []; 
-    for(let li = 0; li < lv.length - 1; li++){ 
-      const L1 = lv[li].level; 
-      const L2 = lv[li+1].level; 
-      const parents = allSplitterPositions.filter(s => s.pon === p.name && s.level === L1); 
-      const kids = allSplitterPositions.filter(s => s.pon === p.name && s.level === L2); 
- 
-      const parentSets = parents.map(pr => new Set((pr.data.users || []).map(normalizeId))); 
- 
-      kids.forEach(ch => { 
-        const chSet = new Set((ch.data.users || []).map(normalizeId)); 
-        let linked = false; 
-        for(let pi=0; pi<parents.length; pi++){ 
-          let hasCommon = false; 
-          for(const u of chSet){ if(parentSets[pi].has(u)){ hasCommon = true; break; } } 
-          if(hasCommon){ 
-            const pr = parents[pi]; 
-            g.append("path") 
-              .attr("d", pathBezier({x:pr.x,y:pr.y},{x:ch.x,y:ch.y})) 
-              .attr("stroke", ch.color) 
-              .attr("stroke-width", 2) 
-              .attr("fill", "none") 
-              .attr("stroke-opacity", 0.95); 
-            linked = true; 
-            break; 
-          } 
-        } 
-      }); 
-    } 
-  }); 
- 
-  const zoom = d3.zoom().scaleExtent([0.25, 3]).on("zoom", ev => g.attr("transform", ev.transform)); 
-  svg.call(zoom); 
- 
-  try { 
-    const bb = g.node().getBBox(); 
-    const sx = width/(bb.width + 120); 
-    const sy = height/(bb.height + 120); 
-    const s0 = Math.min(sx, sy, 1); 
-    const tx0 = -bb.x * s0 + 20; 
-    const ty0 = -bb.y * s0 + 20; 
-    svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx0,ty0).scale(s0)); 
-  } catch(e) {} 
- 
-  applySearchHighlight(); 
-} 
- 
-function pathBezier(src, dst){ 
-  const sx = src.x, sy = src.y, tx = dst.x, ty = dst.y; 
-  const midX = sx + (tx - sx) * 0.5; 
-  return `M ${sx} ${sy} C ${midX} ${sy} ${midX} ${ty} ${tx} ${ty}`; 
-} 
-function countLeaves(node){ 
-  if(!node || !node.children || node.children.length===0) return 1; 
-  return node.children.reduce((s,c)=> s + countLeaves(c), 0); 
-} 
-function findWindowForPon(pon){ 
-  if(!rawJson) return ''; 
-  for(const w of rawJson.windows||[]){ 
-    for(const p of w.pons||[]){ 
-      if(p.pon===pon) return w.window; 
-    } 
-  } 
-  return ''; 
-} 
- 
-function showTooltip(ev, d){ 
-  tooltip.innerHTML = `<strong>${d.name || d.type || ''}</strong><br>Users: ${d.total || (d.users?d.users.length:0)}`; 
-  tooltip.style.left = (ev.pageX+12)+"px"; 
-  tooltip.style.top  = (ev.pageY+8)+"px"; 
-  tooltip.style.display = 'block'; 
-} 
-function hideTooltip(){ tooltip.style.display = 'none'; } 
- 
-function openPopup(sp, pon, win){ 
-  popupModal.style.display = 'flex'; 
-  popupTitle.textContent = `${sp.type || 'Splitter'} — Users`; 
-  popupPath.textContent = `${win||''} → ${pon||''} → ${sp.recordId||''}`; 
-  popupMeta.innerHTML = `<b>Total users:</b> ${sp.total || (sp.users?sp.users.length:0)}`; 
-  const users = Array.isArray(sp.users) ? sp.users : []; 
-  popupUsers.innerHTML = 
-    `<thead><tr><th>Sr</th><th>User</th></tr></thead><tbody>`+ 
-    users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')+ 
-    `</tbody>`; 
-} 
- 
-function applySearchHighlight(){ 
-  const term=(searchInput.value||'').trim().toLowerCase(); 
-  const nodes = d3.selectAll("g.splitter"); 
- 
-  if(!term){ 
-    nodes.selectAll("circle").attr("opacity",1).attr("stroke","#fff").attr("stroke-width",2); 
-    nodes.selectAll("text").attr("opacity",1).style("font-weight",600); 
-    return; 
-  } 
- 
-  nodes.each(function(d){ 
-    const users = d.data.users || []; 
-    const hit = users.some(u => String(u).toLowerCase().includes(term)); 
-    const g = d3.select(this); 
-    if(hit){ 
-      g.select("circle").attr("stroke","#ffb020").attr("stroke-width",4).attr("opacity",1); 
-      g.selectAll("text").attr("opacity",1).style("font-weight",700); 
-    } else { 
-      g.select("circle").attr("opacity",0.25); 
-      g.selectAll("text").attr("opacity",0.3); 
-    } 
-  }); 
-} 
- 
-function downloadCSV(){ 
-  if(popupModal.style.display!=='flex') return; 
-  const rows = [...popupUsers.querySelectorAll("tr")]; 
-  if(!rows.length) return; 
-  let csv = ''; 
-  rows.forEach(r => { 
-    const cols = [...r.querySelectorAll("th,td")].map(c => `"${(c.textContent||'').replace(/"/g,'""')}"`); 
-    csv += cols.join(",") + "\n"; 
-  }); 
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"}); 
-  const url = URL.createObjectURL(blob); 
-  const a = document.createElement('a'); a.href = url; a.download = 'users.csv'; a.click(); URL.revokeObjectURL(url); 
-} 
- 
-function downloadScreenshot(){ 
-  const svg = document.querySelector("#chart svg"); 
-  if(!svg) return alert("Nothing to save"); 
-  const xml = (new XMLSerializer()).serializeToString(svg); 
-  const blob = new Blob([xml], {type:"image/svg+xml"}); 
-  const url = URL.createObjectURL(blob); 
-  const a = document.createElement('a'); a.href = url; a.download = 'merotra-tree.svg'; a.click(); URL.revokeObjectURL(url); 
-} 
- 
-loadAndRender(false); 
-window.addEventListener('resize', () => rawJson && applyFiltersAndRender()); 
+       
+     
+   
+<script>
+const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
+
+let rawJson = null;
+let colorByOlt = new Map();
+
+const tooltip = document.getElementById('tooltip');
+const reloadBtn = document.getElementById('reloadBtn');
+const popupModal = document.getElementById('popupModal');
+const popupClose = document.getElementById('popupClose');
+const popupTitle = document.getElementById('popupTitle');
+const popupPath  = document.getElementById('popupPath');
+const popupMeta  = document.getElementById('popupMeta');
+const popupUsers = document.getElementById('popupUsersTable');
+
+const filtersModal = document.getElementById('filtersModal');
+const windowFilter = document.getElementById('windowFilter');
+const oltFilter = document.getElementById('oltFilter');
+const ponFilter = document.getElementById('ponFilter');
+const applyFilters = document.getElementById('applyFilters');
+const clearFilters = document.getElementById('clearFilters');
+
+const searchFold = document.getElementById('searchFold');
+const searchInput = document.getElementById('searchInput');
+const filtersToggle = document.getElementById('filtersToggle');
+const rotationBtn = document.getElementById('rotationBtn');
+
+let filterState = { windows: new Set(), olts: new Set(), pons: new Set() };
+let currentRotation = 0;
+
+document.getElementById('btnShot').addEventListener('click', downloadScreenshot);
+document.getElementById('btnCsv').addEventListener('click', downloadCSV);
+popupClose.addEventListener('click', () => popupModal.style.display = 'none');
+
+reloadBtn.addEventListener('click', () => loadAndRender(true));
+filtersToggle.addEventListener('click', () => {
+filtersModal.style.display = 'flex';
+buildFilterCheckboxes();
+});
+applyFilters.addEventListener('click', () => {
+updateFilterStateFromCheckboxes();
+filtersModal.style.display = 'none';
+applyFiltersAndRender();
+});
+clearFilters.addEventListener('click', () => {
+filterState = { windows: new Set(), olts: new Set(), pons: new Set() };
+buildFilterCheckboxes();
+applyFiltersAndRender();
+});
+
+searchFold.addEventListener('click', () => {
+if (searchInput.style.display = 'none') {
+searchInput.style.display = 'inline-block';
+searchInput.focus();
+} else {
+searchInput.style.display = 'none';
+searchInput.value = '';
+applyFiltersAndRender();
+}
+});
+searchInput.addEventListener('input', () => applyFiltersAndRender());
+rotationBtn.addEventListener('click', () => {
+currentRotation = (currentRotation + 90) % 360;
+const svg = document.querySelector("#chart svg");
+if (svg) svg.style.transform = `rotate(${currentRotation}deg)`;
+});
+
+function selectAllSection(sectionId) {
+document.getElementById(sectionId).querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+}
+
+function deselectAllSection(sectionId) {
+document.getElementById(sectionId).querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
+function normalizeId(v){ return (v ?? "").toString().trim(); }
+function getOltNumberFromPon(pon){
+const m = (pon || "").match(/O(\d+)/i);
+return m ? m[1] : "0";
+}
+function parsePonKey(pon){
+const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i);
+if(!m) return {olt:9999, ip:9999, port:9999};
+return {olt:+m[1], ip:+m[2], port:+m[3]};
+}
+function ensureColorForOlt(olt){
+if(!colorByOlt.has(String(olt))){
+const idx = colorByOlt.size;
+const h = (idx * 50) % 360;
+colorByOlt.set(String(olt), `hsl(${h} 65% 45%)`);
+}
+return colorByOlt.get(String(olt));
+}
+
+async function loadAndRender(showToast=false){
+try {
+setLoading(true);
+const res = await fetch(BOARD_URL);
+if(!res.ok) throw new Error("HTTP "+res.status);
+
+const j = await res.json();
+rawJson = j;
+
+colorByOlt = new Map();
+applyFiltersAndRender();
+
+if(showToast) console.info('Board loaded', j.summary || {});
+} catch(err){
+console.error(err);
+alert("Load error: " + err.message);
+} finally {
+setLoading(false);
+}
+}
+function setLoading(flag){
+reloadBtn.disabled = flag;
+reloadBtn.textContent = flag ? "Loading..." : "Refresh";
+}
+
+function buildFilterCheckboxes(){
+const winSet=new Set(), oltSet=new Set(), ponSet=new Set();
+(rawJson.windows||[]).forEach(w=>{
+winSet.add(w.window||'');
+(w.pons||[]).forEach(p=>{
+ponSet.add(p.pon||'');
+oltSet.add(getOltNumberFromPon(p.pon||''));
+});
+});
+populateCheckboxes(windowFilter, Array.from(winSet).sort(), filterState.windows);
+populateCheckboxes(oltFilter, Array.from(oltSet).sort((a,b)=>+a-+b), filterState.olts);
+populateCheckboxes(ponFilter, Array.from(ponSet).sort(), filterState.pons);
+}
+function populateCheckboxes(container, arr, selectedSet){
+container.innerHTML = '';
+arr.forEach(v=>{
+const label = document.createElement('label');
+label.innerHTML = `<input type="checkbox" value="${v}" ${selectedSet.has(v) ? 'checked' : ''}> ${v}`;
+container.appendChild(label);
+});
+}
+
+function updateFilterStateFromCheckboxes(){
+filterState.windows = new Set(Array.from(windowFilter.querySelectorAll('input:checked')).map(input => input.value));
+filterState.olts = new Set(Array.from(oltFilter.querySelectorAll('input:checked')).map(input => input.value));
+filterState.pons = new Set(Array.from(ponFilter.querySelectorAll('input:checked')).map(input => input.value));
+}
+
+function applyFiltersAndRender(){
+if(!rawJson) return;
+const filtered = applyClientFilters(rawJson);
+const root = transformToHierarchy(filtered);
+renderBalancedTree(root);
+}
+
+function applyClientFilters(j){
+const term = (searchInput.value || '').trim().toLowerCase();
+
+const out = {windows: []};
+(j.windows || []).forEach(win => {
+if (filterState.windows.size > 0 && !filterState.windows.has(win.window)) return;
+const newWin = {window: win.window, pons: []};
+(win.pons || []).forEach(p => {
+if (filterState.pons.size > 0 && !filterState.pons.has(p.pon)) return;
+if (filterState.olts.size > 0 && !filterState.olts.has(getOltNumberFromPon(p.pon))) return;
+const newLv = (p.levels || []).filter(l => Array.isArray(l.splitters) && l.splitters.length > 0);
+if (newLv.length === 0 && term){
+if (!deepSearchMatch(p, term)) return;
+}
+newWin.pons.push({...p, levels: newLv});
+});
+if (newWin.pons.length > 0) out.windows.push(newWin);
+});
+return out;
+}
+
+function deepSearchMatch(p, term){
+if(!term) return false;
+for(const lvl of (p.levels||[])){
+for(const sp of (lvl.splitters||[])){
+for(const u of (sp.users||[])){
+if(String(u).toLowerCase().includes(term)) return true;
+}
+}
+}
+return false;
+}
+
+function transformToHierarchy(j){
+const root = { name:'Merotra Network', type:'network', children:[] };
+
+(j.windows || []).forEach(win => {
+const winNode = { name: win.window, type:'window', children:[] };
+const oltMap = {};
+(win.pons || []).forEach(p => {
+const meta = parsePonKey(p.pon);
+const levels = (p.levels||[])
+.map(l=>({
+level:l.level,
+splitters:(l.splitters||[]).map(sp=>({
+recordId:sp.recordId||'',
+type:sp.type||'',
+users:(sp.users||[]).map(x=>String(x)),
+total:sp.total || ((sp.users||[]).length || 0)
+}))
+}));
+const ponNode={ name: p.pon, type:'pon', meta, levels };
+const oltNum = String(meta.olt);
+if(!oltMap[oltNum]){
+oltMap[oltNum] = { name: "OLT-"+oltNum, type:'olt', meta:{olt:oltNum}, children:[] };
+}
+oltMap[oltNum].children.push(ponNode);
+});
+
+Object.values(oltMap).forEach(oltn=>{
+oltn.children.sort((a,b)=>{
+if(+a.meta.olt !== +b.meta.olt) return +a.meta.olt - +b.meta.olt;
+if(+a.meta.ip  !== +b.meta.ip ) return +a.meta.ip  - +b.meta.ip;
+return +a.meta.port - +b.meta.port;
+});
+});
+
+Object.values(oltMap).sort((a,b)=> (+a.meta.olt)-(+b.meta.olt)).forEach(olt=> winNode.children.push(olt));
+root.children.push(winNode);
+});
+return root;
+}
+
+function renderBalancedTree(rootData){
+d3.select('#chart').selectAll('*').remove();
+
+const chartEl = document.getElementById('chart');
+const width = chartEl.clientWidth || window.innerWidth;
+const height = chartEl.clientHeight || (window.innerHeight - 60);
+
+const treeRoot = d3.hierarchy(rootData);
+
+const leafCount = Math.max(1, countLeaves(rootData));
+const nodeGap = Math.max(36, Math.min(90, Math.floor(height / (leafCount + 3))));
+
+const treeLayout = d3.tree().nodeSize([nodeGap, 160]);
+treeLayout(treeRoot);
+
+const svg = d3.select("#chart").append("svg").attr("width","100%").attr("height","100%");
+const g = svg.append("g").attr("transform","translate(40,40)");
+
+g.selectAll(".hwlink")
+.data(treeRoot.links())
+.enter()
+.append("path")
+.attr("class","link hwlink")
+.attr("fill","none")
+.attr("stroke","#94a3b8")
+.attr("stroke-width",2)
+.attr("d", d => {
+const sx = d.source.y, sy = d.source.x, tx = d.target.y, ty = d.target.x;
+const midX = (sx + tx) / 2;
+return `M${sx},${sy} C ${midX},${sy} ${midX},${ty} ${tx},${ty}`;
+});
+
+const nodes = treeRoot.descendants();
+const nodeG = g.selectAll(".hnode")
+.data(nodes)
+.enter().append("g")
+.attr("class","hnode")
+.attr("transform", d=>`translate(${d.y},${d.x})`);
+
+nodeG.append("circle")
+.attr("r", d => ({network:22, window:18, olt:16, pon:14}[d.data.type] || 10))
+.attr("fill", d => {
+if(d.data.type==='network') return '#1e3a8a';
+if(d.data.type==='window') return '#1d4ed8';
+if(d.data.type==='olt') return ensureColorForOlt(d.data.meta.olt);
+if(d.data.type==='pon') return '#0f766e';
+return '#6b7280';
+})
+.attr("stroke","#fff").attr("stroke-width",2);
+
+nodeG.append("text")
+.attr("x", d=> d.data.type==='network'?0:18)
+.attr("y", 4)
+.attr("font-size","12px")
+.attr("font-weight","600")
+.attr("text-anchor", d=> d.data.type==='network'? "middle":"start")
+.text(d=>d.data.name);
+
+const ponNodes = treeRoot.descendants().filter(n => n.data && n.data.type === 'pon');
+
+const levelColWidth = 220;
+const ponColGap = 140;
+const minVGap = 44;
+const growthPerItem = 12;
+
+const allSplitterPositions = [];
+
+ponNodes.forEach(ponN => {
+const p = ponN.data;
+const baseX = ponN.y;
+const baseY = ponN.x;
+const levels = (p.levels || []);
+
+if(levels.length === 0) return;
+
+const maxCount = Math.max(...levels.map(l => (l.splitters || []).length, 1), 1);
+
+const vGap = Math.max(minVGap, minVGap + (maxCount - 1) * growthPerItem);
+
+const levelSplitters = levels.map(l => Array.isArray(l.splitters) ? l.splitters.slice() : []);
+
+const userSetOf = sp => new Set((sp.users || []).map(u => normalizeId(u)));
+
+const orderedLevels = [];
+if(levelSplitters.length >= 1) {
+orderedLevels.push(levelSplitters[0].map((s, i) => ({s, origIndex: i})));
+for(let li = 1; li < levelSplitters.length; li++){
+const parents = orderedLevels[li-1];
+const parentSets = parents.map(pObj => userSetOf(pObj.s));
+const children = levelSplitters[li].map((s, idx) => ({s, origIndex: idx}));
+
+const childWithKey = children.map(ch => {
+const chSet = userSetOf(ch.s);
+let foundParentIndex = null;
+for(let pi = 0; pi < parentSets.length; pi++){
+for(const u of chSet){
+if(parentSets[pi].has(u)){ foundParentIndex = pi; break; }
+}
+if(foundParentIndex !== null) break;
+}
+return { ch, key: (foundParentIndex === null ? 9999 : foundParentIndex) };
+});
+
+childWithKey.sort((a,b) => {
+if(a.key !== b.key) return a.key - b.key;
+return a.ch.origIndex - b.ch.origIndex;
+});
+orderedLevels.push(childWithKey.map(x => x.ch));
+}
+}
+
+orderedLevels.forEach((arr, li) => {
+const count = Math.max(1, arr.length);
+const totalH = (count - 1) * vGap;
+const startY = baseY - totalH / 2;
+const stagger = (li % 2 === 0) ? 0 : Math.min(12, Math.floor(vGap/6));
+
+arr.forEach((obj, si) => {
+const sx = baseX + ponColGap + li * levelColWidth + (li % 2 === 0 ? 0 : 6);
+const sy = startY + si * vGap + stagger;
+allSplitterPositions.push({
+pon: p.name,
+level: levels[li].level,
+idx: si,
+x: sx,
+y: sy,
+data: obj.s,
+color: ensureColorForOlt(p.meta.olt)
+});
+});
+});
+});
+
+const sg = g.append("g").attr("class","splitters-group");
+
+const splitterNodes = sg.selectAll(".splitter")
+.data(allSplitterPositions)
+.enter()
+.append("g")
+.attr("class","splitter")
+.attr("transform", d=>`translate(${d.x},${d.y})`)
+.style("cursor","pointer")
+.on("mousemove",(ev,d)=> showTooltip(ev, {name:d.data.type || d.data.recordId, total:d.data.total}))
+.on("mouseout", hideTooltip)
+.on("click", (ev,d)=> openPopup(d.data, d.pon, findWindowForPon(d.pon)));
+
+splitterNodes.each(function(d){
+const g2 = d3.select(this);
+g2.append("circle").attr("r", 12)
+.attr("fill", d.data.total && d.data.total>0 ? "#10b981" : "#6b7280")
+.attr("stroke","#fff").attr("stroke-width",2);
+
+g2.append("text").attr("x", 18).attr("y", 4)
+.attr("font-size",11).attr("fill","#0f172a")
+.text(`${d.data.type}${d.data.total ? ` (${d.data.total})` : ''}`)
+.style("font-weight",600)
+.each(function(){
+const t = d3.select(this);
+const txt = t.text();
+if (txt.length > 28) t.text(txt.slice(0,26) + '…');
+});
+
+if(d.data.recordId){
+g2.append("text").attr("x",0).attr("y",22)
+.attr("font-size",10).attr("text-anchor","middle").attr("fill","#64748b")
+.text(d.data.recordId);
+}
+});
+
+ponNodes.forEach(ponN => {
+const p = ponN.data;
+const pX = ponN.y, pY = ponN.x;
+const level0 = (p.levels && p.levels[0]) ? p.levels[0].level : null;
+if(level0 === null) return;
+
+const lvl1Positions = allSplitterPositions.filter(s => s.pon === p.name && s.level === level0);
+lvl1Positions.forEach(child => {
+g.append("path")
+.attr("d", pathBezier({x:pX,y:pY},{x:child.x,y:child.y}))
+.attr("stroke", ensureColorForOlt(p.meta.olt))
+.attr("stroke-width", 2)
+.attr("fill", "none")
+.attr("stroke-opacity", 0.95);
+});
+});
+
+ponNodes.forEach(ponN => {
+const p = ponN.data;
+const lv = p.levels || [];
+for(let li = 0; li < lv.length - 1; li++){
+const L1 = lv[li].level;
+const L2 = lv[li+1].level;
+const parents = allSplitterPositions.filter(s => s.pon === p.name && s.level === L1);
+const kids = allSplitterPositions.filter(s => s.pon === p.name && s.level === L2);
+
+const parentSets = parents.map(pr => new Set((pr.data.users || []).map(normalizeId)));
+
+kids.forEach(ch => {
+const chSet = new Set((ch.data.users || []).map(normalizeId));
+let linked = false;
+for(let pi=0; pi<parents.length; pi++){
+let hasCommon = false;
+for(const u of chSet){ if(parentSets[pi].has(u)){ hasCommon = true; break; } }
+if(hasCommon){
+const pr = parents[pi];
+g.append("path")
+.attr("d", pathBezier({x:pr.x,y:pr.y},{x:ch.x,y:ch.y}))
+.attr("stroke", ch.color)
+.attr("stroke-width", 2)
+.attr("fill", "none")
+.attr("stroke-opacity", 0.95);
+linked = true;
+break;
+}
+}
+});
+}
+});
+
+g.selectAll(".hnode, .splitter").raise();
+
+const zoom = d3.zoom().scaleExtent([0.25, 3]).on("zoom", ev => g.attr("transform", ev.transform));
+svg.call(zoom);
+
+try {
+const bb = g.node().getBBox();
+const sx = width/(bb.width + 120);
+const sy = height/(bb.height + 120);
+const s0 = Math.min(sx, sy, 1);
+const tx0 = -bb.x * s0 + 20;
+const ty0 = -bb.y * s0 + 20;
+svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx0,ty0).scale(s0));
+} catch(e) {}
+
+applySearchHighlight();
+}
+
+function pathBezier(src, dst){
+const sx = src.x, sy = src.y, tx = dst.x, ty = dst.y;
+const midX = sx + (tx - sx) * 0.5;
+return `M ${sx} ${sy} C ${midX} ${sy} ${midX} ${ty} ${tx} ${ty}`;
+}
+function countLeaves(node){
+if(!node || !node.children || node.children.length===0) return 1;
+return node.children.reduce((s,c)=> s + countLeaves(c), 0);
+}
+function findWindowForPon(pon){
+if(!rawJson) return '';
+for(const w of rawJson.windows||[]){
+for(const p of w.pons||[]){
+if(p.pon===pon) return w.window;
+}
+}
+return '';
+}
+
+function showTooltip(ev, d){
+tooltip.innerHTML = `<strong>${d.name || d.type || ''}</strong><br>Users: ${d.total || (d.users?d.users.length:0)}`;
+tooltip.style.left = (ev.pageX+12)+"px";
+tooltip.style.top  = (ev.pageY+8)+"px";
+tooltip.style.display = 'block';
+}
+function hideTooltip(){ tooltip.style.display = 'none'; }
+
+function openPopup(sp, pon, win){
+popupModal.style.display = 'flex';
+popupTitle.textContent = `${sp.type || 'Splitter'} — Users`;
+popupPath.textContent = `${win||''} → ${pon||''} → ${sp.recordId||''}`;
+popupMeta.innerHTML = `<b>Total users:</b> ${sp.total || (sp.users?sp.users.length:0)}`;
+const users = Array.isArray(sp.users) ? sp.users : [];
+popupUsers.innerHTML =
+`<thead><tr><th>Sr</th><th>User</th></tr></thead><tbody>`+
+users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')+
+`</tbody>`;
+}
+
+function applySearchHighlight(){
+const term=(searchInput.value||'').trim().toLowerCase();
+const nodes = d3.selectAll("g.splitter");
+
+if(!term){
+nodes.selectAll("circle").attr("opacity",1).attr("stroke","#fff").attr("stroke-width",2);
+nodes.selectAll("text").attr("opacity",1).style("font-weight",600);
+return;
+}
+
+nodes.each(function(d){
+const users = d.data.users || [];
+const hit = users.some(u => String(u).toLowerCase().includes(term));
+const g = d3.select(this);
+if(hit){
+g.select("circle").attr("stroke","#ffb020").attr("stroke-width",4).attr("opacity",1);
+g.selectAll("text").attr("opacity",1).style("font-weight",700);
+} else {
+g.select("circle").attr("opacity",0.25);
+g.selectAll("text").attr("opacity",0.3);
+}
+});
+}
+
+function downloadCSV(){
+if(popupModal.style.display!=='flex') return;
+const rows = [...popupUsers.querySelectorAll("tr")];
+if(!rows.length) return;
+let csv = '';
+rows.forEach(r => {
+const cols = [...r.querySelectorAll("th,td")].map(c => `"${(c.textContent||'').replace(/"/g,'""')}"`);
+csv += cols.join(",") + "\n";
+});
+const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a'); a.href = url; a.download = 'users.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+function downloadScreenshot(){
+const svg = document.querySelector("#chart svg");
+if(!svg) return alert("Nothing to save");
+const xml = (new XMLSerializer()).serializeToString(svg);
+const blob = new Blob([xml], {type:"image/svg+xml"});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a'); a.href = url; a.download = 'merotra-tree.svg'; a.click(); URL.revokeObjectURL(url);
+}
+
+loadAndRender(false);
+window.addEventListener('resize', () => rawJson && applyFiltersAndRender());
 </script> 
- 
-</body> 
+</body>
 </html>
 </DOCUMENT>
