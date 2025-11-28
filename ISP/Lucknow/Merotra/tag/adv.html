@@ -1,413 +1,402 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>FTTH Board Tree</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Merotra Tree — Final Build</title>
 
-    <!-- External CSS -->
-    <link rel="stylesheet" href="adv.css" />
+  <!-- D3 -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
 
-    <!-- D3 library -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="adv.css">
+
+  <!-- Minimal fallback (same as your working file) -->
+  <style>
+    :root{font-family:Inter,system-ui,Arial}
+    body{margin:0;padding:0;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#111827;height:100vh;overflow:hidden}
+    #chart{width:100%;height:calc(100vh - 60px);overflow:hidden}
+    .tooltip{position:absolute;pointer-events:none;background:rgba(15,23,42,0.9);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;opacity:0;transition:.12s;z-index:999}
+  </style>
 </head>
 
 <body>
 
-<!-- ---------------------------------------------------------
-     TOP HEADER
---------------------------------------------------------- -->
-<div class="topbar">
-    <div class="title">📡 FTTH Board View</div>
+<!-- Header -->
+<div class="header">
+  <div>
+    <div class="header-title">🌐 Merotra Network — Clean Column Tree</div>
+    <div class="header-sub">Window → PON → Level1 → Level2 → ...</div>
+  </div>
 
-    <div class="controls">
-        <button class="btn-secondary" id="openFilters">Filters</button>
-        <button class="btn" id="resetView">Reset View</button>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="btn" id="btnSearchToggle">🔍 Search</button>
+    <button class="btn" id="reloadBtn">Reload</button>
+  </div>
+</div>
+
+<!-- Search Drawer -->
+<div id="searchDrawer" style="
+  position:absolute; top:60px; right:20px; width:260px;
+  background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15);
+  padding:12px; z-index:99; display:none;
+">
+  <div style="font-weight:700; margin-bottom:6px;">Search User</div>
+  <input id="searchBox" placeholder="Enter user ID..." 
+         style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1;">
+  <button id="searchBtn" class="btn" style="width:100%; margin-top:8px;">Search</button>
+</div>
+
+<!-- SVG -->
+<div id="chart"></div>
+<div id="tooltip" class="tooltip"></div>
+
+<!-- POPUP -->
+<div id="popupModal" class="popup-backdrop" style="display:none">
+  <div class="modal-content">
+    <div style="display:flex;justify-content:space-between;">
+      <div>
+        <h2 id="popupTitle" style="margin:0;font-size:16px"></h2>
+        <div id="popupPath" style="font-size:12px;color:#475569"></div>
+      </div>
+      <button id="popupClose" class="btn btn-secondary" style="height:30px">Close</button>
     </div>
-</div>
+    <div id="popupMeta" style="font-size:13px;color:#334155;margin:8px 0"></div>
 
-<!-- ---------------------------------------------------------
-     SEARCH FLOAT BUTTON
---------------------------------------------------------- -->
-<div class="searchToggle" id="searchToggle">🔍</div>
-
-<!-- ---------------------------------------------------------
-     SEARCH PANEL
---------------------------------------------------------- -->
-<div class="searchPanel" id="searchPanel">
-    <input id="searchInput"
-           placeholder="Search User ID..."
-           style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:6px;">
-    <button id="runSearch" class="btn" style="width:100%;margin-top:4px;">Search</button>
-</div>
-
-<!-- ---------------------------------------------------------
-     POPUP — splitter details
---------------------------------------------------------- -->
-<div class="popup-backdrop" id="popupBg">
-    <div class="modal-content">
-        <h3 id="popupTitle" style="margin-top:0;font-size:1rem;font-weight:700;"></h3>
-        <div id="popupBody"></div>
-
-        <div class="download-btns">
-            <button class="download-btn btn-shot" id="downloadImage">Download PNG</button>
-            <button class="download-btn btn-csv" id="downloadCSV">Download CSV</button>
-        </div>
+    <div style="max-height:380px;overflow:auto">
+      <table id="popupUsersTable" class="user-table"></table>
     </div>
+  </div>
 </div>
 
-<!-- ---------------------------------------------------------
-     INFO CARD (bottom-left)
---------------------------------------------------------- -->
-<div class="info-card" id="infoCard"></div>
-
-<!-- ---------------------------------------------------------
-     FILTER PANEL
---------------------------------------------------------- -->
-<div class="controls-backdrop" id="filterBg" style="display:none;">
-    <div class="controls-modal">
-        <h3 style="margin-top:0;font-size:1rem;">Filters</h3>
-
-        <!-- Window Filter -->
-        <div class="filter-title">Select Window</div>
-        <div class="checkbox-grid" id="windowFilter"></div>
-
-        <!-- PON Filter -->
-        <div class="filter-title" style="margin-top:10px;">Select PON</div>
-        <div class="checkbox-grid pon-grid" id="ponFilter"></div>
-
-        <!-- Splitter Filter -->
-        <div class="filter-title" style="margin-top:10px;">Select Splitter</div>
-        <div class="checkbox-grid pon-grid" id="splitterFilter"></div>
-
-        <div style="display:flex;justify-content:end;margin-top:12px;gap:8px;">
-            <button class="btn-secondary" id="closeFilters">Cancel</button>
-            <button class="btn" id="applyFilters">Apply</button>
-        </div>
-    </div>
-</div>
-
-<!-- ---------------------------------------------------------
-     MAIN SVG TREE
---------------------------------------------------------- -->
-<div id="chartWrap">
-    <svg id="chartSVG"></svg>
-</div>
-
-
-<!-- ---------------------------------------------------------
-     TREE SCRIPT
---------------------------------------------------------- -->
 <script>
-/* -----------------------------------------------------------
-   1) LOAD JSON DATA
------------------------------------------------------------ */
-const DATA_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
+/* =====================================================
+   CONFIG
+===================================================== */
+const BOARD_URL =
+ "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
-let rawData = null;
-let flatSplitters = [];
-let activeWindowFilter = [];
-let activePONFilter = [];
-let activeSplitterFilter = [];
-
-let svg = d3.select("#chartSVG");
-let gLinks = svg.append("g");
-let gNodes = svg.append("g");
-let gGuides = svg.append("g");
+let rawJson = null;
+const tooltip = document.getElementById("tooltip");
 
 
-/* -----------------------------------------------------------
-   2) RESPONSIVE RESIZE
------------------------------------------------------------ */
-let W = 0, H = 0;
-function resize() {
-    const wrap = document.getElementById("chartWrap");
-    W = wrap.clientWidth;
-    H = wrap.clientHeight;
-    svg.attr("width", W).attr("height", H);
+/* =====================================================
+   SIMPLE UI BINDINGS
+===================================================== */
+document.getElementById("reloadBtn").onclick = () => loadAndRender();
+document.getElementById("btnSearchToggle").onclick = toggleSearch;
+document.getElementById("searchBtn").onclick = runSearch;
+document.getElementById("popupClose").onclick = () => {
+  document.getElementById("popupModal").style.display = "none";
+};
+
+
+/* =====================================================
+   LOAD JSON + RENDER
+===================================================== */
+async function loadAndRender() {
+  try {
+    setLoading(true);
+    const res = await fetch(BOARD_URL);
+    const j = await res.json();
+    rawJson = j;
+    renderTree(j);
+  } catch (e) {
+    alert("Load failed");
+  } finally {
+    setLoading(false);
+  }
 }
-window.addEventListener("resize", resize);
 
-
-/* -----------------------------------------------------------
-   3) FETCH JSON + INIT
------------------------------------------------------------ */
-async function init() {
-    resize();
-
-    const res = await fetch(DATA_URL);
-    rawData = await res.json();
-
-    flattenData();
-    buildFilters();
-    drawTree();
+function setLoading(v){
+  const b = document.getElementById("reloadBtn");
+  b.disabled = v;
+  b.textContent = v ? "Loading..." : "Reload";
 }
-init();
 
 
-/* -----------------------------------------------------------
-   4) FLATTEN DATA (window → pons → levels → splitters)
------------------------------------------------------------ */
-function flattenData() {
-    flatSplitters = [];
+/* =====================================================
+   RENDER TREE (CENTERED COLUMNS)
+===================================================== */
+function renderTree(data) {
+  const chart = document.getElementById("chart");
+  chart.innerHTML = "";
 
-    rawData.windows.forEach(w => {
-        w.pons.forEach(p => {
-            p.levels.forEach(lv => {
-                lv.splitters.forEach(sp => {
-                    flatSplitters.push({
-                        window: w.window,
-                        pon: p.pon,
-                        level: lv.level,
-                        recordId: sp.recordId,
-                        type: sp.type,
-                        users: sp.users,
-                        total: sp.total
-                    });
-                });
-            });
+  const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width","100%")
+      .attr("height","100%");
+
+  const g = svg.append("g");
+
+  const zoom = d3.zoom().scaleExtent([0.4, 2])
+     .on("zoom", e => g.attr("transform", e.transform));
+  svg.call(zoom);
+
+  const leftPad = 40;
+  const colWidth = 220;
+  const nodeGap = 55;
+  const nodeR = 12;
+
+  let currY = 30;
+
+
+  /* -------- loop windows -------- */
+  data.windows.forEach(win => {
+    const winName = win.window;
+
+    g.append("text")
+      .attr("x", leftPad)
+      .attr("y", currY)
+      .text(winName)
+      .attr("font-weight",700)
+      .attr("font-size",14);
+
+    currY += 20;
+
+    win.pons.forEach(pon => {
+
+      const levels = pon.levels.sort((a,b)=>a.level-b.level);
+      const maxNodes = Math.max(
+        1,
+        ...levels.map(l=>l.splitters.length)
+      );
+
+      const blockH = Math.max(120, maxNodes*nodeGap + 50);
+      const centerY = currY + blockH/2;
+
+      /* ---- Window NODE ---- */
+      const winX = leftPad;
+      const winY = centerY;
+
+      /* ---- PON NODE ---- */
+      const ponX = winX + colWidth;
+      const ponY = centerY;
+
+      g.append("circle")
+        .attr("cx", ponX)
+        .attr("cy", ponY)
+        .attr("r", nodeR+4)
+        .attr("fill","#0f766e")
+        .attr("stroke","#fff")
+        .attr("stroke-width",2);
+
+      g.append("text")
+        .attr("x", ponX + nodeR + 8)
+        .attr("y", ponY+4)
+        .text(pon.pon)
+        .attr("font-size",12);
+
+      /* -------- LINK: Window → PON -------- */
+      g.append("line")
+        .attr("x1", winX+40)
+        .attr("y1", winY)
+        .attr("x2", ponX - nodeR - 4)
+        .attr("y2", ponY)
+        .attr("stroke", randomBranch(pon.pon))
+        .attr("stroke-width",2);
+
+
+      /* ===== DRAW LEVEL SPLITTERS ===== */
+      const levelPos = [];
+
+      levels.forEach((lvl, i) => {
+        const sx = ponX + colWidth + i*colWidth;
+        const sCount = lvl.splitters.length;
+        const totalH = (sCount-1)*nodeGap;
+        const sy = centerY - totalH/2;
+
+        levelPos[i] = [];
+
+        lvl.splitters.forEach((sp, idx) => {
+          const x = sx;
+          const y = sy + idx*nodeGap;
+
+          levelPos[i].push({x,y, sp});
+
+          // circle
+          g.append("circle")
+            .attr("cx",x)
+            .attr("cy",y)
+            .attr("r",nodeR)
+            .attr("fill","#10b981")
+            .attr("stroke","#fff")
+            .attr("stroke-width",2)
+            .style("cursor","pointer")
+            .on("mousemove",(e)=> showTip(e,sp))
+            .on("mouseout", hideTip)
+            .on("click", ()=> openPopup(sp, pon.pon, winName));
+
+          // label
+          g.append("text")
+            .attr("x", x + nodeR + 6)
+            .attr("y", y + 4)
+            .text(`${sp.type} (${sp.total})`)
+            .attr("font-size",11);
+
+          // record ID
+          g.append("text")
+            .attr("x", x)
+            .attr("y", y + nodeR + 12)
+            .text(sp.recordId)
+            .attr("font-size",10)
+            .attr("fill","#64748b")
+            .attr("text-anchor","middle");
         });
-    });
-}
+      });
 
 
-/* -----------------------------------------------------------
-   5) BUILD FILTER CHECKBOXES
------------------------------------------------------------ */
-function buildFilters() {
-    const windowFilter = document.getElementById("windowFilter");
-    const ponFilter = document.getElementById("ponFilter");
-    const splitterFilter = document.getElementById("splitterFilter");
+      /* ===== LINKS: PON → Level1 ===== */
+      if(levelPos[0]){
+        levelPos[0].forEach(ch => drawLink({x:ponX,y:ponY}, {x:ch.x,y:ch.y}, randomBranch(pon.pon)));
+      }
 
-    windowFilter.innerHTML = "";
-    ponFilter.innerHTML = "";
-    splitterFilter.innerHTML = "";
+      /* ===== LINKS: LevelN → LevelN+1 ===== */
+      for(let i=0;i<levelPos.length-1;i++){
+        const parents = levelPos[i];
+        const children = levelPos[i+1];
 
-    // Windows
-    const windows = [...new Set(rawData.windows.map(w => w.window))];
-    windows.forEach(w => {
-        windowFilter.innerHTML += `
-            <div class="checkbox-item">
-                <label>
-                    <input type="checkbox" value="${w}" class="wFilter">
-                    ${w}
-                </label>
-            </div>`;
-    });
+        children.forEach(ch => {
+          const cset = new Set(ch.sp.users);
+          let linked = false;
 
-    // PONs
-    const pons = flatSplitters.map(x => x.pon);
-    const uniquePons = [...new Set(pons)];
-    uniquePons.forEach(p => {
-        ponFilter.innerHTML += `
-            <div class="checkbox-item">
-                <label>
-                    <input type="checkbox" value="${p}" class="pFilter">
-                    ${p}
-                </label>
-            </div>`;
-    });
+          for(const p of parents){
+            const pset = new Set(p.sp.users);
 
-    // Splitters
-    flatSplitters.forEach(sp => {
-        splitterFilter.innerHTML += `
-            <div class="checkbox-item">
-                <label>
-                    <input type="checkbox" value="${sp.recordId}" class="sFilter">
-                    ${sp.recordId || '(empty)'}
-                </label>
-            </div>`;
-    });
-}
-
-
-/* -----------------------------------------------------------
-   6) DRAW TREE (WINDOW → PON → LEVELS → SPLITTERS)
------------------------------------------------------------ */
-function drawTree() {
-    svg.selectAll("*").remove();
-    gLinks = svg.append("g");
-    gNodes = svg.append("g");
-    gGuides = svg.append("g");
-
-    // Layout settings
-    const colGap = 240;
-    const rowGap = 60;
-
-    let xStart = 80;
-    let windowY = 80;
-
-    rawData.windows.forEach(w => {
-        const winNode = { x: xStart, y: windowY, label: w.window };
-        drawNode(winNode, "window");
-
-        let ponY = windowY + 120;
-        w.pons.forEach(p => {
-            const ponNode = { x: xStart + colGap, y: ponY, label: p.pon };
-            drawNode(ponNode, "pon");
-            drawLink(winNode, ponNode, "#6b7280");
-
-            // Levels
-            const maxLevel = Math.max(...p.levels.map(l => l.level));
-            let levelX = xStart + colGap * 2;
-
-            for (let L = 1; L <= maxLevel; L++) {
-                const Ldata = p.levels.find(x => x.level === L);
-                if (!Ldata) continue;
-
-                const sList = Ldata.splitters;
-
-                sList.forEach((sp, idx) => {
-                    const spNode = {
-                        x: levelX,
-                        y: ponY + idx * rowGap,
-                        label: sp.recordId || "(empty)",
-                        spData: sp
-                    };
-
-                    drawNode(spNode, "splitter");
-
-                    // Connect to parent (pon or previous level)
-                    if (L === 1) {
-                        drawLink(ponNode, spNode);
-                    } else {
-                        const prev = p.levels.find(x => x.level === (L - 1));
-                        if (prev) {
-                            let linked = false;
-
-                            prev.splitters.forEach(par => {
-                                const overlap = par.users.some(u => sp.users.includes(u));
-                                if (overlap) {
-                                    const parentNode = {
-                                        x: levelX - colGap,
-                                        y: spNode.y, // approximate center alignment
-                                        label: par.recordId,
-                                        spData: par
-                                    };
-                                    drawLink(parentNode, spNode);
-                                    linked = true;
-                                }
-                            });
-                        }
-                    }
-                });
-
-                levelX += colGap;
+            for(const u of cset){
+              if(pset.has(u)){
+                drawLink({x:p.x,y:p.y},{x:ch.x,y:ch.y}, randomBranch(pon.pon));
+                linked = true;
+                break;
+              }
             }
-
-            ponY += (p.levels[0].splitters.length + 1.5) * rowGap;
+            if(linked) break;
+          }
         });
+      }
 
-        windowY = ponY + 120;
+      currY += blockH + 20;
     });
+
+    currY += 30;
+  });
+
+
+  fit(svg.node(), g.node());
 }
 
 
-/* -----------------------------------------------------------
-   7) DRAW NODE
------------------------------------------------------------ */
-function drawNode(node, type) {
-    const nodeGroup = gNodes.append("g").attr("transform", `translate(${node.x},${node.y})`);
+/* =====================================================
+   LINK + COLOR HELPERS
+===================================================== */
+const branchColors = {};
+function randomBranch(key){
+  if(branchColors[key]) return branchColors[key];
+  const hue = Math.floor(Math.random()*360);
+  return branchColors[key] = `hsl(${hue},70%,45%)`;
+}
 
-    const color = (type === "window") ? "#0ea5e9"
-                : (type === "pon") ? "#2563eb"
-                : "#10b981";
-
-    nodeGroup.append("circle")
-        .attr("r", 18)
-        .attr("fill", color)
-        .attr("class", "node-circle")
-        .on("click", () => showInfo(node));
-
-    nodeGroup.append("text")
-        .attr("text-anchor", "middle")
-        .attr("dy", 4)
-        .attr("class", "node-text")
-        .text(node.label);
+function drawLink(a,b,color){
+  d3.select("svg g")
+    .append("path")
+    .attr("d", `M ${a.x} ${a.y} C ${(a.x+b.x)/2} ${a.y}, ${(a.x+b.x)/2} ${b.y}, ${b.x} ${b.y}`)
+    .attr("fill","none")
+    .attr("stroke",color)
+    .attr("stroke-width",2)
+    .attr("stroke-opacity",0.85);
 }
 
 
-/* -----------------------------------------------------------
-   8) DRAW LINK
------------------------------------------------------------ */
-function drawLink(a, b, color = null) {
-    gLinks.append("line")
-        .attr("x1", a.x)
-        .attr("y1", a.y)
-        .attr("x2", b.x)
-        .attr("y2", b.y)
-        .attr("stroke", color || "#9ca3af")
-        .attr("class", "link");
+/* =====================================================
+   TOOLTIP + POPUP
+===================================================== */
+function showTip(e, sp){
+  tooltip.style.opacity = 1;
+  tooltip.style.left = (e.pageX+12)+"px";
+  tooltip.style.top = (e.pageY+12)+"px";
+  tooltip.innerHTML =
+    `<strong>${sp.type}</strong><br>
+     Record: ${sp.recordId}<br>
+     Users: ${sp.total}`;
+}
+function hideTip(){ tooltip.style.opacity = 0; }
+
+function openPopup(sp, pon, win){
+  const m = document.getElementById("popupModal");
+  document.getElementById("popupTitle").textContent = `${sp.type}`;
+  document.getElementById("popupPath").textContent = `${win} → ${pon} → ${sp.recordId}`;
+  document.getElementById("popupMeta").innerHTML = `<strong>Total Users:</strong> ${sp.total}`;
+
+  const tbl = document.getElementById("popupUsersTable");
+  tbl.innerHTML = `<thead><tr><th>#</th><th>User</th></tr></thead><tbody>` +
+    sp.users.map((u,i)=> `<tr><td>${i+1}</td><td>${u}</td></tr>`).join("") +
+    `</tbody>`;
+
+  m.style.display = "flex";
 }
 
 
-/* -----------------------------------------------------------
-   9) SHOW INFO POPUP
------------------------------------------------------------ */
-function showInfo(node) {
-    const card = document.getElementById("infoCard");
-
-    if (!node.spData) {
-        card.innerHTML = `<div class="info-row"><b>${node.label}</b></div>`;
-        card.style.display = "block";
-        return;
-    }
-
-    const sp = node.spData;
-    card.innerHTML = `
-        <div class="info-row"><b>Record ID:</b> ${sp.recordId}</div>
-        <div class="info-row"><b>Type:</b> ${sp.type}</div>
-        <div class="info-row"><b>Total Users:</b> ${sp.total}</div>
-        <div class="info-row"><b>Users:</b> ${sp.users.join(", ")}</div>
-    `;
-
-    card.style.display = "block";
+/* =====================================================
+   SEARCH
+===================================================== */
+function toggleSearch(){
+  const d = document.getElementById("searchDrawer");
+  d.style.display = (d.style.display==="none" || d.style.display==="") ? "block" : "none";
 }
 
+function runSearch(){
+  const val = document.getElementById("searchBox").value.trim();
+  if(!val) return;
 
-/* -----------------------------------------------------------
-   10) SEARCH USER HIGHLIGHT
------------------------------------------------------------ */
-document.getElementById("runSearch").addEventListener("click", () => {
-    const id = document.getElementById("searchInput").value.trim();
-    if (!id) return;
+  // simple highlight: scan all splitters
+  let found = null;
 
-    d3.selectAll(".node-circle").classed("highlight", false);
-
-    flatSplitters.forEach(sp => {
-        if (sp.users.includes(id)) {
-            const match = d3.selectAll("text")
-                .filter(function() { return this.textContent == sp.recordId; })
-                .node();
-
-            if (match) {
-                const group = match.parentNode;
-                d3.select(group).select("circle").classed("highlight", true);
-            }
-        }
+  rawJson.windows.forEach(w=>{
+    w.pons.forEach(p=>{
+      p.levels.forEach(l=>{
+        l.splitters.forEach(s=>{
+          if(s.users.includes(val)) found = {s,p,w};
+        });
+      });
     });
-});
+  });
+
+  if(!found){ alert("User not found"); return; }
+
+  openPopup(found.s, found.p.pon, found.w.window);
+
+  // optional: auto pan to node (can add)
+}
 
 
-/* -----------------------------------------------------------
-   11) TOGGLES
------------------------------------------------------------ */
-document.getElementById("searchToggle").onclick = () => {
-    const p = document.getElementById("searchPanel");
-    p.style.display = (p.style.display === "block") ? "none" : "block";
-};
+/* =====================================================
+   FIT TO VIEW
+===================================================== */
+function fit(svg, g){
+  try{
+    const box = g.getBBox();
+    const w = svg.clientWidth;
+    const h = svg.clientHeight;
+    const scale = Math.min(1, Math.min(
+      w/(box.width+100),
+      h/(box.height+100)
+    ));
+    const tx = -box.x*scale + 20;
+    const ty = -box.y*scale + 20;
 
-document.getElementById("openFilters").onclick = () => {
-    document.getElementById("filterBg").style.display = "flex";
-};
+    d3.select(svg).call(
+      d3.zoom().transform,
+      d3.zoomIdentity.translate(tx,ty).scale(scale)
+    );
+  }catch(e){}
+}
 
-document.getElementById("closeFilters").onclick = () => {
-    document.getElementById("filterBg").style.display = "none";
-};
 
-document.getElementById("resetView").onclick = () => {
-    location.reload();
-};
+/* =====================================================
+   INIT
+===================================================== */
+loadAndRender();
+
 </script>
-
 </body>
 </html>
