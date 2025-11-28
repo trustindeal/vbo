@@ -7,6 +7,7 @@
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <link rel="stylesheet" href="adv.css">
+
   <style>
     :root{font-family:Inter,system-ui,Arial}
     body{margin:0;padding:0;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#111827}
@@ -16,6 +17,7 @@
     @media (max-width:760px){ .search-input{ width:140px } }
   </style>
 </head>
+
 <body>
 
   <div class="header">
@@ -40,6 +42,7 @@
   <div id="chart"></div>
   <div id="tooltip" class="tooltip"></div>
 
+  <!-- Popup -->
   <div id="popupModal" class="popup-backdrop" style="display:none">
     <div class="modal-content">
       <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
@@ -61,8 +64,11 @@
   </div>
 
 <script>
-/* ---------- Config / State ---------- */
-const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
+/* ==========================================
+   CONFIG & GLOBALS
+========================================== */
+const BOARD_URL =
+ "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
 let rawJson = null;
 let colorByOlt = new Map();
@@ -80,58 +86,114 @@ const windowFilter = document.getElementById('windowFilter');
 const oltFilter = document.getElementById('oltFilter');
 const ponFilter = document.getElementById('ponFilter');
 const clearFilters = document.getElementById('clearFilters');
+
 const searchFold = document.getElementById('searchFold');
 const searchInput = document.getElementById('searchInput');
 
 document.getElementById('btnShot').addEventListener('click', downloadScreenshot);
 document.getElementById('btnCsv').addEventListener('click', downloadCSV);
-reloadBtn.addEventListener('click', ()=> loadAndRender(true));
-popupClose.addEventListener('click', ()=> { popupModal.style.display='none'; });
+popupClose.addEventListener('click', ()=> popupModal.style.display='none');
 
+reloadBtn.addEventListener('click', ()=> loadAndRender(true));
 windowFilter.addEventListener('change', applyFiltersAndRender);
 oltFilter.addEventListener('change', applyFiltersAndRender);
 ponFilter.addEventListener('change', applyFiltersAndRender);
-clearFilters.addEventListener('click', ()=> { windowFilter.value=''; oltFilter.value=''; ponFilter.value=''; applyFiltersAndRender(); });
+
+clearFilters.addEventListener('click', ()=>{
+  windowFilter.value=''; oltFilter.value=''; ponFilter.value='';
+  applyFiltersAndRender();
+});
 
 searchFold.addEventListener('click', ()=>{
-  if (searchInput.style.display === 'none' || searchInput.style.display === '') { searchInput.style.display='inline-block'; searchInput.focus(); }
-  else { searchInput.style.display='none'; searchInput.value=''; applyFiltersAndRender(); }
+  if (searchInput.style.display === 'none') {
+    searchInput.style.display='inline-block';
+    searchInput.focus();
+  } else {
+    searchInput.style.display='none';
+    searchInput.value='';
+    applyFiltersAndRender();
+  }
 });
-searchInput.addEventListener('input', ()=> { applyFiltersAndRender(); });
 
-/* ---------- Helpers ---------- */
+searchInput.addEventListener('input', ()=> applyFiltersAndRender());
+
+/* ==========================================
+   HELPERS
+========================================== */
 function normalizeId(v){ return (v ?? "").toString().trim(); }
-function getOltNumberFromPon(pon){ const m = (pon || "").match(/O(\d+)/i); return m ? m[1] : "0"; }
-function parsePonKey(pon){ const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i); if(!m) return {olt:9999, ip:9999, port:9999}; return {olt:+m[1], ip:+m[2], port:+m[3]}; }
-function ensureColorForOlt(olt){ if(!colorByOlt.has(olt)){ const idx=colorByOlt.size; const h=(idx*50)%360; colorByOlt.set(olt, `hsl(${h} 65% 45%)`); } return colorByOlt.get(olt); }
+function getOltNumberFromPon(pon){
+  const m = (pon || "").match(/O(\d+)/i);
+  return m ? m[1] : "0";
+}
+function parsePonKey(pon){
+  const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i);
+  if(!m) return {olt:9999, ip:9999, port:9999};
+  return {olt:+m[1], ip:+m[2], port:+m[3]};
+}
+function ensureColorForOlt(olt){
+  if(!colorByOlt.has(olt)){
+    const idx = colorByOlt.size;
+    const h = (idx * 50) % 360;
+    colorByOlt.set(olt, `hsl(${h} 65% 45%)`);
+  }
+  return colorByOlt.get(olt);
+}
 
-/* ---------- Load/Filter/Transform ---------- */
+/* ==========================================
+   LOADING & FILTERING
+========================================== */
 async function loadAndRender(showToast=false){
-  try{
+  try {
     setLoading(true);
     const res = await fetch(BOARD_URL);
-    if(!res.ok) throw new Error('Fetch failed: '+res.status);
+    if(!res.ok) throw new Error("HTTP "+res.status);
+
     const j = await res.json();
     rawJson = j;
+
     colorByOlt = new Map();
     buildFiltersFromJson(j);
     applyFiltersAndRender();
-    if(showToast) console.info('Loaded', j.summary || {});
-  }catch(e){ console.error(e); alert('Load error: '+(e.message||e)) } finally { setLoading(false); }
+
+  } catch(err){
+    console.error(err);
+    alert("Load error: " + err.message);
+  } finally {
+    setLoading(false);
+  }
 }
-function setLoading(flag){ reloadBtn.textContent = flag? 'Loading...':'🔄 Refresh'; reloadBtn.disabled = flag; }
+
+function setLoading(flag){
+  reloadBtn.disabled = flag;
+  reloadBtn.textContent = flag ? "Loading..." : "🔄 Refresh";
+}
 
 function buildFiltersFromJson(j){
   const winSet=new Set(), oltSet=new Set(), ponSet=new Set();
-  (j.windows||[]).forEach(win=>{ winSet.add(win.window||''); (win.pons||[]).forEach(p=>{ ponSet.add(p.pon||''); oltSet.add(getOltNumberFromPon(p.pon||'')); });});
-  populateSelect(windowFilter, ['', ...Array.from(winSet).sort()], '(all)');
-  populateSelect(oltFilter, ['', ...Array.from(oltSet).sort((a,b)=>+a-+b)], '(all)');
-  populateSelect(ponFilter, ['', ...Array.from(ponSet).sort()], '(all)');
+  (j.windows||[]).forEach(w=>{
+    winSet.add(w.window||'');
+    (w.pons||[]).forEach(p=>{
+      ponSet.add(p.pon||'');
+      oltSet.add(getOltNumberFromPon(p.pon||''));
+    });
+  });
+  populateSelect(windowFilter, ['', ...Array.from(winSet).sort()], "(all)");
+  populateSelect(oltFilter, ['', ...Array.from(oltSet).sort((a,b)=>+a-+b)], "(all)");
+  populateSelect(ponFilter, ['', ...Array.from(ponSet).sort()], "(all)");
 }
-function populateSelect(sel, arr, defaultLabel='(all)'){
+
+function populateSelect(sel, arr, label){
   const prev = sel.value||'';
-  sel.innerHTML=''; const opt=document.createElement('option'); opt.value=''; opt.textContent=defaultLabel; sel.appendChild(opt);
-  arr.filter(v=>v!=='').forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+  sel.innerHTML='';
+  const o0=document.createElement('option');
+  o0.value=''; o0.textContent=label;
+  sel.appendChild(o0);
+
+  arr.filter(x=>x!=='').forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v; o.textContent=v; sel.appendChild(o);
+  });
+
   if(prev) sel.value = prev;
 }
 
@@ -143,392 +205,431 @@ function applyFiltersAndRender(){
 }
 
 function applyClientFilters(j){
-  const wsel=windowFilter.value; const oltsel=oltFilter.value; const ponsel=ponFilter.value; const search=(searchInput.value||'').trim().toLowerCase();
+  const wsel=windowFilter.value;
+  const oltsel=oltFilter.value;
+  const psel=ponFilter.value;
+  const term=(searchInput.value||'').trim().toLowerCase();
+
   const out={windows:[]};
+
   (j.windows||[]).forEach(win=>{
     if(wsel && win.window !== wsel) return;
+
     const newWin={window:win.window, pons:[]};
+
     (win.pons||[]).forEach(p=>{
-      if(ponsel && p.pon !== ponsel) return;
-      if(oltsel && getOltNumberFromPon(p.pon||'') !== oltsel) return;
-      const newLevels=(p.levels||[]).filter(l=>Array.isArray(l.splitters) && l.splitters.length>0).map(l=>({level:l.level, splitters:l.splitters}));
-      if(newLevels.length===0 && search){
-        const matched=deepSearchMatch(p, search);
-        if(!matched) return;
+      if(psel && p.pon !== psel) return;
+      if(oltsel && getOltNumberFromPon(p.pon) !== oltsel) return;
+
+      const newLv = (p.levels||[])
+          .filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0);
+
+      if(newLv.length===0 && term){
+        if(!deepSearchMatch(p, term)) return;
       }
-      newWin.pons.push(Object.assign({}, p, {levels:newLevels}));
+
+      newWin.pons.push({...p, levels:newLv});
     });
-    if(newWin.pons.length>0 || !wsel) out.windows.push(newWin);
+
+    if(newWin.pons.length>0 || !wsel){
+      out.windows.push(newWin);
+    }
   });
+
   return out;
 }
-function deepSearchMatch(pObj, term){
+
+function deepSearchMatch(p, term){
   if(!term) return false;
-  for(const lvl of (pObj.levels||[])) for(const sp of (lvl.splitters||[])) for(const u of (sp.users||[])) if(String(u).toLowerCase().includes(term)) return true;
+  for(const lvl of (p.levels||[])){
+    for(const sp of (lvl.splitters||[])){
+      for(const u of (sp.users||[])){
+        if(String(u).toLowerCase().includes(term)) return true;
+      }
+    }
+  }
   return false;
 }
 
-/* Transform to hierarchy up to PON; keep levels as separate array on PON */
+/* ==========================================
+   🔥 FIXED: transformToHierarchy()
+========================================== */
 function transformToHierarchy(j){
   const root = { name:'Merotra Network', type:'network', children:[] };
-  (j.windows||[]).forEach(win=>{
-    const winNode = { name: win.window || 'Window', type:'window', children:[] };
-    // group PONs by OLT
+
+  (j.windows || []).forEach(win => {
+
+    const winNode = { name: win.window, type:'window', children:[] };
+
     const oltMap = {};
-    (win.pons||[]).forEach(p=>{
-      const ponKey = p.pon||'NOPON';
-      const meta = parsePonKey(ponKey);
-      const levels = (p.levels||[]).filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0).map(l=>({
-        level: l.level,
-        splitters: (l.splitters||[]).map(sp=>({
-          recordId: sp.recordId||'',
-          type: sp.type||'',
-          users: (sp.users||[]).map(u=>String(u)),
-          total: sp.total || ((sp.users||[]).length || 0)
-        }))
-      }));
-      const ponNode = { name: ponKey, type:'pon', meta, levels };
+
+    (win.pons || []).forEach(p => {
+
+      const meta = parsePonKey(p.pon);
+      const levels = (p.levels||[])
+        .map(l=>({
+          level:l.level,
+          splitters:(l.splitters||[]).map(sp=>({
+            recordId:sp.recordId||'',
+            type:sp.type||'',
+            users:(sp.users||[]).map(x=>String(x)),
+            total:sp.total || ((sp.users||[]).length || 0)
+          }))
+        }));
+
+      const ponNode={
+        name: p.pon,
+        type:'pon',
+        meta,
+        levels
+      };
+
       const oltNum = String(meta.olt);
-      if(!oltMap[oltNum]) oltMap[oltNum] = { name: 'OLT-' + oltNum, type:'olt', meta:{olt:oltNum}, children: [] };
+      if(!oltMap[oltNum]){
+        oltMap[oltNum] = {
+          name: "OLT-"+oltNum,
+          type:'olt',
+          meta:{olt:oltNum},
+          children:[]
+        };
+      }
+
       oltMap[oltNum].children.push(ponNode);
     });
-    // sort ponds inside each olt
+
+    /* Sort PONs inside OLT */
     Object.values(oltMap).forEach(oltn=>{
-oltn.children.sort((a,b)=> {
-  const A = a.meta || {};
-  const B = b.meta || {};
+      oltn.children.sort((a,b)=>{
+        if(+a.meta.olt !== +b.meta.olt) return +a.meta.olt - +b.meta.olt;
+        if(+a.meta.ip  !== +b.meta.ip ) return +a.meta.ip  - +b.meta.ip;
+        return +a.meta.port - +b.meta.port;
+      });
+    });
 
-  const ao = Number(A.olt) || 0;
-  const bo = Number(B.olt) || 0;
-  if (ao !== bo) return ao - bo;
+    /* Sort OLT groups */
+    Object.values(oltMap)
+      .sort((a,b)=> (+a.meta.olt) - (+b.meta.olt))
+      .forEach(olt=> winNode.children.push(olt));
 
-  const ai = Number(A.ip) || 0;
-  const bi = Number(B.ip) || 0;
-  if (ai !== bi) return ai - bi;
-
-  const ap = Number(A.port) || 0;
-  const bp = Number(B.port) || 0;
-  return ap - bp;
-});
-
-    // push OLTs sorted by olt number
-    Object.values(oltMap).sort((a,b)=> (+a.meta.olt)-(+b.meta.olt)).forEach(x=>winNode.children.push(x));
     root.children.push(winNode);
   });
   return root;
 }
 
-/* ---------- Render: hybrid approach ----------
-   - Use d3.tree to layout Network->Window->OLT->PON vertically (top->down)
-   - For each PON, draw its levels as columns to the right of the PON (preserving exact order and sheet order)
-   - This preserves level ordering and avoids disturbing splitter-level system
-*/
+/* ==========================================
+   RENDER (Hybrid) — includes FIX for vGap
+========================================== */
 function renderHybridTree(rootData){
   d3.select('#chart').selectAll('*').remove();
-  const chart = d3.select('#chart');
-  const width = chart.node().clientWidth || window.innerWidth;
-  const height = chart.node().clientHeight || (window.innerHeight - 60);
 
-  // Small layout tuning
-  const levelColWidth = 220;     // horizontal gap for each level column after PON
-  const ponColGap = 140;         // space between PON column and first level column
-  const nodeVgapBase = 56;      // base vertical gap
-  const rootPadding = 40;
+  const chart=document.getElementById('chart');
+  const width = chart.clientWidth;
+  const height= chart.clientHeight;
 
-  // create d3.hierarchy for network->window->olt->pon
-  const treeRoot = d3.hierarchy(rootData, d => d.children && d.children.length ? d.children : null);
+  // hybrid tree + level columns
+  const treeRoot = d3.hierarchy(rootData);
+  const nodeCount = countLeaves(rootData);
+  const nodeGap = Math.min(80, Math.max(40, height/(nodeCount+2)));
 
-  // nodeSize: y (depth spacing) and x (vertical spacing)
-  const nodeVerticalGap = Math.max(36, Math.min(80, Math.floor(height / (Math.max(6, countLeaves(rootData)) + 2))));
-  const treeLayout = d3.tree().nodeSize([nodeVerticalGap, 140]); // [x,y] where x is vertical, y is horizontal
+  const treeLayout = d3.tree().nodeSize([nodeGap, 140]);
   treeLayout(treeRoot);
 
-  // Prepare SVG & group
-  const svg = chart.append('svg').attr('width','100%').attr('height','100%').attr('viewBox',`0 0 ${Math.max(1200, width)} ${Math.max(800, height)}`);
-  const g = svg.append('g').attr('transform', `translate(${rootPadding}, ${rootPadding})`);
+  const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width","100%")
+      .attr("height","100%");
 
-  // compute scale-fit later
-  const nodes = treeRoot.descendants();
-  const links = treeRoot.links();
+  const g = svg.append("g").attr("transform","translate(40,40)");
 
-  // Draw hierarchical links (network->window->olt->pon)
-  function diagSimple(d){
-    const sx = d.source.y, sy = d.source.x, tx = d.target.y, ty = d.target.x;
-    const midX = (sx + tx) / 2;
-    return `M ${sx} ${sy} C ${midX} ${sy} ${midX} ${ty} ${tx} ${ty}`;
-  }
+  /* Draw T-R-E-E links */
+  g.selectAll(".hwlink")
+    .data(treeRoot.links())
+    .enter()
+    .append("path")
+    .attr("class","link")
+    .attr("fill","none")
+    .attr("stroke","#94a3b8")
+    .attr("stroke-width",2)
+    .attr("d",d=>`M${d.source.y},${d.source.x} C ${(d.source.y+d.target.y)/2},${d.source.x} ${(d.source.y+d.target.y)/2},${d.target.x} ${d.target.y},${d.target.x}`);
 
-  g.selectAll('.hwlink')
-    .data(links)
-    .enter().append('path')
-    .attr('class','link hwlink')
-    .attr('d', diagSimple)
-    .attr('fill','none')
-    .attr('stroke','#94a3b8')
-    .attr('stroke-width',2)
-    .attr('stroke-opacity',0.9);
+  /* Draw nodes */
+  const n = g.selectAll(".hnode")
+        .data(treeRoot.descendants())
+        .enter().append("g")
+        .attr("class","hnode")
+        .attr("transform",d=>`translate(${d.y},${d.x})`);
 
-  // Draw nodes (network/window/olt/pon). We'll later draw level columns to the right of pon nodes.
-  const node = g.selectAll('.hnode').data(nodes).enter().append('g')
-    .attr('class','node hnode')
-    .attr('transform', d => `translate(${d.y},${d.x})`);
-
-  node.append('circle')
-    .attr('r', d => {
-      if(d.data.type==='network') return 22;
-      if(d.data.type==='window') return 18;
-      if(d.data.type==='olt') return 16;
-      if(d.data.type==='pon') return 14;
-      return 10;
-    })
-    .attr('fill', d => {
+  n.append("circle")
+    .attr("r",d=>({
+      network:22, window:18, olt:16, pon:14
+    }[d.data.type] || 10))
+    .attr("fill",d=>{
       if(d.data.type==='network') return '#1e3a8a';
       if(d.data.type==='window') return '#1d4ed8';
-      if(d.data.type==='olt') return ensureColorForOlt(d.data.meta ? d.data.meta.olt : getOltNumberFromPon(d.data.name || '0'));
+      if(d.data.type==='olt') return ensureColorForOlt(d.data.meta.olt);
       if(d.data.type==='pon') return '#0f766e';
-      return '#94a3b8';
+      return '#6b7280';
     })
-    .attr('stroke','#fff').attr('stroke-width',2)
-    .style('cursor','pointer');
+    .attr("stroke","#fff").attr("stroke-width",2);
 
-  node.append('text')
-    .attr('x', d => d.data.type==='network'?0:18)
-    .attr('y', d => d.data.type==='network'?4:4)
-    .attr('text-anchor', d => d.data.type==='network' ? 'middle' : 'start')
-    .style('font-size', d => (d.data.type==='network'? '14px' : (d.data.type==='window'?'13px': '12px')))
-    .style('font-weight', d => (d.data.type==='network' || d.data.type==='window') ? 800 : 600)
-    .text(d => {
-      if(d.data.type==='network') return d.data.name;
-      if(d.data.type==='window') return d.data.name;
-      return d.data.name;
-    })
-    .style('pointer-events','none');
+  n.append("text")
+    .attr("x",d=> d.data.type==='network'?0:18)
+    .attr("y",4)
+    .attr("font-size","12px")
+    .attr("font-weight","600")
+    .attr("text-anchor",d=> d.data.type==='network'? "middle":"start")
+    .text(d=>d.data.name);
 
-  // After drawing hierarchical nodes, for each PON draw level columns to the right, preserving level order & splitter sheet order
-  // We'll compute positions for each PON's column layout independently using the PON's vertical center as base.
-  const ponNodes = nodes.filter(n => n.data && n.data.type === 'pon');
 
-  // For links between PON -> level1 and levelN->levelN+1, we need to store created splitter positions for linking.
-  const allSplitterPositions = []; // {pon, level, splitterIndex, x,y, data}
+  /* DRAW SPLITTER COLUMNS */
+  const ponNodes = treeRoot.descendants().filter(n=>n.data.type==='pon');
+  const levelColWidth = 220;
+  const ponColGap = 140;
 
-  ponNodes.forEach(ponN => {
-    const p = ponN.data;
-    const baseX = ponN.y; // x-position (horizontal) of PON in tree
-    const baseY = ponN.x; // y-position (vertical) of PON in tree
+  const splitterPos=[];
 
-    const levels = p.levels || [];
-    // skip PONs with no levels? still draw nothing on right but keep pon
-    if(levels.length === 0) return;
+  ponNodes.forEach(ponN=>{
+    const p=ponN.data;
+    if(!(p.levels||[]).length) return;
 
-    // starting X for first level column
-    const firstColX = baseX + ponColGap;
+    const baseX = ponN.y;
+    const baseY = ponN.x;
 
-    // For each level compute vertical positions of its splitters.
-    // We'll center all splitters around baseY and avoid overlaps by using a nodeVgap scaled by the number of splitters.
-    levels.forEach((lvl, li) => {
-      const splitters = lvl.splitters || [];
-      const colX = firstColX + li * levelColWidth;
-      const count = Math.max(1, splitters.length);
-      // spacing: increase if many splitters so they don't overlap
-      // dynamic vertical spacing to avoid any overlap
-const minGap = 42;        // minimum space between splitters
-const scaleFactor = 18;   // spacing growth per splitter
-const vGap = Math.max(minGap, minGap + (count - 1) * scaleFactor);
+    p.levels.forEach((lvl, i)=>{
+      const colX = baseX + ponColGap + i*levelColWidth;
+      const sList=lvl.splitters||[];
+      const count=sList.length||1;
 
-      // total height
-      const totalHeight = (count - 1) * vGap;
-      const startY = baseY - (totalHeight / 2);
+      /* DYNAMIC spacing — FIXED */
+      const baseGap=48;
+      const vGap = baseGap + (count-1)*14;
 
-      splitters.forEach((sp, si) => {
-        const sx = colX, sy = startY + si * vGap;
-        allSplitterPositions.push({ pon: p.name, level: lvl.level, idx: si, x: sx, y: sy, data: sp });
+      const totalH=(count-1)*vGap;
+      const startY=baseY - totalH/2;
+
+      sList.forEach((sp,si)=>{
+        splitterPos.push({
+          pon:p.name,
+          level:lvl.level,
+          x:colX,
+          y:startY + si*vGap,
+          data:sp,
+          color:ensureColorForOlt(p.meta.olt)
+        });
       });
     });
   });
 
-  // draw splitter nodes (circles + labels) in columns
-  const spG = g.append('g').attr('class','splitters-group');
+  const sg = g.append("g");
 
-  spG.selectAll('g.splitter').data(allSplitterPositions).enter().append('g')
-    .attr('class','splitter')
-    .attr('transform', d => `translate(${d.x},${d.y})`)
-    .style('cursor','pointer')
-    .on('mousemove', (event,d) => showTooltip(event, { name: d.data.type || d.data.recordId, type:'splitter', total:d.data.total }))
-    .on('mouseout', hideTooltip)
-    .on('click', (event,d) => openPopup(d.data, d.pon, findWindowForPon(d.pon)) )
+  sg.selectAll(".splitter")
+    .data(splitterPos)
+    .enter()
+    .append("g")
+    .attr("class","splitter")
+    .attr("transform",d=>`translate(${d.x},${d.y})`)
+    .on("mousemove",(ev,d)=>showTooltip(ev,{type:'splitter', name:d.data.type, total:d.data.total}))
+    .on("mouseout",hideTooltip)
+    .on("click",(ev,d)=>openPopup(d.data,d.pon,findWindowForPon(d.pon)))
     .each(function(d){
-      const gnode = d3.select(this);
-      gnode.append('circle').attr('r', 12)
-        .attr('fill', d.data.total && d.data.total>0 ? '#10b981' : '#6b7280')
-        .attr('stroke','#fff').attr('stroke-width',2);
-      gnode.append('text').attr('x', 18).attr('y', 4).attr('font-size',11).attr('fill','#0f172a').text(`${d.data.type}${d.data.total?` (${d.data.total})`:''}`);
+      const g2=d3.select(this);
+      g2.append("circle")
+        .attr("r",12)
+        .attr("fill","#10b981")
+        .attr("stroke","#fff")
+        .attr("stroke-width",2);
+
+      g2.append("text")
+        .attr("x",18).attr("y",4)
+        .attr("font-size","11px")
+        .text(`${d.data.type} (${d.data.total})`);
+
       if(d.data.recordId){
-        gnode.append('text').attr('x', 0).attr('y', 20).attr('font-size',10).attr('fill','#64748b').attr('text-anchor','middle').text(d.data.recordId);
+        g2.append("text")
+          .attr("y",22)
+          .attr("font-size","10px")
+          .attr("text-anchor","middle")
+          .attr("fill","#64748b")
+          .text(d.data.recordId);
       }
     });
 
-  // draw links:
-  // 1) PON -> all level1 splitters (always)
-  ponNodes.forEach(ponN => {
-    const p = ponN.data;
-    const ponX = ponN.y, ponY = ponN.x;
-    const firstLevelSplitters = allSplitterPositions.filter(s => s.pon === p.name && s.level === (p.levels[0] && p.levels[0].level));
-    firstLevelSplitters.forEach(child => {
-      const path = pathBezier({x:ponX, y:ponY}, {x:child.x, y:child.y});
-      g.append('path').attr('d', path).attr('fill','none').attr('stroke', ensureColorForOlt(p.meta? p.meta.olt : getOltNumberFromPon(p.name))).attr('stroke-width',2).attr('stroke-opacity',0.95);
+  /* LINKS: PON → level1 */
+  ponNodes.forEach(ponN=>{
+    const p=ponN.data;
+    const pX=ponN.y, pY=ponN.x;
+    const lvl1 = splitterPos.filter(x=>x.pon===p.name && x.level===p.levels[0].level);
+
+    lvl1.forEach(ch=>{
+      g.append("path")
+        .attr("d",bezier({x:pX,y:pY},{x:ch.x,y:ch.y}))
+        .attr("stroke",ensureColorForOlt(p.meta.olt))
+        .attr("stroke-width",2)
+        .attr("fill","none");
     });
   });
 
-  // 2) levelN -> levelN+1 : connect each child splitter to the FIRST previous-level splitter that shares any user (preserve your rule). If no parent match -> no link.
-  // For each PON, process its levels sequentially.
-  ponNodes.forEach(ponN => {
-    const p = ponN.data;
-    const levels = p.levels || [];
-    for(let li=0; li<levels.length-1; li++){
-      const parentLevel = levels[li];
-      const childLevel = levels[li+1];
-      const parents = allSplitterPositions.filter(s => s.pon===p.name && s.level===parentLevel.level);
-      const children = allSplitterPositions.filter(s => s.pon===p.name && s.level===childLevel.level);
+  /* LINKS: levelN → levelN+1 */
+  ponNodes.forEach(ponN=>{
+    const p=ponN.data;
+    const lv=p.levels||[];
+    for(let i=0;i<lv.length-1;i++){
+      const L1=lv[i].level;
+      const L2=lv[i+1].level;
 
-      // build parent sets
-      const parentSets = parents.map(pr => new Set((pr.data.users||[]).map(u => normalizeId(u))));
-      children.forEach(ch => {
-        const chSet = new Set((ch.data.users||[]).map(u => normalizeId(u)));
+      const parents=splitterPos.filter(x=>x.pon===p.name && x.level===L1);
+      const kids=splitterPos.filter(x=>x.pon===p.name && x.level===L2);
+
+      const parentSets=parents.map(pr=> new Set(pr.data.users.map(normalizeId)));
+
+      kids.forEach(ch=>{
+        const cSet=new Set(ch.data.users.map(normalizeId));
         let linked=false;
-        for(let pi=0; pi<parents.length; pi++){
-          const parentSet = parentSets[pi];
-          // check intersection
-          let hasCommon = false;
-          for(const u of chSet){ if(parentSet.has(u)){ hasCommon = true; break; } }
-          if(hasCommon){
-            const pnode = parents[pi];
-            const path = pathBezier({x:pnode.x, y:pnode.y}, {x:ch.x, y:ch.y});
-            g.append('path').attr('d', path).attr('fill','none').attr('stroke', ensureColorForOlt(p.meta? p.meta.olt : getOltNumberFromPon(p.name))).attr('stroke-width',2).attr('stroke-opacity',0.95);
-            linked=true; break;
+        for(let pi=0;pi<parents.length;pi++){
+          let comm=false;
+          for(const u of cSet){ if(parentSets[pi].has(u)){ comm=true; break; }}
+
+          if(comm){
+            g.append("path")
+              .attr("d",bezier({x:parents[pi].x,y:parents[pi].y},{x:ch.x,y:ch.y}))
+              .attr("stroke",ch.color)
+              .attr("stroke-width",2)
+              .attr("fill","none");
+            linked=true;
+            break;
           }
         }
-        // if not linked, do not draw (per your rule)
       });
     }
   });
 
-  // Fit / zoom: attach zoom behavior and auto-fit initial view
-  const zoom = d3.zoom().scaleExtent([0.2, 3]).on('zoom', (evt) => g.attr('transform', evt.transform));
+  /* ZOOM */
+  const zoom=d3.zoom().scaleExtent([0.25,3]).on("zoom",ev=> g.attr("transform",ev.transform));
   svg.call(zoom);
 
-  try {
-    const bbox = g.node().getBBox();
-    const svgW = svg.node().clientWidth || width;
-    const svgH = svg.node().clientHeight || height;
-    const sx = svgW / (bbox.width + 120);
-    const sy = svgH / (bbox.height + 120);
-    const s0 = Math.min(sx, sy, 1.0);
-    const tx0 = -bbox.x * s0 + 20;
-    const ty0 = -bbox.y * s0 + 20;
-    svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity.translate(tx0,ty0).scale(s0));
-  } catch(e){ /* ignore */ }
+  /* Fit view */
+  try{
+    const bb=g.node().getBBox();
+    const sx=width/(bb.width+100);
+    const sy=height/(bb.height+100);
+    const s=Math.min(sx,sy,1);
+    const tx=-bb.x*s+20;
+    const ty=-bb.y*s+20;
+    svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(s));
+  }catch(e){}
 
-  // After render, apply search highlight
   applySearchHighlight();
 }
 
-/* ---------- Utility path builder (gentle bezier) ---------- */
-function pathBezier(src, dst){
-  const sx = src.x, sy = src.y, tx = dst.x, ty = dst.y;
-  const midX = sx + (tx - sx) * 0.5;
-  return `M ${sx} ${sy} C ${midX} ${sy} ${midX} ${ty} ${tx} ${ty}`;
+function bezier(s,d){
+  const mid=(s.x+d.x)/2;
+  return `M${s.x},${s.y} C${mid},${s.y} ${mid},${d.y} ${d.x},${d.y}`;
 }
 
-/* count leaves helper (approx for spacing) */
 function countLeaves(node){
-  if(!node) return 1;
   if(!node.children || node.children.length===0) return 1;
-  return node.children.reduce((s,c)=> s + countLeaves(c), 0);
+  return node.children.reduce((a,c)=>a+countLeaves(c),0);
 }
 
-/* find window for a PON name (simple scan in rawJson) */
-function findWindowForPon(ponName){
+function findWindowForPon(pon){
   if(!rawJson) return '';
-  for(const win of (rawJson.windows||[])){
-    for(const p of (win.pons||[])) if(p.pon === ponName) return win.window;
+  for(const w of rawJson.windows||[]){
+    for(const p of w.pons||[]){
+      if(p.pon===pon) return w.window;
+    }
   }
   return '';
 }
 
-/* ---------- Tooltip / Popup ---------- */
-function showTooltip(event, data){
-  if(!data){ tooltip.style.opacity = 0; return; }
-  let html = `<strong>${data.name || data.type || ''}</strong><br/>Type: ${data.type||''}`;
-  if(data.type === 'splitter') html += `<br/>Users: <strong>${data.total || (data.users?data.users.length:0)}</strong>`;
-  tooltip.innerHTML = html;
-  tooltip.style.left = (event.pageX + 12) + 'px';
-  tooltip.style.top = (event.pageY + 8) + 'px';
-  tooltip.style.opacity = 1;
+/* ==========================================
+   Tooltip + Popup
+========================================== */
+function showTooltip(ev,d){
+  tooltip.innerHTML = `<strong>${d.name}</strong><br>Users: ${d.total}`;
+  tooltip.style.left = (ev.pageX+12)+"px";
+  tooltip.style.top  = (ev.pageY+8)+"px";
+  tooltip.style.opacity=1;
 }
-function hideTooltip(){ tooltip.style.opacity = 0; }
+function hideTooltip(){ tooltip.style.opacity=0; }
 
-function openPopup(spObj, ponName, winName){
-  popupModal.style.display = 'flex';
-  popupTitle.textContent = `${spObj.type || 'Splitter'} — Users`;
-  popupPath.textContent = `${winName||''} → ${ponName||''} → ${spObj.recordId||''}`;
-  popupMeta.innerHTML = `<div><strong>Total users:</strong> ${spObj.total || (spObj.users?spObj.users.length:0)}</div>`;
-  const users = Array.isArray(spObj.users) ? spObj.users : [];
-  popupUsers.innerHTML = `<thead><tr><th>Sr</th><th>User ID</th></tr></thead><tbody>${users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')}</tbody>`;
+function openPopup(sp,pon,win){
+  popupModal.style.display='flex';
+  popupTitle.textContent = `${sp.type} — Users`;
+  popupPath.textContent = `${win} → ${pon} → ${sp.recordId}`;
+  popupMeta.innerHTML = `<b>Total users:</b> ${sp.total}`;
+  popupUsers.innerHTML =
+    `<thead><tr><th>Sr</th><th>User</th></tr></thead><tbody>`+
+    sp.users.map((u,i)=>`<tr><td>${i+1}</td><td>${u}</td></tr>`).join('')+
+    `</tbody>`;
 }
 
-/* ---------- Search / highlight ---------- */
+/* ==========================================
+   Search highlight
+========================================== */
 function applySearchHighlight(){
-  const term = (searchInput.value||'').trim().toLowerCase();
-  // highlight all splitter nodes that include the term; highlight their PON and OLT circles too
-  d3.selectAll('g.splitter').each(function(d){
-    const datum = d;
-    const node = d3.select(this);
-    const users = Array.isArray(datum.data.users) ? datum.data.users : [];
-    const matches = term ? users.some(u => String(u).toLowerCase().includes(term)) : false;
-    if(matches){
-      node.select('circle').attr('stroke','#ffb020').attr('stroke-width',4).attr('opacity',1);
-      node.select('text').style('font-weight',900);
+  const term=(searchInput.value||'').trim().toLowerCase();
+  const nodes=d3.selectAll("g.splitter");
+
+  if(!term){
+    nodes.selectAll("circle").attr("opacity",1).attr("stroke","#fff").attr("stroke-width",2);
+    nodes.selectAll("text").attr("opacity",1);
+    return;
+  }
+
+  nodes.each(function(d){
+    const users=d.data.users||[];
+    const hit=users.some(u=>String(u).toLowerCase().includes(term));
+    const g=d3.select(this);
+    if(hit){
+      g.select("circle").attr("stroke","#ffb020").attr("stroke-width",4).attr("opacity",1);
+      g.selectAll("text").attr("opacity",1).style("font-weight","700");
     } else {
-      node.select('circle').attr('stroke','#fff').attr('stroke-width',2).attr('opacity',1);
-      node.select('text').style('font-weight',600);
+      g.select("circle").attr("opacity",0.25);
+      g.selectAll("text").attr("opacity",0.3);
     }
   });
-  // also dim non-matching splitters if search active
-  if(!term){
-    d3.selectAll('g.splitter circle').attr('opacity',1);
-    d3.selectAll('g.splitter text').style('opacity',1);
-  } else {
-    // lighten non-matching
-    d3.selectAll('g.splitter').each(function(d){
-      const node = d3.select(this);
-      const users = Array.isArray(d.data.users) ? d.data.users : [];
-      const matches = users.some(u=>String(u).toLowerCase().includes(term));
-      if(!matches){ node.select('circle').attr('opacity',0.25); node.select('text').attr('opacity',0.35); }
-    });
-  }
 }
 
-/* ---------- Downloads ---------- */
+/* ==========================================
+   Downloads
+========================================== */
 function downloadCSV(){
-  if(popupModal.style.display !== 'flex') { alert('Open popup first'); return; }
-  const rows = Array.from(popupUsers.querySelectorAll('tr'));
+  if(popupModal.style.display!=='flex') return;
+  const rows=[...popupUsers.querySelectorAll("tr")];
   if(!rows.length) return;
-  let csv = '';
-  rows.forEach(r=>{ const cols = Array.from(r.querySelectorAll('th,td')).map(c=>`"${(c.textContent||'').replace(/"/g,'""')}"`); csv += cols.join(',') + '\n'; });
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='users.csv'; a.click(); URL.revokeObjectURL(url);
-}
-function downloadScreenshot(){
-  const svg = document.querySelector('#chart svg'); if(!svg) return alert('No chart');
-  const serializer = new XMLSerializer(); const source = serializer.serializeToString(svg);
-  const blob = new Blob([source], {type:'image/svg+xml;charset=utf-8'}); const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='merotra-tree.svg'; a.click(); URL.revokeObjectURL(url);
+
+  let csv='';
+  rows.forEach(r=>{
+    const cols=[...r.querySelectorAll("th,td")]
+      .map(c=> `"${c.textContent.replace(/"/g,'""')}"`);
+    csv += cols.join(",")+"\n";
+  });
+
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="users.csv"; a.click();
+  URL.revokeObjectURL(url);
 }
 
-/* ---------- Init ---------- */
+function downloadScreenshot(){
+  const svg=document.querySelector("#chart svg");
+  if(!svg) return alert("Nothing to save");
+  const xml=new XMLSerializer().serializeToString(svg);
+  const blob=new Blob([xml],{type:"image/svg+xml"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="merotra-tree.svg"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ==========================================
+   INIT
+========================================== */
 loadAndRender(false);
-window.addEventListener('resize', ()=> { if(rawJson) applyFiltersAndRender(); });
+window.addEventListener('resize',()=> rawJson && applyFiltersAndRender());
 
 </script>
+
 </body>
 </html>
