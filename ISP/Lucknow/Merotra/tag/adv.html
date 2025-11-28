@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — PON / Splitter Tree</title>
+  <title>Merotra — PON / Splitter Tree (Levels)</title>
 
   <!-- D3 & Tailwind -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -21,7 +21,7 @@
     .header-sub{font-size:12px;color:#475569}
     .btn{background:#0f172a;color:white;padding:6px 10px;border-radius:6px;border:none;cursor:pointer}
     .btn-secondary{background:#94a3b8}
-    #chart{width:100%;height:74vh;border-radius:8px;background:#fff;padding:8px;box-shadow:0 6px 20px rgba(2,6,23,0.06)}
+    #chart{width:100%;height:78vh;border-radius:8px;background:#fff;padding:8px;box-shadow:0 6px 20px rgba(2,6,23,0.06);overflow:auto}
     .tooltip{position:absolute;pointer-events:none;background:#111827;color:#fff;padding:6px 8px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .12s}
     /* popup */
     .popup-backdrop{display:none;position:fixed;inset:0;background:rgba(2,6,23,0.5);align-items:center;justify-content:center;padding:18px}
@@ -33,6 +33,9 @@
     .checkbox-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:220px;overflow:auto;padding:6px}
     .checkbox-item{font-size:13px}
     .link-btn{margin-right:8px;display:inline-block;padding:6px;border-radius:6px;background:#eef2ff;color:#1e3a8a;cursor:pointer;font-size:12px}
+    /* node label */
+    .node-label { font-family: Inter, system-ui, Arial; font-size:11px; fill: #0f172a; font-weight:600; }
+    .subtitle { font-size:10px; fill:#475569; font-weight:400; }
   </style>
 </head>
 <body>
@@ -40,7 +43,7 @@
   <div class="header">
     <div>
       <div class="header-title">🌐 Merotra Network Tree</div>
-      <div class="header-sub">Window → PON → Splitters → Users (+ Untagged)</div>
+      <div class="header-sub">Window → PON → Level 1 → Level 2 → ... (sheet-order preserved)</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button id="controlsBtn" class="btn btn-secondary">Filters</button>
@@ -111,9 +114,6 @@
   // -------------- CONFIG --------------
   const BOARD_URL = "https://script.google.com/macros/s/AKfycbzItUueYIqcUuCn2cDaTTrWIF0LiilUxOXhhL-4b4D9aUlEo8Ov9pasR44d6JSM3h1t/exec?mode=board";
 
-  // statusMaps kept (empty) — we removed TheMaster lookups
-  const statusMaps = {}; // keep for popup usage, can be filled later if needed
-
   // -------------- STATE --------------
   const tooltip = document.getElementById("tooltip");
   const popupModal = document.getElementById("popupModal");
@@ -124,7 +124,7 @@
   const popupLinksEl = document.getElementById("popupLinks");
   const popupUsersTbl = document.getElementById("popupUsersTable");
 
-  let rawBoard = {};    // board shaped object used by buildHierarchy
+  let rawBoard = {};    // shaped by transformServerToBoard
   let serverSummary = null;
   let currentTreeData = null;
 
@@ -134,31 +134,44 @@
   // -------------- HELPERS --------------
   function normalizeId(v){ return (v ?? "").toString().trim().replace(/\s+/g,'').toLowerCase(); }
 
-  // Transform server JSON to board: { pon: { window: { splitName: { users:[{id:...}], tag, location, jcPic, polePic }}}}
+  // Transform server JSON (new shape with windows -> pons -> levels -> splitters)
+  // into board: { pon: { window: winName, levels: [ { level:1, splitters: [...] }, ... ] } }
   function transformServerToBoard(serverJson) {
     const board = {};
     if (!serverJson || !Array.isArray(serverJson.windows)) return board;
+
     serverJson.windows.forEach(win => {
-      const winName = win.window;
+      const winName = win.window || "UNKNOWN";
       (win.pons || []).forEach(pon => {
-        const ponName = pon.pon;
+        const ponName = pon.pon || "NOPON";
         if (!board[ponName]) board[ponName] = {};
-        if (!board[ponName][winName]) board[ponName][winName] = {};
-        (pon.splitters || []).forEach(split => {
-          const usersObjArray = (split.users || []).map(u => {
-            if (typeof u === "object" && u !== null) return { id: u.id ?? "" };
-            return { id: String(u) };
-          });
-          board[ponName][winName][split.name] = {
-            users: usersObjArray,
-            tag: split.tag || "",
-            location: split.location || "",
-            jcPic: split.jcPic || "",
-            polePic: split.polePic || ""
-          };
+        // keep multiple windows per pon possible; store under window name
+        if (!board[ponName][winName]) board[ponName][winName] = { levels: [] };
+
+        // levels expected as array in correct sheet order already
+        const levels = Array.isArray(pon.levels) ? pon.levels : [];
+
+        // convert splitters inside each level to normalized objects
+        const cleanLevels = levels.map(l => {
+          const lvlNum = (typeof l.level === 'number') ? l.level : (l.level ? Number(l.level) : null);
+          const splitters = Array.isArray(l.splitters) ? l.splitters.map(s => {
+            // s expected: { recordId, type, users:[], total }
+            return {
+              recordId: s.recordId ?? (s.timestamp ?? ""),
+              type: s.type ?? s.splitType ?? "",
+              users: Array.isArray(s.users) ? s.users.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? String(u)) : String(u)) : [],
+              total: typeof s.total === 'number' ? s.total : (Array.isArray(s.users) ? s.users.length : (s.total ? Number(s.total) : 0))
+            };
+          }) : [];
+          // filter-out empty splitters if user wanted, but you asked to remove empty levels later; keep empties for now
+          return { level: lvlNum, splitters };
         });
+
+        // assign
+        board[ponName][winName].levels = cleanLevels;
       });
     });
+
     return board;
   }
 
@@ -261,9 +274,11 @@
     Object.entries(board).forEach(([pon, winObj]) => {
       if (!filters.pons.includes(pon)) return;
       const newWin = {};
-      Object.entries(winObj || {}).forEach(([win, splits]) => {
+      Object.entries(winObj || {}).forEach(([win, obj]) => {
         if (!filters.windows.includes(win)) return;
-        newWin[win] = splits;
+        // remove empty levels (no splitters)
+        const levels = (obj.levels || []).filter(l => Array.isArray(l.splitters) && l.splitters.length > 0);
+        if (levels.length) newWin[win] = { levels };
       });
       if (Object.keys(newWin).length) out[pon] = newWin;
     });
@@ -278,252 +293,249 @@
   }
 
   // -------------- BUILD HIERARCHY (for D3) --------------
-  // Input board shape: { pon: { window: { splitName: { users:[{id:...}], tag, location, jcPic, polePic }}}}
-  // improved buildHierarchy — preserves all splitters and attaches sensibly
-function buildHierarchy(board) {
-  const root = { nodeType: "root", name: "🌐 Merotra Network", children: [] };
-  const windowMap = {};
+  // We create: root -> windows -> pon -> level nodes (level1, level2, ...) -> splitter nodes
+  function buildHierarchy(board) {
+    const root = { nodeType: "root", name: "🌐 Merotra Network", children: [] };
+    const windowMap = {};
 
-  // sort PONs
-  const sortedPons = Object.entries(board).sort(([a],[b])=>{
-    const A = parsePon(a), B = parsePon(b);
-    if (A.olt !== B.olt) return A.olt - B.olt;
-    if (A.ip !== B.ip) return A.ip - B.ip;
-    return A.port - B.port;
-  });
-
-  sortedPons.forEach(([pon, winObj])=>{
-    Object.entries(winObj || {}).forEach(([winName, splitters])=>{
-      if (!windowMap[winName]) {
-        windowMap[winName] = { nodeType:"window", name: "🪟 " + winName, rawWindow: winName, children: [] };
-        root.children.push(windowMap[winName]);
-      }
-      const winNode = windowMap[winName];
-
-      const ponNode = { nodeType:"pon", name:"🔌 " + pon, rawPon: pon, window: winName, children: [], total:0 };
-
-      // build list of splitters (KEEP even if users empty so structure shows)
-      const entries = Object.entries(splitters || {}).map(([splitName, info])=>{
-        const userIds = (info.users || []).map(u => (typeof u === 'object' && u !== null) ? (u.id ?? "") : String(u)).filter(Boolean);
-        return {
-          splitName,
-          info,
-          userIds,
-          usersSet: new Set(userIds),
-          userCount: userIds.length
-        };
-      });
-
-      if (entries.length === 0) {
-        winNode.children.push(ponNode);
-        return;
-      }
-
-      // sort by userCount desc so largest becomes primary candidate
-      entries.sort((a,b)=> b.userCount - a.userCount);
-
-      // convert to working nodes
-      const nodes = entries.map(e => ({
-        nodeType: "splitter",
-        name: e.splitName,
-        rawSplitter: e.splitName,
-        splitterName: e.splitName,
-        pon,
-        window: winName,
-        users: Array.from(e.usersSet),
-        usersSet: new Set(e.usersSet),
-        total: e.userCount,
-        tag: e.info.tag || "",
-        location: e.info.location || "",
-        jcPic: e.info.jcPic || "",
-        polePic: e.info.polePic || "",
-        children: []
-      }));
-
-      const roots = [];
-
-      // helper: intersection size
-      function intersectSize(aSet, bSet) {
-        let c = 0;
-        for (const x of aSet) if (bSet.has(x)) c++;
-        return c;
-      }
-
-      // place each node: try subset first, then best-overlap parent, else make new root
-      for (let i=0; i<nodes.length; i++){
-        const node = nodes[i];
-
-        // try to attach as subset to any existing root (prefer earliest root where subset holds)
-        let attached = false;
-        for (const r of roots) {
-          if (isSubset(node.usersSet, r.usersSet)) {
-            r.children.push(node);
-            // merge: add any users missing in parent so parent counts remain >= children
-            for (const u of node.usersSet) r.usersSet.add(u);
-            attached = true;
-            break;
-          }
-        }
-        if (attached) continue;
-
-        // if not subset: find root with maximum overlap ( >0 )
-        let bestParent = null;
-        let bestOverlap = 0;
-        for (const r of roots) {
-          const ov = intersectSize(node.usersSet, r.usersSet);
-          if (ov > bestOverlap) { bestOverlap = ov; bestParent = r; }
-        }
-        if (bestParent && bestOverlap > 0) {
-          // attach to bestParent (not always roots[0])
-          bestParent.children.push(node);
-          // ensure parent absorbs child's non-overlapping users (rule 4)
-          for (const u of node.usersSet) if (!bestParent.usersSet.has(u)) bestParent.usersSet.add(u);
-          attached = true;
-        }
-
-        if (!attached) {
-          // new sibling root under PON
-          roots.push(node);
-        }
-      }
-
-      // After placement, ensure all parents' sets include children users (propagate up)
-      function propagateUp(n) {
-        n.children.forEach(ch => {
-          propagateUp(ch);
-          for (const u of ch.users) n.usersSet.add(u);
-        });
-      }
-      roots.forEach(r => propagateUp(r));
-
-      // Add UNTAGGED nodes where a parent has some users not covered by children
-      function addUntagged(node) {
-        if (!node.children || node.children.length === 0) return;
-        // compute covered
-        const covered = new Set();
-        node.children.forEach(c => {
-          addUntagged(c);
-          (c.users || []).forEach(u => covered.add(u));
-        });
-        const own = (node.users || []).filter(u => !covered.has(u));
-        if (own.length > 0) {
-          node.children.push({
-            nodeType: "untagged",
-            name: `Other / Untagged (${own.length})`,
-            users: own,
-            total: own.length,
-            children: []
-          });
-        }
-      }
-      roots.forEach(r => addUntagged(r));
-
-      // cleanup: convert usersSet -> users & totals
-      function cleanup(node) {
-        if (node.usersSet) {
-          node.users = Array.from(node.usersSet);
-          node.total = node.users.length;
-          delete node.usersSet;
-        } else {
-          node.total = node.total ?? (Array.isArray(node.users) ? node.users.length : 0);
-        }
-        node.children.forEach(cleanup);
-      }
-      roots.forEach(cleanup);
-
-      // pon total = unique union of all roots users
-      const union = new Set();
-      roots.forEach(r => {
-        (r.users || []).forEach(u => union.add(u));
-      });
-
-      ponNode.total = union.size;
-      ponNode.children = roots;
-      winNode.children.push(ponNode);
+    // get sorted PON list (keeps earlier sorting behavior by OLT/IP/Port)
+    const sortedPons = Object.entries(board).sort(([a],[b])=>{
+      const A = parsePon(a), B = parsePon(b);
+      if (A.olt !== B.olt) return A.olt - B.olt;
+      if (A.ip !== B.ip) return A.ip - B.ip;
+      return A.port - B.port;
     });
-  });
 
-  return root;
-}
+    sortedPons.forEach(([pon, winObj])=>{
+      Object.entries(winObj || {}).forEach(([winName, obj])=>{
+        if (!windowMap[winName]) {
+          windowMap[winName] = { nodeType:"window", name: "🪟 " + winName, rawWindow: winName, children: [] };
+          root.children.push(windowMap[winName]);
+        }
+        const winNode = windowMap[winName];
+
+        const ponNode = { nodeType:"pon", name:"🔌 " + pon, rawPon: pon, window: winName, children: [], total:0 };
+
+        // levels array preserved in sheet order
+        const levels = (obj.levels || []).slice(); // copy
+        // remove empty levels already done in filter but safe-guard
+        const nonEmptyLevels = levels.filter(l => Array.isArray(l.splitters) && l.splitters.length > 0);
+
+        // construct level nodes in same order (level number used if provided)
+        nonEmptyLevels.forEach((lvlObj, idx) => {
+          const lvlNum = (typeof lvlObj.level === 'number' && !isNaN(lvlObj.level)) ? lvlObj.level : (idx+1);
+          const levelNode = {
+            nodeType: "level",
+            name: `Level ${lvlNum}`,
+            level: lvlNum,
+            children: []
+          };
+
+          // each splitter node preserved in same order as in JSON (which you requested = sheet order)
+          (lvlObj.splitters || []).forEach(sp => {
+            const usersArr = Array.isArray(sp.users) ? sp.users.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? String(u)) : String(u)).filter(Boolean) : [];
+            const spNode = {
+              nodeType: "splitter",
+              name: `${sp.type || "splitter"} ${sp.recordId ? "• " + sp.recordId : ""}`,
+              recordId: sp.recordId || "",
+              type: sp.type || "",
+              users: usersArr,
+              total: (typeof sp.total === 'number' ? sp.total : usersArr.length),
+              children: []
+            };
+            levelNode.children.push(spNode);
+          });
+
+          // only add level if it has splitters
+          if (levelNode.children.length > 0) {
+            ponNode.children.push(levelNode);
+          }
+        });
+
+        // compute pon total = unique union of all splitters users
+        const union = new Set();
+        ponNode.children.forEach(levelN => {
+          levelN.children.forEach(s => (s.users || []).forEach(u => union.add(u)));
+        });
+        ponNode.total = union.size;
+        winNode.children.push(ponNode);
+      });
+    });
+
+    return root;
+  }
 
   // -------------- DRAW TREE (D3) --------------
   function drawTree(data) {
-    d3.select("#chart").select("svg").remove();
-    const width = document.getElementById("chart").clientWidth || Math.max(window.innerWidth-40,800);
+    // remove old
+    d3.select("#chart").selectAll("*").remove();
+
+    const chartEl = document.getElementById("chart");
+    const width = chartEl.clientWidth || Math.max(window.innerWidth-40,1200);
     const height = Math.max(window.innerHeight - 220, 420);
 
-    const dx = 80;
-    const dy = width > 900 ? 260 : 200;
-    const treeLayout = d3.tree().nodeSize([dx, dy]);
-    const root = d3.hierarchy(data, d => d.children || []);
-    treeLayout(root);
+    // We'll layout the tree left-to-right by depth (columns). Compute max depth dynamically.
+    const flatten = [];
+    const nodesByDepth = [];
+    function walk(n, depth) {
+      if (!nodesByDepth[depth]) nodesByDepth[depth] = [];
+      nodesByDepth[depth].push(n);
+      (n.children || []).forEach(ch => walk(ch, depth+1));
+    }
+    walk(data, 0);
+    const depthCount = nodesByDepth.length;
+    const colWidth = Math.max(180, Math.min(300, Math.floor((width - 160) / Math.max(1, depthCount-1))));
 
-    const svgRoot = d3.select("#chart").append("svg").attr("width", width).attr("height", height);
-    const zoom = d3.zoom().scaleExtent([0.4, 3]).on("zoom", (event) => g.attr("transform", event.transform));
-    svgRoot.call(zoom);
+    // create svg
+    const svg = d3.select("#chart").append("svg").attr("width", width).attr("height", height);
+    const g = svg.append("g").attr("transform", "translate(20,20)");
 
-    const g = svgRoot.append("g").attr("transform", "translate(80,60)");
+    // compute positions for nodes: for each depth (column), spread nodes vertically
+    const positions = new Map();
+    for (let d = 0; d < nodesByDepth.length; d++) {
+      const col = nodesByDepth[d];
+      const gap = Math.max(40, Math.floor((height - 120) / (col.length + 1)));
+      const x = d * colWidth;
+      for (let i = 0; i < col.length; i++) {
+        const y = (i+1) * gap;
+        positions.set(col[i], { x: x, y: y });
+      }
+    }
 
-    // links
-    g.selectAll(".link").data(root.links()).enter().append("path")
-      .attr("class","link")
-      .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x))
-      .attr("fill","none").attr("stroke","#94a3b8").attr("stroke-width",2);
-
-    // nodes
-    const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
-      .attr("class","node").attr("transform", d => `translate(${d.y},${d.x})`);
-
-    // circles by type
-    node.filter(d => d.data.nodeType === "root")
-      .append("circle").attr("r",24).attr("fill","#1e3a8a").attr("stroke","#fff").attr("stroke-width",3);
-
-    node.filter(d => d.data.nodeType === "window")
-      .append("circle").attr("r",20).attr("fill","#1d4ed8").attr("stroke","#fff").attr("stroke-width",3);
-
-    node.filter(d => d.data.nodeType === "pon")
-      .append("circle").attr("r",18).attr("fill","#0f766e").attr("stroke","#fff").attr("stroke-width",3);
-
-    node.filter(d => (d.data.nodeType === "splitter" || d.data.nodeType === "untagged"))
-      .append("circle").attr("r", d => d.data.nodeType === "splitter" ? 14 : 10)
-      .attr("fill", d => d.data.nodeType === "untagged" ? "#6b7280" : (d.data.total > 0 ? "#10b981" : "#6b7280"))
-      .attr("stroke","#fff").attr("stroke-width",2);
-
-    // text
-    node.append("text")
-      .attr("dy","0.32em")
-      .attr("x", d => d.children && d.depth>0 ? -20 : 20)
-      .attr("text-anchor", d => d.children && d.depth>0 ? "end" : "start")
-      .style("font-size", d => d.data.nodeType === "root" ? "14px" : (d.data.nodeType === "window" ? "13px" : (d.data.nodeType === "pon" ? "12px" : "11px")))
-      .style("font-weight", d => (d.data.nodeType === "root" || d.data.nodeType === "window") ? 700 : 500)
-      .text(d => {
-        // show count for pon and splitters
-        if (d.data.nodeType === "pon") return `${d.data.name} (${d.data.total || 0})`;
-        if (d.data.nodeType === "splitter") return `${d.data.name} (${d.data.total || (d.data.users ? d.data.users.length : 0)})`;
-        if (d.data.nodeType === "untagged") return d.data.name;
-        return d.data.name;
+    // collect link lines between parent-child (straight horizontal-ish lines - dotted)
+    const links = [];
+    // walk again to produce pairs
+    function collectLinks(n) {
+      const ppos = positions.get(n);
+      (n.children || []).forEach(ch => {
+        const cpos = positions.get(ch);
+        if (ppos && cpos) links.push({ source: ppos, target: cpos });
+        collectLinks(ch);
       });
+    }
+    collectLinks(data);
+
+    // draw links (dotted)
+    g.selectAll(".link")
+      .data(links)
+      .enter()
+      .append("path")
+      .attr("class","link")
+      .attr("d", d => {
+        // curved horizontal path: start at source.x+circleOffset to target.x-circleOffset
+        const sx = d.source.x + 80;
+        const sy = d.source.y;
+        const tx = d.target.x;
+        const ty = d.target.y;
+        // horizontal cubic bezier
+        const mx = (sx + tx) / 2;
+        return `M${sx},${sy} C ${mx},${sy} ${mx},${ty} ${tx},${ty}`;
+      })
+      .attr("fill","none")
+      .attr("stroke","#94a3b8")
+      .attr("stroke-width",1.5)
+      .attr("stroke-dasharray","4 6")
+      .attr("opacity",0.9);
+
+    // render nodes as groups
+    const allNodes = [];
+    function collectNodes(n) {
+      allNodes.push(n);
+      (n.children || []).forEach(ch => collectNodes(ch));
+    }
+    collectNodes(data);
+
+    const nodeG = g.selectAll(".node")
+      .data(allNodes)
+      .enter()
+      .append("g")
+      .attr("class","node")
+      .attr("transform", d => {
+        const p = positions.get(d);
+        if (!p) return "translate(0,0)";
+        return `translate(${p.x + 80},${p.y})`; // 80px offset for nicer spacing
+      })
+      .style("cursor","pointer");
+
+    // circles (only for root/window/pon/level header and splitters we want circles: user asked circles like before)
+    nodeG.append("circle")
+      .attr("r", d => {
+        if (d.nodeType === "root") return 26;
+        if (d.nodeType === "window") return 20;
+        if (d.nodeType === "pon") return 18;
+        if (d.nodeType === "level") return 12;
+        if (d.nodeType === "splitter") return 14;
+        return 10;
+      })
+      .attr("fill", d => {
+        if (d.nodeType === "root") return "#1e3a8a";
+        if (d.nodeType === "window") return "#1d4ed8";
+        if (d.nodeType === "pon") return "#0f766e";
+        if (d.nodeType === "level") return "#f1f5f9";
+        if (d.nodeType === "splitter") return (d.total && d.total>0) ? "#10b981" : "#6b7280";
+        return "#94a3b8";
+      })
+      .attr("stroke","#fff")
+      .attr("stroke-width", d => (d.nodeType==="splitter"||d.nodeType==="level") ? 2 : 3);
+
+    // labels
+    nodeG.append("text")
+      .attr("class","node-label")
+      .attr("dy", d => {
+        if (d.nodeType === "root") return "0.32em";
+        if (d.nodeType === "window") return "0.32em";
+        if (d.nodeType === "pon") return "0.32em";
+        return "0.35em";
+      })
+      .attr("x", d => 22)
+      .attr("text-anchor", "start")
+      .text(d => {
+        if (d.nodeType === "root") return d.name;
+        if (d.nodeType === "window") return d.name;
+        if (d.nodeType === "pon") return `${d.name} (${d.total || 0})`;
+        if (d.nodeType === "level") return d.name;
+        if (d.nodeType === "splitter") return `${d.name} (${d.total || (d.users ? d.users.length : 0)})`;
+        return d.name;
+      })
+      .style("font-size", d => d.nodeType==="root" ? "14px" : (d.nodeType==="window" ? "13px" : (d.nodeType==="pon" ? "12px" : "11px")));
+
+    // level subtitle (smaller)
+    nodeG.filter(d => d.nodeType === "splitter")
+      .append("text")
+      .attr("class","subtitle")
+      .attr("x", 22)
+      .attr("dy", "1.4em")
+      .text(d => d.type ? d.type : "");
 
     // interactions
-    node.on("mousemove", handleMouseOver)
-        .on("mouseout", ()=> tooltip.style.opacity = 0)
-        .on("click", handleNodeClick);
+    nodeG.on("mousemove", (event, d) => {
+        handleMouseOver(event, { data: d });
+      })
+      .on("mouseout", ()=> tooltip.style.opacity = 0)
+      .on("click", (event, d) => handleNodeClick(event, { data: d }));
 
-    // fit to view
-    fitToView(svgRoot, g, zoom);
+    // fit to view (center & scale to fit)
+    fitToView(svg, g);
   }
 
-  function fitToView(svgRoot, g, zoom) {
-    const chart = document.getElementById("chart");
-    const bounds = g.node().getBBox();
-    const fullWidth = chart.clientWidth;
-    const fullHeight = chart.clientHeight;
-    const widthScale = fullWidth / (bounds.width + 160);
-    const heightScale = fullHeight / (bounds.height + 160);
-    const scale = Math.min(2, Math.max(0.4, Math.min(widthScale, heightScale)));
-    const tx = -(bounds.x)*scale + 40;
-    const ty = -(bounds.y)*scale + 40;
-    svgRoot.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+  function fitToView(svgRoot, g) {
+    try {
+      const chart = document.getElementById("chart");
+      const bounds = g.node().getBBox();
+      const fullWidth = chart.clientWidth;
+      const fullHeight = chart.clientHeight;
+      const widthScale = fullWidth / (bounds.width + 160);
+      const heightScale = fullHeight / (bounds.height + 160);
+      const scale = Math.min(1.6, Math.max(0.5, Math.min(widthScale, heightScale)));
+      const tx = -(bounds.x)*scale + 40;
+      const ty = -(bounds.y)*scale + 40;
+      svgRoot.transition().duration(600).call(
+        d3.zoom().transform,
+        d3.zoomIdentity.translate(tx,ty).scale(scale)
+      );
+    } catch(e) {
+      // ignore
+    }
   }
 
   // -------------- TOOLTIP & POPUP --------------
@@ -531,10 +543,10 @@ function buildHierarchy(board) {
     const data = d.data;
     let html = `<strong>${data.name}</strong><br/>`;
     if (data.nodeType === "window") html += `Window`;
-    else if (data.nodeType === "pon") html += `PON: ${data.rawPon}<br/>Total users: ${data.total || 0}`;
-    else if (data.nodeType === "splitter" || data.nodeType === "untagged") {
-      html += `Window: ${data.window}<br/>PON: ${data.pon || data.rawPon || ""}<br/>Users: <strong>${data.total || (data.users ? data.users.length : 0)}</strong>`;
-      if (data.tag) html += `<br/>Tag: ${data.tag}`;
+    else if (data.nodeType === "pon") html += `PON: ${data.rawPon || ""}<br/>Total users: ${data.total || 0}`;
+    else if (data.nodeType === "level") html += `Level ${data.level}`;
+    else if (data.nodeType === "splitter") {
+      html += `Record: ${data.recordId || "-"}<br/>Type: ${data.type || "-"}<br/>Users: <strong>${data.total || (data.users ? data.users.length : 0)}</strong>`;
     }
     tooltip.innerHTML = html;
     tooltip.style.left = (event.pageX + 12) + "px";
@@ -544,17 +556,14 @@ function buildHierarchy(board) {
 
   function handleNodeClick(event, d) {
     const data = d.data;
-    if (!(data.nodeType === "splitter" || data.nodeType === "untagged")) return;
+    if (data.nodeType !== "splitter") return;
 
     const total = data.total || (data.users ? data.users.length : 0);
-    popupTitleEl.textContent = data.nodeType === "untagged" ? `⬜ Untagged users (${total})` : `${data.name} — Users`;
+    popupTitleEl.textContent = `${data.name} — Users`;
     popupPathEl.textContent = `${data.window || ""} → ${data.pon || data.rawPon || ""} → ${data.name}`;
-    popupMetaEl.innerHTML = `<div><strong>Total users:</strong> ${total}</div><div><strong>Tag:</strong> ${data.tag || "-"}</div>`;
+    popupMetaEl.innerHTML = `<div><strong>Total users:</strong> ${total}</div><div><strong>Record ID:</strong> ${data.recordId || "-"}</div><div><strong>Type:</strong> ${data.type || "-"}</div>`;
 
     let linksHtml = "";
-    if (data.location) linksHtml += `<span class="link-btn" onclick="openLink('${data.location}')">📍 Location</span>`;
-    if (data.jcPic) linksHtml += `<span class="link-btn" onclick="openLink('${data.jcPic}')">📸 JC Pic</span>`;
-    if (data.polePic) linksHtml += `<span class="link-btn" onclick="openLink('${data.polePic}')">🪵 Pole Pic</span>`;
     popupLinksEl.innerHTML = linksHtml || "";
 
     buildUserTable(data);
@@ -566,7 +575,7 @@ function buildHierarchy(board) {
     const users = rawUsers.map(u => (typeof u === 'object' && u !== null) ? (u.id ?? "") : String(u));
     popupUsersTbl.innerHTML = `
       <thead>
-        <tr><th style="width:36px">Sr</th><th>User ID</th><th>Name</th><th>Number</th><th>Location</th><th>Status</th></tr>
+        <tr><th style="width:36px">Sr</th><th>User ID</th></tr>
       </thead>
       <tbody></tbody>
     `;
@@ -574,25 +583,20 @@ function buildHierarchy(board) {
     currentPopupRows = [];
 
     users.forEach((rawId, idx) => {
-      const normId = normalizeId(rawId);
-      const dbRow = statusMaps[normId] || {}; // empty unless you populate statusMaps later
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${idx+1}</td><td>${rawId}</td><td>${dbRow.name||""}</td><td>${dbRow.number||""}</td><td>${dbRow.location||""}</td><td>${dbRow.status||""}</td>`;
+      tr.innerHTML = `<td>${idx+1}</td><td>${rawId}</td>`;
       tbody.appendChild(tr);
-      currentPopupRows.push({ sr: idx+1, id: rawId, name: dbRow.name||"", number: dbRow.number||"", location: dbRow.location||"", status: dbRow.status||"" });
+      currentPopupRows.push({ sr: idx+1, id: rawId });
     });
   }
 
-  function openLink(url){ if (url) window.open(url, "_blank"); }
-
   // -------------- DOWNLOADS --------------
   function downloadScreenshot(){
-    const modalContent = document.querySelector("#popupModal .modal-content");
-    if (!modalContent) return;
-    html2canvas(modalContent).then(canvas=>{
+    const chartEl = document.getElementById("chart");
+    html2canvas(chartEl).then(canvas=>{
       const link = document.createElement("a");
       const today = new Date().toISOString().slice(0,10);
-      link.download = `merotra-users-${today}.png`;
+      link.download = `merotra-tree-${today}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     });
@@ -600,17 +604,10 @@ function buildHierarchy(board) {
 
   function downloadCSV(){
     if (!currentPopupRows.length) return;
-    const header = ["Sr","User ID","Name","Number","Location","Status"];
+    const header = ["Sr","User ID"];
     const lines = [header.join(",")];
     currentPopupRows.forEach(r=>{
-      const row = [
-        r.sr,
-        `"${r.id}"`,
-        `"${(r.name||"").replace(/"/g,'""')}"`,
-        `"${(r.number||"").replace(/"/g,'""')}"`,
-        `"${(r.location||"").replace(/"/g,'""')}"`,
-        `"${(r.status||"").replace(/"/g,'""')}"`
-      ];
+      const row = [ r.sr, `"${(r.id||"").replace(/"/g,'""')}"` ];
       lines.push(row.join(","));
     });
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
@@ -621,14 +618,6 @@ function buildHierarchy(board) {
     URL.revokeObjectURL(url);
   }
 
-function isSubset(aSet, bSet){
-  for (const x of aSet) {
-    if (!bSet.has(x)) return false;
-  }
-  return true;
-}
-
-  
 </script>
 </body>
 </html>
