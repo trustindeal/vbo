@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recent Down Lines</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 🔥 ANIMATION STYLES -->
+  <style>
+    /* 🔥 Fire Gradient Background */
+    .fire-badge {
+      background: linear-gradient(90deg, #ff3b30, #ff9500, #ff3b30);
+      background-size: 300% 100%;
+      animation: fireMove 2s infinite linear;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 0.75rem;
+      font-weight: bold;
+      position: relative;
+      display: inline-block;
+    }
+
+    @keyframes fireMove {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 300% 0%; }
+    }
+
+    /* 🚨 Shaking Animation */
+    .shake {
+      animation: shakeAnim 0.35s infinite;
+    }
+    @keyframes shakeAnim {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* ⚡ Neon Flicker Border */
+    .neon {
+      animation: neonAnim 1.5s infinite alternate;
+      border: 2px solid #ff3b30;
+      box-shadow: 0 0 10px #ff3b30;
+    }
+    @keyframes neonAnim {
+      0% { box-shadow: 0 0 5px #ff3b30; }
+      50% { box-shadow: 0 0 14px #ff9500; }
+      100% { box-shadow: 0 0 5px #ff3b30; }
+    }
+
+    /* 🟢 Normal (OK) badge */
+    .normal-badge {
+      background: #7CFC00;
+      color: #333;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 0.75rem;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 p-4">
+
+  <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Recent Down Lines</h2>
+
+  <!-- Refresh Button -->
+  <div class="text-center mb-4">
+    <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md text-lg">
+      REFRESH
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex justify-center gap-4 mb-6 flex-wrap">
+    
+    <!-- Window Filter -->
+    <select id="windowFilter" onchange="applyFilters()"
+      class="px-4 py-2 rounded-lg border border-gray-300 shadow-sm">
+      <option value="">All Windows</option>
+    </select>
+
+    <!-- PON Filter -->
+    <select id="ponFilter" onchange="applyFilters()" 
+      class="px-4 py-2 rounded-lg border border-gray-300 shadow-sm">
+      <option value="">All PONs</option>
+    </select>
+
+  </div>
+
+  <div id="mainCards" class="space-y-6"></div>
+
+  <script>
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbxe9IQkV5s-co4YGPJtiTmJ3yxLabg8pg02YYQLfoN7_C5r7c5FRHJrEYWThYAJxLEy/exec?sheet=MerotranetworkSPN";
+
+    function mapRow(row) {
+      return {
+        pon: row[21] || "",
+        window: row[22] || "",
+        tagBy: row[2] || "",
+        location: row[3] || "",
+        jcPic: row[4] || "",
+        polePic: row[5] || "",
+        lineName: row[6] || "",
+        splitter: row[7] || "",
+        fiber: row[8] || "",
+        tagId: row[15] || "",
+        totalUsers: row[154] || "",
+        offlineUsers: row[155] || "",
+        onlineUsers: row[156] || "",
+        splitterStatus: row[157] || ""
+      };
+    }
+
+    function extractUsers(row) {
+      let list = [];
+      for (let i = 24; i < 152 && i < row.length; i++) {
+        let v = row[i];
+        if (v) list.push(String(v).trim());
+      }
+      return list;
+    }
+
+    function buildCard(row) {
+      let f = mapRow(row);
+      let users = extractUsers(row);
+
+      let usersHTML = users.length ? `
+        <div class="mt-4">
+          <p class="font-semibold text-gray-800 mb-2">Users:</p>
+          <div class="flex flex-wrap gap-2">
+            ${users.map(u => `<span class="bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200">${u}</span>`).join("")}
+          </div>
+        </div>
+      ` : "";
+
+      /* 🔥 CONDITIONALLY BUILD PON BADGE */
+      let ponBadge = "";
+      if (f.splitterStatus === "🔴❌") {
+        ponBadge = `
+          <span class="fire-badge shake neon">
+            PON: ${f.pon}
+          </span>`;
+      } else {
+        ponBadge = `<span class="normal-badge">PON: ${f.pon}</span>`;
+      }
+
+      return `
+        <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
+
+          <!-- TOP ALIGN ROW -->
+          <div class="flex justify-between items-center mb-3">
+
+            <!-- Window TOP RIGHT -->
+            <span class="bg-green-300 text-gray-900 px-3 py-1 rounded-lg text-sm font-bold shadow">
+              WINDOW: ${f.window}
+            </span>
+
+            <!-- PON LEFT -->
+            ${ponBadge}
+
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base">
+
+            <p><span class='font-semibold'>Line Name:</span> ${f.lineName}</p>
+            <p><span class='font-semibold'>Splitter:</span> ${f.splitter}</p>
+            <p><span class='font-semibold'>Fiber:</span> ${f.fiber}</p>
+            <p><span class='font-semibold'>Tag ID:</span> ${f.tagId}</p>
+            <p><span class='font-semibold'>Offline Users:</span> ${f.offlineUsers}</p>
+            <p><span class='font-semibold'>Online Users:</span> ${f.onlineUsers}</p>
+            <p><span class='font-semibold'>Splitter Status:</span> ${f.splitterStatus}</p>
+
+          </div>
+
+          <div class="mt-6 flex flex-wrap gap-4">
+            ${f.location ? `<a href="${f.location}" target="_blank"
+              class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow text-sm">Splitter Location</a>` : ""}
+
+            ${f.jcPic ? `<a href="${f.jcPic}" target="_blank"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm">JC Pic</a>` : ""}
+
+            ${f.polePic ? `<a href="${f.polePic}" target="_blank"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm">Pole Pic</a>` : ""}
+
+          </div>
+
+          ${usersHTML}
+        </div>
+      `;
+    }
+
+    async function loadData() {
+      let main = document.getElementById("mainCards");
+      main.innerHTML = "<p class='text-center text-gray-600'>Loading...</p>";
+
+      try {
+        let res = await fetch(API_URL);
+        let text = await res.text();
+
+        let json = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
+        let rows = json.rows.filter(r => Array.isArray(r) && r.join("").trim() !== "");
+
+        window._allRows = rows;
+
+        // Fill Window Dropdown
+        let windowDD = document.getElementById("windowFilter");
+        windowDD.innerHTML = `<option value="">All Windows</option>`;
+        let uniqueWindows = [...new Set(rows.map(r => r[22]).filter(Boolean))];
+        uniqueWindows.forEach(w => windowDD.innerHTML += `<option value="${w}">${w}</option>`);
+
+        // Fill PON Dropdown
+        let ponDD = document.getElementById("ponFilter");
+        ponDD.innerHTML = `<option value="">All PONs</option>`;
+        let uniquePONs = [...new Set(rows.map(r => r[21]).filter(Boolean))];
+        uniquePONs.forEach(p => ponDD.innerHTML += `<option value="${p}">${p}</option>`);
+
+        // Show all initially
+        main.innerHTML = rows.map(r => buildCard(r)).join("");
+
+      } catch (err) {
+        main.innerHTML = "<p class='text-center text-red-600'>Failed to load data.</p>";
+      }
+    }
+
+    function applyFilters() {
+      let selectedWindow = document.getElementById("windowFilter").value;
+      let selectedPON = document.getElementById("ponFilter").value;
+
+      let rows = window._allRows || [];
+
+      let filtered = rows.filter(r => {
+        let matchWindow = selectedWindow ? r[22] === selectedWindow : true;
+        let matchPON = selectedPON ? r[21] === selectedPON : true;
+        return matchWindow && matchPON;
+      });
+
+      document.getElementById("mainCards").innerHTML =
+        filtered.map(r => buildCard(r)).join("");
+    }
+
+    loadData();
+  </script>
+
+</body>
+</html>
