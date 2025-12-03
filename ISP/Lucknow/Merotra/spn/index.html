@@ -149,16 +149,13 @@
           return Array.isArray(r) && r.join("").trim() !== "";
         });
 
-        var cards = [];
-        if (rows[0]) cards.push(buildCard(rows[0]));
-        if (rows[1]) cards.push(buildCard(rows[1]));
-        if (rows[2] || rows[3]) cards.push(buildCard(rows[2] || rows[3], rows[3]));
+var cards = rows.map(r => buildCard(r));
 
-        if (!cards.length) {
-          main.innerHTML = "<p class='text-center text-gray-500'>No data found.</p>";
-        } else {
-          main.innerHTML = cards.join("");
-        }
+if (!cards.length) {
+  main.innerHTML = "<p class='text-center text-gray-500'>No data found.</p>";
+} else {
+  main.innerHTML = cards.join("");
+}
       } catch (err) {
         // Network / CORS / other fetch-related issue: show soft message, no thrown error
         main.innerHTML = "<p class='text-center text-red-600'>Failed to load API data (network/CORS).</p>";
