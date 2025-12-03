@@ -6,18 +6,19 @@
   <title>Recent Down Lines</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- 🔥 Animation Styles -->
+  <!-- 🔥 ANIMATION STYLES -->
   <style>
-    /* Fire Gradient Badge Animation */
+    /* 🔥 Fire Gradient Background */
     .fire-badge {
       background: linear-gradient(90deg, #ff3b30, #ff9500, #ff3b30);
       background-size: 300% 100%;
       animation: fireMove 2s infinite linear;
       color: #fff;
-      font-weight: bold;
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 0.75rem;
-      box-shadow: 0 0 12px rgba(255, 60, 30, 0.9);
+      font-weight: bold;
+      position: relative;
+      display: inline-block;
     }
 
     @keyframes fireMove {
@@ -25,7 +26,31 @@
       100% { background-position: 300% 0%; }
     }
 
-    /* Normal Green Badge */
+    /* 🚨 Shaking Animation */
+    .shake {
+      animation: shakeAnim 0.35s infinite;
+    }
+    @keyframes shakeAnim {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* ⚡ Neon Flicker Border */
+    .neon {
+      animation: neonAnim 1.5s infinite alternate;
+      border: 2px solid #ff3b30;
+      box-shadow: 0 0 10px #ff3b30;
+    }
+    @keyframes neonAnim {
+      0% { box-shadow: 0 0 5px #ff3b30; }
+      50% { box-shadow: 0 0 14px #ff9500; }
+      100% { box-shadow: 0 0 5px #ff3b30; }
+    }
+
+    /* 🟢 Normal (OK) badge */
     .normal-badge {
       background: #7CFC00;
       color: #333;
@@ -72,8 +97,8 @@
 
     function mapRow(row) {
       return {
-        pon: row[21] || "",        // Column V
-        window: row[22] || "",     // Column W
+        pon: row[21] || "",
+        window: row[22] || "",
         tagBy: row[2] || "",
         location: row[3] || "",
         jcPic: row[4] || "",
@@ -93,9 +118,7 @@
       let list = [];
       for (let i = 24; i < 152 && i < row.length; i++) {
         let v = row[i];
-        if (v !== null && v !== "" && v !== undefined) {
-          list.push(String(v).trim());
-        }
+        if (v) list.push(String(v).trim());
       }
       return list;
     }
@@ -108,28 +131,36 @@
         <div class="mt-4">
           <p class="font-semibold text-gray-800 mb-2">Users:</p>
           <div class="flex flex-wrap gap-2">
-            ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
+            ${users.map(u => `<span class="bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200">${u}</span>`).join("")}
           </div>
         </div>
       ` : "";
 
+      /* 🔥 CONDITIONALLY BUILD PON BADGE */
+      let ponBadge = "";
+      if (f.splitterStatus === "🔴❌") {
+        ponBadge = `
+          <span class="fire-badge shake neon">
+            PON: ${f.pon}
+          </span>`;
+      } else {
+        ponBadge = `<span class="normal-badge">PON: ${f.pon}</span>`;
+      }
+
       return `
         <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
 
-          <!-- 🟠 Window Highlight -->
-          <div class="mb-2">
+          <!-- TOP ALIGN ROW -->
+          <div class="flex justify-between items-center mb-3">
+
+            <!-- Window TOP RIGHT -->
             <span class="bg-green-300 text-gray-900 px-3 py-1 rounded-lg text-sm font-bold shadow">
               WINDOW: ${f.window}
             </span>
-          </div>
 
-          <!-- 🔥 Conditional PON Highlight -->
-          <div class="mb-4">
-            ${
-              f.splitterStatus === "🔴❌"
-                ? `<span class="fire-badge">PON: ${f.pon}</span>`
-                : `<span class="normal-badge">PON: ${f.pon}</span>`
-            }
+            <!-- PON LEFT -->
+            ${ponBadge}
+
           </div>
 
           <div class="grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base">
