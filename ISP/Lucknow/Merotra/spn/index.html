@@ -5,6 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Recent Down Lines</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 🔥 Animation Styles -->
+  <style>
+    /* Fire Gradient Badge Animation */
+    .fire-badge {
+      background: linear-gradient(90deg, #ff3b30, #ff9500, #ff3b30);
+      background-size: 300% 100%;
+      animation: fireMove 2s infinite linear;
+      color: #fff;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 0.75rem;
+      box-shadow: 0 0 12px rgba(255, 60, 30, 0.9);
+    }
+
+    @keyframes fireMove {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 300% 0%; }
+    }
+
+    /* Normal Green Badge */
+    .normal-badge {
+      background: #7CFC00;
+      color: #333;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 0.75rem;
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100 p-4">
@@ -94,14 +123,17 @@
             </span>
           </div>
 
-          <!-- 🔵 PON Highlight -->
+          <!-- 🔥 Conditional PON Highlight -->
           <div class="mb-4">
-            <span class="bg-yellow-300 text-gray-900 px-3 py-1 rounded-lg text-sm font-bold shadow">
-              PON: ${f.pon}
-            </span>
+            ${
+              f.splitterStatus === "🔴❌"
+                ? `<span class="fire-badge">PON: ${f.pon}</span>`
+                : `<span class="normal-badge">PON: ${f.pon}</span>`
+            }
           </div>
 
           <div class="grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base">
+
             <p><span class='font-semibold'>Line Name:</span> ${f.lineName}</p>
             <p><span class='font-semibold'>Splitter:</span> ${f.splitter}</p>
             <p><span class='font-semibold'>Fiber:</span> ${f.fiber}</p>
@@ -109,12 +141,19 @@
             <p><span class='font-semibold'>Offline Users:</span> ${f.offlineUsers}</p>
             <p><span class='font-semibold'>Online Users:</span> ${f.onlineUsers}</p>
             <p><span class='font-semibold'>Splitter Status:</span> ${f.splitterStatus}</p>
+
           </div>
 
           <div class="mt-6 flex flex-wrap gap-4">
-            ${f.location ? `<a href="${f.location}" target="_blank" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow text-sm">Splitter Location</a>` : ""}
-            ${f.jcPic ? `<a href="${f.jcPic}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm">JC Pic</a>` : ""}
-            ${f.polePic ? `<a href="${f.polePic}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm">Pole Pic</a>` : ""}
+            ${f.location ? `<a href="${f.location}" target="_blank"
+              class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow text-sm">Splitter Location</a>` : ""}
+
+            ${f.jcPic ? `<a href="${f.jcPic}" target="_blank"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm">JC Pic</a>` : ""}
+
+            ${f.polePic ? `<a href="${f.polePic}" target="_blank"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm">Pole Pic</a>` : ""}
+
           </div>
 
           ${usersHTML}
