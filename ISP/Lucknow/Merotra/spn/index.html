@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Recent Tags – SPN</title>
+  <title>Recent Down Lines</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 p-4">
 
-  <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Recent Tags – SPN</h2>
+  <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Recent Down Lines</h2>
 
   <!-- Refresh Button -->
   <div class="text-center mb-4">
@@ -34,7 +34,7 @@
 
     function mapRow(row) {
       return {
-        pon: row[22] || "",  // <-- PON NUMBER
+        pon: row[21] || "",     // <-- CORRECT PON (Column V)
         time: row[0] || "",
         tagBy: row[2] || "",
         location: row[3] || "",
@@ -43,7 +43,7 @@
         lineName: row[6] || "",
         splitter: row[7] || "",
         fiber: row[8] || "",
-        window: row[22] || "",
+        window: row[22] || "",  // <-- Correct window column
         tagId: row[15] || "",
         totalUsers: row[154] || "",
         offlineUsers: row[155] || "",
@@ -69,22 +69,19 @@
 
       let timeText = f.time ? new Date(f.time).toLocaleString() : "";
 
-      let usersHTML = "";
-      if (users.length) {
-        usersHTML = `
-          <div class="mt-4">
-            <p class="font-semibold text-gray-800 mb-2">Users:</p>
-            <div class="flex flex-wrap gap-2">
-              ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
-            </div>
+      let usersHTML = users.length ? `
+        <div class="mt-4">
+          <p class="font-semibold text-gray-800 mb-2">Users:</p>
+          <div class="flex flex-wrap gap-2">
+            ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
           </div>
-        `;
-      }
+        </div>
+      ` : "";
 
       return `
         <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
 
-          <!-- 🔵 PON Highlight Badge -->
+          <!-- 🔵 Highlight PON -->
           <div class="mb-4">
             <span class="bg-yellow-300 text-gray-900 px-3 py-1 rounded-lg text-sm font-bold shadow">
               PON: ${f.pon}
@@ -127,16 +124,14 @@
         let json = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
         let rows = json.rows.filter(r => Array.isArray(r) && r.join("").trim() !== "");
 
-        // store globally for filter
         window._allRows = rows;
 
-        // fill dropdown with unique PONs
+        // Dropdown fill – PON list
         let dropdown = document.getElementById("ponFilter");
         dropdown.innerHTML = `<option value="">All PONs</option>`;
-        let uniquePONs = [...new Set(rows.map(r => r[22]).filter(Boolean))];
+        let uniquePONs = [...new Set(rows.map(r => r[21]).filter(Boolean))];
         uniquePONs.forEach(p => dropdown.innerHTML += `<option value="${p}">${p}</option>`);
 
-        // show all rows initially
         main.innerHTML = rows.map(r => buildCard(r)).join("");
 
       } catch (err) {
@@ -147,7 +142,7 @@
     function filterByPON() {
       let selected = document.getElementById("ponFilter").value;
       let rows = window._allRows || [];
-      let filtered = selected ? rows.filter(r => r[22] === selected) : rows;
+      let filtered = selected ? rows.filter(r => r[21] === selected) : rows;
 
       document.getElementById("mainCards").innerHTML =
         filtered.map(r => buildCard(r)).join("");
