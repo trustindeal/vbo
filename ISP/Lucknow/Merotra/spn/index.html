@@ -3,24 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Recent Tags</title>
+  <title>Recent Tags – SPN</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 p-4">
 
-  <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Recent tags</h2>
+  <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Recent Tags – SPN</h2>
 
+  <!-- Refresh Button -->
+  <div class="text-center mb-4">
+    <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md text-lg">
+      REFRESH
+    </button>
+  </div>
+
+  <!-- PON Filter -->
   <div class="text-center mb-6">
-    <button onclick="loadData()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md text-lg">REFRESH</button>
+    <select id="ponFilter" onchange="filterByPON()" 
+        class="px-4 py-2 rounded-lg border border-gray-300 shadow-sm">
+      <option value="">All PONs</option>
+    </select>
   </div>
 
   <div id="mainCards" class="space-y-6"></div>
 
   <script>
-   const API_URL = "https://script.google.com/macros/s/AKfycbxe9IQkV5s-co4YGPJtiTmJ3yxLabg8pg02YYQLfoN7_C5r7c5FRHJrEYWThYAJxLEy/exec?sheet=MerotranetworkSPN";
-    // Map one row to a structured object based on your JSON sample
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbxe9IQkV5s-co4YGPJtiTmJ3yxLabg8pg02YYQLfoN7_C5r7c5FRHJrEYWThYAJxLEy/exec?sheet=MerotranetworkSPN";
+
     function mapRow(row) {
       return {
+        pon: row[22] || "",  // <-- PON NUMBER
         time: row[0] || "",
         tagBy: row[2] || "",
         location: row[3] || "",
@@ -29,8 +43,8 @@
         lineName: row[6] || "",
         splitter: row[7] || "",
         fiber: row[8] || "",
-        window: row[22] || "",   // Column W
-        tagId: row[15] || "",    // Column P
+        window: row[22] || "",
+        tagId: row[15] || "",
         totalUsers: row[154] || "",
         offlineUsers: row[155] || "",
         onlineUsers: row[156] || "",
@@ -38,182 +52,107 @@
       };
     }
 
-    // Extract users from Y..EV (indexes 24..151)
     function extractUsers(row) {
-      if (!Array.isArray(row)) return [];
-      var list = [];
-      for (var i = 24; i < 152 && i < row.length; i++) {
-        var v = row[i];
-        if (v !== null && v !== undefined) {
-          var s = String(v).trim();
-          if (s !== "") list.push(s);
+      let list = [];
+      for (let i = 24; i < 152 && i < row.length; i++) {
+        let v = row[i];
+        if (v !== null && v !== "" && v !== undefined) {
+          list.push(String(v).trim());
         }
       }
       return list;
     }
 
-    // Build one card; if extraRow is given, merge users from both rows
-    function buildCard(row, extraRow) {
-      var f = mapRow(row);
-      var users = extractUsers(row);
-      if (extraRow) {
-        users = users.concat(extractUsers(extraRow));
-      }
+    function buildCard(row) {
+      let f = mapRow(row);
+      let users = extractUsers(row);
 
-      var usersHTML = "";
+      let timeText = f.time ? new Date(f.time).toLocaleString() : "";
+
+      let usersHTML = "";
       if (users.length) {
-        var chips = [];
-        for (var i = 0; i < users.length; i++) {
-          chips.push("<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>" + users[i] + "</span>");
-        }
-        usersHTML = "<div class='mt-4'>" +
-          "<p class='font-semibold text-gray-800 mb-2'>Users:</p>" +
-          "<div class='flex flex-wrap gap-2'>" + chips.join("") + "</div>" +
-        "</div>";
+        usersHTML = `
+          <div class="mt-4">
+            <p class="font-semibold text-gray-800 mb-2">Users:</p>
+            <div class="flex flex-wrap gap-2">
+              ${users.map(u => `<span class='bg-blue-50 text-blue-800 text-sm px-2 py-1 rounded-full border border-blue-200'>${u}</span>`).join("")}
+            </div>
+          </div>
+        `;
       }
 
-      var timeText = f.time ? new Date(f.time).toLocaleString() : "";
+      return `
+        <div class="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200">
 
-      var html = "";
-      html += "<div class='bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto border border-gray-200'>";
-      html += "<div class='grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base'>";
-      html += "<p><span class='font-semibold'>Time:</span> " + timeText + "</p>";
-      html += "<p><span class='font-semibold'>Tag By:</span> " + f.tagBy + "</p>";
-      // Location label removed from grid, only button below
-      html += "<p><span class='font-semibold'>Line Name:</span> " + f.lineName + "</p>";
-      html += "<p><span class='font-semibold'>Splitter:</span> " + f.splitter + "</p>";
-      html += "<p><span class='font-semibold'>Fiber:</span> " + f.fiber + "</p>";
-      html += "<p><span class='font-semibold'>Window:</span> " + f.window + "</p>";
-      html += "<p><span class='font-semibold'>Tag ID:</span> " + f.tagId + "</p>";
-      html += "<p><span class='font-semibold'>Total Users:</span> " + f.totalUsers + "</p>";
-      html += "<p><span class='font-semibold'>Offline Users:</span> " + f.offlineUsers + "</p>";
-      html += "<p><span class='font-semibold'>Online Users:</span> " + f.onlineUsers + "</p>";
-      html += "<p><span class='font-semibold'>Splitter Status:</span> " + f.splitterStatus + "</p>";
-      html += "</div>";
+          <!-- 🔵 PON Highlight Badge -->
+          <div class="mb-4">
+            <span class="bg-yellow-300 text-gray-900 px-3 py-1 rounded-lg text-sm font-bold shadow">
+              PON: ${f.pon}
+            </span>
+          </div>
 
-      html += "<div class='mt-6 flex flex-wrap gap-4'>";
-      if (f.location) {
-        html += "<a href='" + f.location + "' target='_blank' class='bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow text-sm'>Splitter Location</a>";
-      }
-      if (f.jcPic) {
-        html += "<a href='" + f.jcPic + "' target='_blank' class='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm'>JC Pic</a>";
-      }
-      if (f.polePic) {
-        html += "<a href='" + f.polePic + "' target='_blank' class='bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm'>Pole Pic</a>";
-      }
-      html += "</div>";
+          <div class="grid md:grid-cols-2 gap-3 text-gray-800 text-sm md:text-base">
+            <p><span class='font-semibold'>Time:</span> ${timeText}</p>
+            <p><span class='font-semibold'>Tag By:</span> ${f.tagBy}</p>
+            <p><span class='font-semibold'>Line Name:</span> ${f.lineName}</p>
+            <p><span class='font-semibold'>Splitter:</span> ${f.splitter}</p>
+            <p><span class='font-semibold'>Fiber:</span> ${f.fiber}</p>
+            <p><span class='font-semibold'>Window:</span> ${f.window}</p>
+            <p><span class='font-semibold'>Tag ID:</span> ${f.tagId}</p>
+            <p><span class='font-semibold'>Total Users:</span> ${f.totalUsers}</p>
+            <p><span class='font-semibold'>Offline Users:</span> ${f.offlineUsers}</p>
+            <p><span class='font-semibold'>Online Users:</span> ${f.onlineUsers}</p>
+            <p><span class='font-semibold'>Splitter Status:</span> ${f.splitterStatus}</p>
+          </div>
 
-      html += usersHTML;
-      html += "</div>";
-      return html;
+          <div class="mt-6 flex flex-wrap gap-4">
+            ${f.location ? `<a href="${f.location}" target="_blank" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow text-sm">Splitter Location</a>` : ""}
+            ${f.jcPic ? `<a href="${f.jcPic}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm">JC Pic</a>` : ""}
+            ${f.polePic ? `<a href="${f.polePic}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow text-sm">Pole Pic</a>` : ""}
+          </div>
+
+          ${usersHTML}
+        </div>
+      `;
     }
 
     async function loadData() {
-      var main = document.getElementById("mainCards");
-      if (!main) return;
+      let main = document.getElementById("mainCards");
       main.innerHTML = "<p class='text-center text-gray-600'>Loading...</p>";
 
-      // In some environments (tests/sandbox) fetch may fail or be blocked (CORS).
-      if (typeof fetch !== "function") {
-        main.innerHTML = "<p class='text-center text-red-600'>Cannot load live data (fetch not available).</p>";
-        return;
-      }
-
       try {
-        var res = await fetch(API_URL, { method: "GET" });
-        if (!res.ok) {
-          // Soft-fail on HTTP error: show message, do not throw hard error
-          main.innerHTML = "<p class='text-center text-red-600'>API HTTP error: " + res.status + "</p>";
-          return;
-        }
+        let res = await fetch(API_URL);
+        let text = await res.text();
 
-        var text = await res.text();
-        var json;
-        try {
-          json = JSON.parse(text);
-        } catch (e) {
-          var match = text.match(/\{[\s\S]*\}/);
-          if (!match) {
-            main.innerHTML = "<p class='text-center text-red-600'>API response is not valid JSON.</p>";
-            return;
-          }
-          json = JSON.parse(match[0]);
-        }
+        let json = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
+        let rows = json.rows.filter(r => Array.isArray(r) && r.join("").trim() !== "");
 
-        if (!json || !Array.isArray(json.rows)) {
-          main.innerHTML = "<p class='text-center text-red-600'>API JSON missing rows array.</p>";
-          return;
-        }
+        // store globally for filter
+        window._allRows = rows;
 
-        var rows = json.rows.filter(function (r) {
-          return Array.isArray(r) && r.join("").trim() !== "";
-        });
+        // fill dropdown with unique PONs
+        let dropdown = document.getElementById("ponFilter");
+        dropdown.innerHTML = `<option value="">All PONs</option>`;
+        let uniquePONs = [...new Set(rows.map(r => r[22]).filter(Boolean))];
+        uniquePONs.forEach(p => dropdown.innerHTML += `<option value="${p}">${p}</option>`);
 
-var cards = rows.map(r => buildCard(r));
+        // show all rows initially
+        main.innerHTML = rows.map(r => buildCard(r)).join("");
 
-if (!cards.length) {
-  main.innerHTML = "<p class='text-center text-gray-500'>No data found.</p>";
-} else {
-  main.innerHTML = cards.join("");
-}
       } catch (err) {
-        // Network / CORS / other fetch-related issue: show soft message, no thrown error
-        main.innerHTML = "<p class='text-center text-red-600'>Failed to load API data (network/CORS).</p>";
+        main.innerHTML = "<p class='text-center text-red-600'>Failed to load data.</p>";
       }
     }
 
-    // Simple in-browser tests (no network involved)
-    function runTests() {
-      // Minimal mock row from your JSON example
-      var mockRow = [
-        "2025-11-25T07:17:08.000Z", // time
-        "",
-        "alamshan761@gmail.com",   // tagBy
-        "https://www.google.com/maps/dir/?api=1&destination=26.80796,80.8609383", // location
-        "https://drive.google.com/file/d/1pY4Z8t2QEkQ3MTnolQKjaiuTsLt-YT9K/view?usp=drivesdk", // jcPic
-        "https://drive.google.com/file/d/1l6nHR_diqO7qERaEafMAFcIBLsym0OMx/view?usp=drivesdk", // polePic
-        "Dudha office to main jc by to sadrauna by to sundar vihar ", // lineName
-        "4 way", // splitter
-        "6 Core", // fiber
-        "Black",
-        "Dudha office to sundar vihar colony ", // (old window, but we now map window from index 22)
-        122,
-        "0",
-        1,
-        "Merotra",
-        10000121,
-        "",
-        "2025-11-25T09:02:50.000Z",
-        "2025-11-25T09:04:29.000Z",
-        "2025-11-25T09:06:06.000Z",
-        "Fresh",
-        "O1I5P6",
-        "Merotra",
-        "P00 → 5220081095",
-        5220038647,
-        5220006080,
-        5220012838,
-        "USER_A",
-        "USER_B"
-      ];
+    function filterByPON() {
+      let selected = document.getElementById("ponFilter").value;
+      let rows = window._allRows || [];
+      let filtered = selected ? rows.filter(r => r[22] === selected) : rows;
 
-      var mapped = mapRow(mockRow);
-      console.assert(mapped.tagBy === "alamshan761@gmail.com", "tagBy mapping failed");
-      console.assert(mapped.location.indexOf("google.com/maps") !== -1, "location mapping failed");
-      console.assert(mapped.lineName.indexOf("Dudha office") !== -1, "lineName mapping failed");
-      console.assert(mapped.splitter === "4 way", "splitter mapping failed");
-
-      var users = extractUsers(mockRow);
-      console.assert(users.length === 2 && users[0] === "USER_A" && users[1] === "USER_B", "extractUsers failed");
-
-      var html = buildCard(mockRow);
-      console.assert(typeof html === "string" && html.indexOf("JC Pic") !== -1, "buildCard output looks wrong");
+      document.getElementById("mainCards").innerHTML =
+        filtered.map(r => buildCard(r)).join("");
     }
 
-    // Run local tests (do not depend on network)
-    runTests();
-
-    // Initial load
     loadData();
   </script>
 
