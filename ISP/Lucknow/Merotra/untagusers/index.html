@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PON wise untagged users list</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+    h2 {
+        margin-bottom: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+    th, td {
+        padding: 10px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+    th {
+        background: #f5f5f5;
+    }
+    button {
+        padding: 6px 12px;
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+    }
+    button:hover {
+        background: #005dc0;
+    }
+
+    /* Popup styling */
+    #popup {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6);
+        justify-content: center;
+        align-items: center;
+    }
+    #popupContent {
+        background: white;
+        padding: 20px;
+        width: 70%;
+        max-height: 80%;
+        overflow-y: auto;
+        border-radius: 8px;
+        position: relative;
+    }
+    #closePopup {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 20px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<h2>PON wise untagged users list</h2>
+
+<table id="mainTable">
+    <thead>
+        <tr>
+            <th>S.No</th>
+            <th>PON No</th>
+            <th>User Count</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- Popup -->
+<div id="popup">
+    <div id="popupContent">
+        <span id="closePopup">✖</span>
+        <h3>Untagged users list</h3>
+
+        <table id="popupTable">
+            <thead>
+                <tr>
+                    <th>PON</th>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Area</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+</div>
+
+
+<script>
+// GAS URL
+const apiURL = "https://script.google.com/macros/s/AKfycbyMZEACoEcEijcrxGny6EWUy0LJXIcbOKtl9POAk2d2X1jrl5-YplBTeL7Rhve1aR1A7w/exec";
+
+let globalData = [];
+
+// Fetch JSON
+fetch(apiURL)
+    .then(res => res.json())
+    .then(data => {
+        globalData = data;
+        buildMainTable(data);
+    });
+
+// Build PON summary table
+function buildMainTable(data) {
+    const tableBody = document.querySelector("#mainTable tbody");
+    tableBody.innerHTML = "";
+
+    // Count users by PON (column A)
+    let ponMap = {};
+
+    data.forEach(row => {
+        let pon = row.A;
+        if (!ponMap[pon]) ponMap[pon] = 0;
+        ponMap[pon]++;
+    });
+
+    let serial = 1;
+
+    Object.keys(ponMap).forEach(pon => {
+        let tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${serial++}</td>
+            <td>${pon}</td>
+            <td>${ponMap[pon]}</td>
+            <td><button onclick="showUsers('${pon}')">View users</button></td>
+        `;
+
+        tableBody.appendChild(tr);
+    });
+}
+
+
+// Popup logic
+function showUsers(pon) {
+    const popup = document.getElementById("popup");
+    const tbody = document.querySelector("#popupTable tbody");
+
+    tbody.innerHTML = "";
+
+    // Filter records for this PON
+    const rows = globalData.filter(r => r.A === pon);
+
+    // Build popup rows
+    rows.forEach(r => {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${r.A}</td>
+            <td>${r.B}</td>
+            <td>${r.G}</td>
+            <td>${r.H}</td>
+            <td>${r.I}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    popup.style.display = "flex";
+}
+
+document.getElementById("closePopup").onclick = () => {
+    document.getElementById("popup").style.display = "none";
+};
+
+// Close popup on clicking outside box
+document.getElementById("popup").onclick = (e) => {
+    if (e.target.id === "popup") {
+        document.getElementById("popup").style.display = "none";
+    }
+};
+</script>
+
+</body>
+</html>
