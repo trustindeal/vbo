@@ -373,6 +373,27 @@ footer {
     box-sizing: border-box !important;
   }
 }
+/* Sub-button background fix */
+/* Internet */
+.btn-internet + .dropdown-options .right-button-small {
+  background: #C8E6C9 !important;
+}
+
+/* Cable */
+.btn-cable + .dropdown-options .right-button-small {
+  background: #FFCDD2 !important;
+}
+
+/* Admin */
+.btn-admin + .dropdown-options .right-button-small {
+  background: #BBDEFB !important;
+}
+
+/* Stock */
+.btn-stock + .dropdown-options .right-button-small {
+  background: #FFE0B2 !important;
+}
+
 /* Text readable ho jaaye */
 .btn-internet .right-button-small { color: #1b5e20; }
 .btn-cable .right-button-small { color: #c62828; }
