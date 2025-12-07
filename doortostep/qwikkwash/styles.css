@@ -377,3 +377,18 @@ footer {
     box-sizing: border-box !important;
   }
 }
+/* Sub-buttons ko parent ka color dene ke liye */
+.dropdown-options .right-button-small {
+  background: inherit !important;
+}
+
+/* Text readable ho jaaye */
+.btn-internet .right-button-small { color: #1b5e20; }
+.btn-cable .right-button-small { color: #c62828; }
+.btn-admin .right-button-small { color: #0d47a1; }
+.btn-stock .right-button-small { color: #e65100; }
+
+.dropdown-options .right-button-small:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  transform: translateY(-3px);
+}
