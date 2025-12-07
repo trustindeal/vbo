@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>PON wise untagged users list</title>
-<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Mobile Friendly -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
     body {
@@ -57,7 +57,7 @@
         background: #005dc0;
     }
 
-    /* Popup styling - responsive */
+    /* Popup styling */
     #popup {
         display: none;
         position: fixed;
@@ -171,7 +171,10 @@ function buildMainTable(data) {
 
     let serial = 1;
 
-    Object.keys(ponMap).forEach(pon => {
+    // Sort PONs by user count (descending)
+    const sortedPons = Object.keys(ponMap).sort((a, b) => ponMap[b] - ponMap[a]);
+
+    sortedPons.forEach(pon => {
         let tr = document.createElement("tr");
 
         tr.innerHTML = `
