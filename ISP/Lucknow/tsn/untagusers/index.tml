@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PON wise untagged users list</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 15px;
+        max-width: 900px;
+        margin: auto;
+    }
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 22px;
+    }
+
+    /* Responsive table wrapper */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        min-width: 600px;
+    }
+
+    th, td {
+        padding: 10px;
+        border: 1px solid #ccc;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    th {
+        background: #f1f1f1;
+        font-weight: bold;
+    }
+
+    button {
+        padding: 6px 10px;
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+
+    button:hover {
+        background: #005dc0;
+    }
+
+    /* Popup styling */
+    #popup {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+    }
+
+    #popupContent {
+        background: white;
+        padding: 15px;
+        width: 95%;
+        max-width: 550px;
+        max-height: 85%;
+        overflow-y: auto;
+        border-radius: 8px;
+        position: relative;
+    }
+
+    #closePopup {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        font-size: 22px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    #popupTable th, #popupTable td {
+        font-size: 13px;
+    }
+</style>
+</head>
+<body>
+
+<h2>PON wise untagged users list</h2>
+
+<div class="table-container">
+<table id="mainTable">
+    <thead>
+        <tr>
+            <th>S.No</th>
+            <th>PON No</th>
+            <th>User Count</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+</div>
+
+<!-- Popup -->
+<div id="popup">
+    <div id="popupContent">
+        <span id="closePopup">✖</span>
+        <h3 style="margin-top:0;">Untagged users list</h3>
+
+        <div class="table-container">
+        <table id="popupTable">
+            <thead>
+                <tr>
+                    <th>PON</th>
+                    <th>User ID</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Area</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+// GAS URL
+const apiURL = "https://script.google.com/macros/s/AKfycbxHAQ24yKabuWx_TWZRO-ds8rcLJkpANK-v6SNV4l3CoTQoBcuLZxXERc90PavobMQI/exec";
+
+let globalData = [];
+
+// Fetch JSON
+fetch(apiURL)
+    .then(res => res.json())
+    .then(data => {
+        globalData = data;
+        buildMainTable(data);
+    });
+
+// Build main PON table
+function buildMainTable(data) {
+    const tableBody = document.querySelector("#mainTable tbody");
+    tableBody.innerHTML = "";
+
+    let ponMap = {};
+
+    data.forEach(row => {
+        let pon = row.A ? row.A.toString().trim() : "";
+
+        // Ignore blank, "P00", "P000"
+        if (!pon || pon === "P00" || pon === "P000") return;
+
+        if (!ponMap[pon]) ponMap[pon] = 0;
+        ponMap[pon]++;
+    });
+
+    let serial = 1;
+
+    // Sort PONs by user count (descending)
+    const sortedPons = Object.keys(ponMap).sort((a, b) => ponMap[b] - ponMap[a]);
+
+    sortedPons.forEach(pon => {
+        let tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${serial++}</td>
+            <td>${pon}</td>
+            <td>${ponMap[pon]}</td>
+            <td><button onclick="showUsers('${pon}')">View users</button></td>
+        `;
+
+        tableBody.appendChild(tr);
+    });
+}
+
+// Popup show
+function showUsers(pon) {
+    const popup = document.getElementById("popup");
+    const tbody = document.querySelector("#popupTable tbody");
+
+    tbody.innerHTML = "";
+
+    const rows = globalData.filter(r => r.A === pon);
+
+    rows.forEach(r => {
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${r.A}</td>
+            <td>${r.B}</td>
+            <td>${r.G}</td>
+            <td>${r.H}</td>
+            <td>${r.I}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    popup.style.display = "flex";
+}
+
+// Close popup
+document.getElementById("closePopup").onclick = () => {
+    document.getElementById("popup").style.display = "none";
+};
+
+document.getElementById("popup").onclick = (e) => {
+    if (e.target.id === "popup") {
+        document.getElementById("popup").style.display = "none";
+    }
+};
+</script>
+
+</body>
+</html>
