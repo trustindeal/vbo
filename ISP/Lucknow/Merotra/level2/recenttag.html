@@ -150,10 +150,12 @@
           return Array.isArray(r) && r.join("").trim() !== "";
         });
 
-        var cards = [];
-        if (rows[0]) cards.push(buildCard(rows[0]));
-        if (rows[1]) cards.push(buildCard(rows[1]));
-        if (rows[2] || rows[3]) cards.push(buildCard(rows[2] || rows[3], rows[3]));
+var cards = [];
+
+for (var i = 0; i < rows.length; i++) {
+  cards.push(buildCard(rows[i]));
+}
+
 
         if (!cards.length) {
           main.innerHTML = "<p class='text-center text-gray-500'>No data found.</p>";
