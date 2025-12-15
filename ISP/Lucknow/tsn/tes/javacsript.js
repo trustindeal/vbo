@@ -155,3 +155,18 @@ function logout() {
 window.addEventListener('load', () => {
   initTabs();
 });
+function showComingSoon() {
+  const popup = document.getElementById('popupMessage');
+
+  if (!popup) {
+    alert('Coming soon');
+    return;
+  }
+
+  popup.textContent = 'Coming soon';
+  popup.classList.add('show');
+
+  setTimeout(() => {
+    popup.classList.remove('show');
+  }, 2000);
+}
