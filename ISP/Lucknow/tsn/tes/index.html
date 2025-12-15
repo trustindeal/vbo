@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-
   <base target="_top">
-  <!-- ZOOM IN + ZOOM OUT ENABLED -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
 
   <!-- ICONS & FONT -->
@@ -12,170 +9,186 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
   <!-- EXTERNAL CSS -->
-  <link rel="stylesheet" href="look.css">
+  <link rel="stylesheet" href="merotra.css">
 </head>
 
 <body>
 
-  <header class="header"></header>
+<header class="header"></header>
 <button class="logout-btn" onclick="logout()">Logout</button>
-  <div class="container">
-    
 
-    <div class="tab-bar" id="tab-bar"></div>
+<div class="container">
+  <div class="tab-bar" id="tab-bar"></div>
 
-    <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
+  <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
 
-      <!-- HOME TAB -->
-      <div id="home-content" class="tab-content active">
+    <div id="home-content" class="tab-content active">
 
-        <div class="right-grid">
+      <div class="right-grid">
 
-          <!-- INTERNET -->
-          <div>
-            <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-router-fill"></i> Internet
-            </div>
-
-            <div class="dropdown-options">
-              <a class="right-button btn-internet right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https://virtualbackoffice4-commits.github.io/tns/rack/', 'Rack & PONs'); return false;">
-                <i class="bi bi-card-checklist"></i> Rack & PONs
-              </a>
-
-              <a class="right-button btn-internet right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https://virtualbackoffice4-commits.github.io/tns/off/', 'Complain Handle'); return false;">
-                <i class="bi bi-card-checklist"></i> Mark Complain
-              </a>
-
-              <a class="right-button btn-internet right-button-small clickable"
-                 href="https://del-desk.excitel.in/" target="_blank">
-                <i class="bi bi-person-square"></i> Procare Login
-              </a>
-
-              <a class="right-button btn-internet right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https:###', 'Splitter Tagging Report'); return false;">
-                <i class="bi bi-slash-circle"></i> Splitter tagging report
-              </a>
-            </div>
+        <!-- INTERNET -->
+        <div>
+          <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-router-fill"></i> Internet
           </div>
 
-          <!-- CABLE -->
-          <div>
-            <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-tv"></i> Cable
-            </div>
+          <div class="dropdown-options">
 
-            <div class="dropdown-options">
+            <!-- Rack & PONs (UPDATED) -->
+            <a class="right-button btn-internet right-button-small clickable"
+               href="#"
+               onclick="openTab('https://virtualbackoffice4-commits.github.io/tns/rack/', 'Rack & PONs'); return false;">
+              <i class="bi bi-card-checklist"></i> Rack & PONs
+            </a>
 
-              <a class="right-button btn-cable right-button-small clickable"
-                 href="https:###"
-                 target="_blank">
-                <i class="bi bi-table"></i> Due Payment Schedules
-              </a>
+            <!-- Down lines (Coming Soon) -->
+            <a class="right-button btn-internet right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              Down lines
+            </a>
 
-              <a class="right-button btn-cable right-button-small clickable"
-                 href="https:###"
-                 target="_blank">
-                <i class="bi bi-exclamation-circle"></i> Mark Complain
-              </a>
+            <!-- Mark Complain (UPDATED) -->
+            <a class="right-button btn-internet right-button-small clickable"
+               href="#"
+               onclick="openTab('https://virtualbackoffice4-commits.github.io/tns/off/', 'Mark Complain'); return false;">
+              <i class="bi bi-card-checklist"></i> Mark Complain
+            </a>
 
- 
-              <a class="right-button btn-cable right-button-small clickable"
-                 href="https:###"
-                 target="_blank">
-                <i class="bi bi-person-square"></i> Den Login
-              </a>
+            <!-- Procare Login (SAME) -->
+            <a class="right-button btn-internet right-button-small clickable"
+               href="https://del-desk.excitel.in/"
+               target="_blank">
+              <i class="bi bi-person-square"></i> Procare Login
+            </a>
 
-            </div>
+            <!-- Splitter tagging report (Coming Soon) -->
+            <a class="right-button btn-internet right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-slash-circle"></i> Splitter tagging report
+            </a>
+
           </div>
-
-          <!-- ADMIN -->
-          <div>
-            <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-buildings-fill"></i> Administration
-            </div>
-
-            <div class="dropdown-options">
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="https:###"
-                 target="_blank">
-                <i class="bi bi-person-badge"></i> Manager Dashboard
-              </a>
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="https:###"
-                 target="_blank">
-                <i class="bi bi-people"></i> Team Dashboard
-              </a>
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="#"
-                 onclick="openTab('https:###', 'Attendance'); return false;">
-                <i class="bi bi-journal-richtext"></i> Check attendance
-              </a>
-
-              <a class="right-button btn-admin right-button-small clickable"
-                 href="https:###"
-                 target="_blank">
-                <i class="bi bi-journal-richtext"></i> Payroll
-              </a>
-
-              <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-bar-chart-line"></i> Financial Reports
-              </div>
-
-            </div>
-          </div>
-
-          <!-- STOCK -->
-          <div>
-            <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-box-arrow-in-down"></i> Stock
-            </div>
-
-            <div class="dropdown-options">
-
-              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-journals"></i> Stock Book
-              </div>
-
-              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-graph-up"></i> Set Stock Levels
-              </div>
-
-            </div>
-          </div>
-
         </div>
 
-        <!-- NOTES -->
-        <div class="notes-section">
-          <a class="notes-button clickable"
-             href="https:###"
-             target="_blank">
-             <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
-          </a>
+        <!-- CABLE -->
+        <div>
+          <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-tv"></i> Cable
+          </div>
+
+          <div class="dropdown-options">
+
+            <a class="right-button btn-cable right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-table"></i> Due Payment Schedules
+            </a>
+
+            <a class="right-button btn-cable right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-exclamation-circle"></i> Mark Complain
+            </a>
+
+            <a class="right-button btn-cable right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-wallet2"></i> Recharge Sheet
+            </a>
+
+            <!-- Den Login (SAME) -->
+            <a class="right-button btn-cable right-button-small clickable"
+               href="https://partners.denonline.in/login.aspx"
+               target="_blank">
+              <i class="bi bi-person-square"></i> Den Login
+            </a>
+
+          </div>
+        </div>
+
+        <!-- ADMIN -->
+        <div>
+          <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-buildings-fill"></i> Administration
+          </div>
+
+          <div class="dropdown-options">
+
+            <a class="right-button btn-admin right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-person-badge"></i> Manager Dashboard
+            </a>
+
+            <a class="right-button btn-admin right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-people"></i> Team Dashboard
+            </a>
+
+            <a class="right-button btn-admin right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-journal-richtext"></i> Check attendance
+            </a>
+
+            <a class="right-button btn-admin right-button-small clickable"
+               href="#"
+               onclick="showComingSoon(); return false;">
+              <i class="bi bi-journal-richtext"></i> Payroll
+            </a>
+
+            <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-bar-chart-line"></i> Financial Reports
+            </div>
+
+          </div>
+        </div>
+
+        <!-- STOCK -->
+        <div>
+          <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-box-arrow-in-down"></i> Stock
+          </div>
+
+          <div class="dropdown-options">
+
+            <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-journals"></i> Stock Book
+            </div>
+
+            <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-graph-up"></i> Set Stock Levels
+            </div>
+
+          </div>
         </div>
 
       </div>
 
+      <!-- NOTES -->
+      <div class="notes-section">
+        <a class="notes-button clickable"
+           href="#"
+           onclick="showComingSoon(); return false;">
+          <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
+        </a>
+      </div>
+
     </div>
   </div>
+</div>
 
-  <footer>Powered by: Trust In Deal Enterprises</footer>
 
-  
-  <audio id="errorSound"
-         src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3"
-         preload="auto"></audio>
 
-  <!-- EXTERNAL JS -->
-  <script src="javascript.js"></script>
+<audio id="errorSound"
+       src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3"
+       preload="auto"></audio>
+
+<!-- EXTERNAL JS -->
+<script src="merotra.js"></script>
 
 </body>
 </html>
