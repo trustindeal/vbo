@@ -377,3 +377,7 @@ footer {
     box-sizing: border-box !important;
   }
 }
+/* ===== Hide icons from ALL sub-buttons only ===== */
+.dropdown-options i {
+  display: none !important;
+}
