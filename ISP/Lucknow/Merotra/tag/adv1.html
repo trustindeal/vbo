@@ -74,6 +74,8 @@ const BOARD_URL =
 let rawJson = null;
 let colorByOlt = new Map();
 let expandedPon = null;   // kaunsa PON open hai (sirf ek)
+let lastZoomTransform = d3.zoomIdentity;
+
 
 
 const tooltip = document.getElementById('tooltip');
@@ -565,7 +567,12 @@ circles
   });
 
   // ZOOM
-  const zoom = d3.zoom().scaleExtent([0.25, 3]).on("zoom", ev => g.attr("transform", ev.transform));
+  const zoom = d3.zoom()
+  .scaleExtent([0.25, 3])
+  .on("zoom", ev => {
+    lastZoomTransform = ev.transform;   // zoom yaad rakho
+    g.attr("transform", ev.transform);
+  });
   svg.call(zoom);
 
   // fit to view nicely
@@ -576,7 +583,15 @@ circles
     const s0 = Math.min(sx, sy, 1);
     const tx0 = -bb.x * s0 + 20;
     const ty0 = -bb.y * s0 + 20;
-    svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx0,ty0).scale(s0));
+   if (!lastZoomTransform || lastZoomTransform === d3.zoomIdentity) {
+  svg.transition().duration(500).call(
+    zoom.transform,
+    d3.zoomIdentity.translate(tx0,ty0).scale(s0)
+  );
+} else {
+  svg.call(zoom.transform, lastZoomTransform);
+}
+
   } catch(e) { /* ignore */ }
 
   // apply search highlight after everything drawn
