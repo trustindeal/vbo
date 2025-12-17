@@ -314,7 +314,7 @@ function renderBalancedTree(rootData){
   // choose vertical node gap based on leaf count (keeps things dense but not overlapped)
   const leafCount = Math.max(1, countLeaves(rootData));
   const isMobile = window.innerWidth < 768;
-const nodeGap = isMobile ? 32 : 45;
+const nodeGap = isMobile ? 45 : 45;
 
   const treeLayout = d3.tree().nodeSize([
   nodeGap,
@@ -351,7 +351,15 @@ const nodeGap = isMobile ? 32 : 45;
     .attr("transform", d=>`translate(${d.y},${d.x})`);
 
 const circles = nodeG.append("circle")
-  .attr("r", d => ({network:22, window:18, olt:16, pon:14}[d.data.type] || 10))
+  .attr("r", d => {
+    if (isMobile && d.data.type === 'pon') return 8;   // 🔹 mobile PON size
+    if (d.data.type === 'network') return 22;
+    if (d.data.type === 'window') return 18;
+    if (d.data.type === 'olt') return 16;
+    if (d.data.type === 'pon') return 14;               // desktop PON size
+    return 10;
+  })
+
   .attr("fill", d => {
     if(d.data.type==='network') return '#1e3a8a';
     if(d.data.type==='window') return '#1d4ed8';
