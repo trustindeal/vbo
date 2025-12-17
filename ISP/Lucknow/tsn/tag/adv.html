@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — Hierarchical PON Tree (Balanced Layout)</title>
+  <title>Technocrates — Hierarchical PON Tree (Balanced Layout)</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <!-- keep your adv.css as supplied -->
@@ -35,7 +35,7 @@
 
   <div class="header">
     <div>
-      <div class="header-title">🌐 Merotra Network: Auto populated fiber network tree</div>
+      <div class="header-title">🌐 Technocrates Network: Auto populated fiber network tree</div>
     </div>
 
     <div class="toolbar">
@@ -256,7 +256,7 @@ function deepSearchMatch(p, term){
    (unchanged semantics)
    ========================================== */
 function transformToHierarchy(j){
-  const root = { name:'Merotra Network', type:'network', children:[] };
+  const root = { name:'Technocrates Network', type:'network', children:[] };
 
   (j.windows || []).forEach(win => {
     const winNode = { name: win.window, type:'window', children:[] };
@@ -725,7 +725,7 @@ function downloadScreenshot(){
   const xml = (new XMLSerializer()).serializeToString(svg);
   const blob = new Blob([xml], {type:"image/svg+xml"});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'merotra-tree.svg'; a.click(); URL.revokeObjectURL(url);
+  const a = document.createElement('a'); a.href = url; a.download = 'Technocrates-tree.svg'; a.click(); URL.revokeObjectURL(url);
 }
 
 /* INIT */
