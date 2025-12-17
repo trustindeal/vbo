@@ -299,7 +299,7 @@ function renderBalancedTree(rootData){
 
   // choose vertical node gap based on leaf count (keeps things dense but not overlapped)
   const leafCount = Math.max(1, countLeaves(rootData));
-  const nodeGap = Math.max(36, Math.min(90, Math.floor(height / (leafCount + 3))));
+  const nodeGap = 45;
 
   const treeLayout = d3.tree().nodeSize([nodeGap, 160]); // [x(vertical), y(horizontal)]
   treeLayout(treeRoot);
@@ -354,18 +354,23 @@ circles
     } else {
       expandedPon = d.data.name; // open
     }
-
+lastZoomTransform = null;   // 🔴 IMPORTANT
     renderBalancedTree(rootData);
   });
 
 
-  nodeG.append("text")
-    .attr("x", d=> d.data.type==='network'?0:18)
-    .attr("y", 4)
-    .attr("font-size","12px")
-    .attr("font-weight","600")
-    .attr("text-anchor", d=> d.data.type==='network'? "middle":"start")
-    .text(d=>d.data.name);
+nodeG.append("text")
+  .attr("x", 0)                 // center horizontally
+  .attr("y", d => {
+    // circle ke niche thoda gap
+    const r = ({network:22, window:18, olt:16, pon:14}[d.data.type] || 10);
+    return r + 14;
+  })
+  .attr("font-size", "11px")
+  .attr("font-weight", "600")
+  .attr("text-anchor", "middle")
+  .attr("fill", "#0f172a")
+  .text(d => d.data.name);
 
   // find PON nodes for constructing their level columns
   const ponNodes = treeRoot.descendants().filter(n => n.data && n.data.type === 'pon');
@@ -489,21 +494,22 @@ circles
       .attr("fill", d.data.total && d.data.total>0 ? "#10b981" : "#6b7280")
       .attr("stroke","#fff").attr("stroke-width",2);
 
-    g2.append("text").attr("x", 18).attr("y", 4)
-      .attr("font-size",11).attr("fill","#0f172a")
-      .text(`${d.data.type}${d.data.total ? ` (${d.data.total})` : ''}`)
-      .style("font-weight",600)
-      .each(function(){ // ellipsis if too long
-        const t = d3.select(this);
-        const txt = t.text();
-        if (txt.length > 28) t.text(txt.slice(0,26) + '…');
-      });
+g2.append("text")
+  .attr("x", 0)
+  .attr("y", 26)
+  .attr("text-anchor","middle")
+  .attr("font-size",11)
+  .attr("fill","#0f172a")
+  .style("font-weight",600)
+  .text(`${d.data.type}${d.data.total ? ` (${d.data.total})` : ''}`)
+  .each(function(){ // ellipsis if too long
+    const t = d3.select(this);
+    const txt = t.text();
+    if (txt.length > 28) t.text(txt.slice(0,26) + '…');
+  });
 
-    if(d.data.recordId){
-      g2.append("text").attr("x",0).attr("y",22)
-        .attr("font-size",10).attr("text-anchor","middle").attr("fill","#64748b")
-        .text(d.data.recordId);
-    }
+
+
   });
 
   // LINKS SECTION
@@ -576,23 +582,10 @@ circles
   svg.call(zoom);
 
   // fit to view nicely
-  try {
-    const bb = g.node().getBBox();
-    const sx = width/(bb.width + 120);
-    const sy = height/(bb.height + 120);
-    const s0 = Math.min(sx, sy, 1);
-    const tx0 = -bb.x * s0 + 20;
-    const ty0 = -bb.y * s0 + 20;
-   if (!lastZoomTransform || lastZoomTransform === d3.zoomIdentity) {
-  svg.transition().duration(500).call(
-    zoom.transform,
-    d3.zoomIdentity.translate(tx0,ty0).scale(s0)
-  );
-} else {
+if (lastZoomTransform) {
   svg.call(zoom.transform, lastZoomTransform);
 }
 
-  } catch(e) { /* ignore */ }
 
   // apply search highlight after everything drawn
   applySearchHighlight();
