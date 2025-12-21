@@ -80,7 +80,7 @@
    CONFIG & GLOBALS (unchanged behaviour)
    ========================================== */
 const BOARD_URL =
- "https://script.google.com/macros/s/AKfycbwMZoKlv8-WD-kwwURqjdTu-L9VW5IZd9Z1NB6_-FW_OCj_fmBYMOTio-vjI7eX-PxX/exec?mode=board";
+ "https://script.google.com/macros/s/AKfycbz2zAg84IQKR2v1ORrt1C4gSaV02Qjfo16ZiPCuvK6X1PuMMvNtjsUCgW7XmCKahaGE/exec?mode=board";
 
 let rawJson = null;
 let colorByOlt = new Map();
@@ -223,22 +223,28 @@ function applyClientFilters(j){
   const term=(searchInput.value||'').trim().toLowerCase();
 
   const out={windows:[]};
+
   (j.windows||[]).forEach(win=>{
     if(wsel && win.window !== wsel) return;
+
     const newWin={window:win.window, pons:[]};
+
     (win.pons||[]).forEach(p=>{
       if(psel && p.pon !== psel) return;
       if(oltsel && getOltNumberFromPon(p.pon) !== oltsel) return;
-      const newLv = (p.levels||[]).filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0);
-      if(newLv.length===0 && term){
-        if(!deepSearchMatch(p, term)) return;
-      }
-      newWin.pons.push({...p, levels:newLv});
+
+      // 🔹 IMPORTANT: push full PON as-is
+      newWin.pons.push(p);
     });
-    if(newWin.pons.length>0 || !wsel) out.windows.push(newWin);
+
+    if(newWin.pons.length>0 || !wsel){
+      out.windows.push(newWin);
+    }
   });
+
   return out;
 }
+
 function deepSearchMatch(p, term){
   if(!term) return false;
   for(const lvl of (p.levels||[])){
@@ -261,38 +267,77 @@ function transformToHierarchy(j){
   (j.windows || []).forEach(win => {
     const winNode = { name: win.window, type:'window', children:[] };
     const oltMap = {};
+
+    // 🔹 REAL PONs FROM JSON
     (win.pons || []).forEach(p => {
       const meta = parsePonKey(p.pon);
-      const levels = (p.levels||[])
-        .map(l=>({
-          level:l.level,
-          splitters:(l.splitters||[]).map(sp=>({
-            recordId:sp.recordId||'',
-            type:sp.type||'',
-            users:(sp.users||[]).map(x=>String(x)),
-            total:sp.total || ((sp.users||[]).length || 0)
-          }))
-        }));
-      const ponNode={ name: p.pon, type:'pon', meta, levels };
+
+      const levels = (p.levels||[]).map(l => ({
+        level:l.level,
+        splitters:(l.splitters||[]).map(sp=>({
+          recordId:sp.recordId||'',
+          type:sp.type||'',
+          users:(sp.users||[]).map(x=>String(x)),
+          total:sp.total || ((sp.users||[]).length || 0)
+        }))
+      }));
+
+      const ponNode = {
+        name: p.pon,
+        type: 'pon',
+        meta,
+        levels,
+        isDummy: false
+      };
+
       const oltNum = String(meta.olt);
       if(!oltMap[oltNum]){
-        oltMap[oltNum] = { name: "OLT-"+oltNum, type:'olt', meta:{olt:oltNum}, children:[] };
+        oltMap[oltNum] = {
+          name: "OLT-"+oltNum,
+          type:'olt',
+          meta:{olt:oltNum},
+          children:[]
+        };
       }
+
       oltMap[oltNum].children.push(ponNode);
     });
 
-    // sort PONs inside each OLT by (OLT,IP,Port)
-    Object.values(oltMap).forEach(oltn=>{
-      oltn.children.sort((a,b)=>{
-        if(+a.meta.olt !== +b.meta.olt) return +a.meta.olt - +b.meta.olt;
-        if(+a.meta.ip  !== +b.meta.ip ) return +a.meta.ip  - +b.meta.ip;
-        return +a.meta.port - +b.meta.port;
-      });
+    // 🔹 ADD DUMMY PONs (P1–P4)
+    Object.values(oltMap).forEach(oltNode => {
+      const existingPorts = new Set(
+        oltNode.children.map(p => p.meta.port)
+      );
+
+      for(let port = 1; port <= 4; port++){
+        if(!existingPorts.has(port)){
+          oltNode.children.push({
+            name: `O${oltNode.meta.olt}I1P${port}`,
+            type:'pon',
+            meta:{
+              olt: oltNode.meta.olt,
+              ip: 1,
+              port
+            },
+            levels: [],
+            isDummy: true
+          });
+        }
+      }
     });
 
-    Object.values(oltMap).sort((a,b)=> (+a.meta.olt)-(+b.meta.olt)).forEach(olt=> winNode.children.push(olt));
+    // 🔹 SORT PONs
+    Object.values(oltMap).forEach(oltn=>{
+      oltn.children.sort((a,b)=> a.meta.port - b.meta.port);
+    });
+
+    Object.values(oltMap)
+      .sort((a,b)=> (+a.meta.olt)-(+b.meta.olt))
+      .forEach(olt=> winNode.children.push(olt));
+
     root.children.push(winNode);
   });
+
   return root;
 }
 
@@ -360,30 +405,35 @@ const circles = nodeG.append("circle")
     return 10;
   })
 
-  .attr("fill", d => {
-    if(d.data.type==='network') return '#1e3a8a';
-    if(d.data.type==='window') return '#1d4ed8';
-    if(d.data.type==='olt') return ensureColorForOlt(d.data.meta.olt);
-    if(d.data.type==='pon') return '#0f766e';
-    return '#6b7280';
-  })
+.attr("fill", d => {
+  if(d.data.type==='network') return '#1e3a8a';
+  if(d.data.type==='window') return '#1d4ed8';
+  if(d.data.type==='olt') return '#065f46'; // 🌲 dark green
+
+
+  if(d.data.type==='pon') {
+    return ponHasAnySplitter(d.data)
+      ? '#0f766e'   // 🟢 splitter present
+      : '#9ca3af';  // ⚪ no splitter (GRAY)
+  }
+
+  return '#6b7280';
+})
+
   .attr("stroke","#fff")
   .attr("stroke-width",2);
 
 circles
   .filter(d => d.data.type === 'pon')
   .style("cursor","pointer")
-  .on("click", (ev, d) => {
+.on("click", (ev, d) => {
+  if(d.data.isDummy) return; // 🚫 dummy expand nahi hoga
 
-    if (expandedPon === d.data.name) {
-      expandedPon = null;     // fold
-    } else {
-      expandedPon = d.data.name; // open
-    }
+  expandedPon =
+    expandedPon === d.data.name ? null : d.data.name;
 
-    renderBalancedTree(rootData);
-  });
-
+  renderBalancedTree(rootData);
+});
 
 nodeG.append("text")
   .attr("x", 0)                 // center horizontally
@@ -396,7 +446,12 @@ nodeG.append("text")
   .attr("font-weight", "600")
   .attr("text-anchor", "middle")
   .attr("fill", "#0f172a")
-  .text(d => d.data.name);
+  .text(d => {
+  if(d.data.type === 'pon') {
+    return formatPonLabel(d.data.name);
+  }
+  return d.data.name;
+});
 
   // find PON nodes for constructing their level columns
   const ponNodes = treeRoot.descendants().filter(n => n.data && n.data.type === 'pon');
@@ -516,9 +571,21 @@ nodeG.append("text")
 
   splitterNodes.each(function(d){
     const g2 = d3.select(this);
-    g2.append("circle").attr("r", 12)
-      .attr("fill", d.data.total && d.data.total>0 ? "#10b981" : "#6b7280")
-      .attr("stroke","#fff").attr("stroke-width",2);
+const outgoing = allSplitterPositions.filter(
+  s => s.pon === d.pon && s.level > d.level
+).length;
+
+const overCapacity = isSplitterOverCapacity(d.data, outgoing);
+
+g2.append("circle")
+  .attr("r", 12)
+  .attr("fill", overCapacity
+    ? "#ec4899"              // 🌸 PINK (over capacity)
+    : (d.data.total && d.data.total>0 ? "#10b981" : "#6b7280")
+  )
+  .attr("stroke","#fff")
+  .attr("stroke-width",2);
+
 
 g2.append("text")
   .attr("x", 0)
@@ -738,6 +805,34 @@ window.addEventListener('resize', () => {
     applyFiltersAndRender();
   }, 250);
 });
+
+function ponHasAnySplitter(ponData){
+  if(!ponData.levels || ponData.levels.length === 0) return false;
+  return ponData.levels.some(l =>
+    Array.isArray(l.splitters) && l.splitters.length > 0
+  );
+}
+
+function formatPonLabel(ponName){
+  const m = (ponName || "").match(/O(\d+)I\d+P(\d+)/i);
+  if(!m) return ponName;   // fallback
+  return `O${m[1]}P${m[2]}`;
+}
+
+function isSplitterOverCapacity(splitter, outgoingCount){
+  const type = (splitter.type || "").toLowerCase();
+
+  let capacity = 0;
+
+  if(type.includes('16')) capacity = 16;
+  else if(type.includes('8')) capacity = 8;
+  else if(type.includes('4')) capacity = 4;
+  else if(type.includes('2')) capacity = 2;
+  else return false; // unknown type
+
+  return outgoingCount > capacity;
+}
+
 
 
 </script>
