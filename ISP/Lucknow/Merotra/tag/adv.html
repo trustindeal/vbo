@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Technocrates — Hierarchical PON Tree (Balanced Layout)</title>
+  <title>Merotranetwork — Hierarchical PON Tree (Balanced Layout)</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <!-- keep your adv.css as supplied -->
@@ -35,7 +35,7 @@
 
   <div class="header">
     <div>
-      <div class="header-title">🌐 Technocrates Network: Auto populated fiber network tree</div>
+      <div class="header-title">🌐 Merotra Network: Auto populated fiber network tree</div>
     </div>
 
     <div class="toolbar">
@@ -271,7 +271,20 @@ function deepSearchMatch(p, term){
    (unchanged semantics)
    ========================================== */
 function transformToHierarchy(j){
-  const root = { name:'Technocrates Network', type:'network', children:[] };
+function maxPonForOlt(olt){
+  olt = Number(olt);
+
+  if (olt === 1) return 8;
+  if (olt === 2) return 8;
+  if (olt === 3) return 4;
+  if (olt === 4) return 4;
+  if (olt === 5) return 8;
+
+  return 4; // default
+}
+
+    
+  const root = { name:'Merotra Network', type:'network', children:[] };
 
   (j.windows || []).forEach(win => {
     const winNode = { name: win.window, type:'window', children:[] };
@@ -319,7 +332,10 @@ function transformToHierarchy(j){
         oltNode.children.map(p => p.meta.port)
       );
 
-      for(let port = 1; port <= 4; port++){
+     const maxPorts = maxPonForOlt(oltNode.meta.olt);
+
+for(let port = 1; port <= maxPorts; port++){
+
         if(!existingPorts.has(port)){
           oltNode.children.push({
             name: `O${oltNode.meta.olt}I1P${port}`,
@@ -436,14 +452,24 @@ const circles = nodeG.append("circle")
 circles
   .filter(d => d.data.type === 'pon')
   .style("cursor","pointer")
-.on("click", (ev, d) => {
-  if(d.data.isDummy) return; // 🚫 dummy expand nahi hoga
+  .on("click", (ev, d) => {
 
-  expandedPon =
-    expandedPon === d.data.name ? null : d.data.name;
+    // 🔹 AGAR DUMMY PON HAI → LINK OPEN KARO
+    if (d.data.isDummy) {
+      window.open(
+        "https://vbo.co.in/ISP/Lucknow/Merotra/untagusers/",
+        "_blank"
+      );
+      return;
+    }
 
-  renderBalancedTree(rootData);
-});
+    // 🔹 REAL PON → NORMAL EXPAND / COLLAPSE
+    expandedPon =
+      expandedPon === d.data.name ? null : d.data.name;
+
+    renderBalancedTree(rootData);
+  });
+
 
 nodeG.append("text")
   .attr("x", 0)                 // center horizontally
@@ -827,7 +853,7 @@ function downloadScreenshot(){
   const xml = (new XMLSerializer()).serializeToString(svg);
   const blob = new Blob([xml], {type:"image/svg+xml"});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'Technocrates-tree.svg'; a.click(); URL.revokeObjectURL(url);
+  const a = document.createElement('a'); a.href = url; a.download = 'Merotranetwork-tree.svg'; a.click(); URL.revokeObjectURL(url);
 }
 
 /* INIT */
