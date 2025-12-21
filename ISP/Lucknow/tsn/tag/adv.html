@@ -142,10 +142,19 @@ function getOltNumberFromPon(pon){
   return m ? m[1] : "0";
 }
 function parsePonKey(pon){
-  const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i);
-  if(!m) return {olt:9999, ip:9999, port:9999};
-  return {olt:+m[1], ip:+m[2], port:+m[3]};
+  if(!pon) return null;
+
+  const clean = String(pon).trim();
+  const m = clean.match(/^O(\d+)I(\d+)P(\d+)$/i);
+  if(!m) return null;
+
+  return {
+    olt: Number(m[1]),
+    ip: Number(m[2]),
+    port: Number(m[3])
+  };
 }
+
 function ensureColorForOlt(olt){
   if(!colorByOlt.has(String(olt))){
     const idx = colorByOlt.size;
@@ -271,6 +280,7 @@ function transformToHierarchy(j){
     // 🔹 REAL PONs FROM JSON
     (win.pons || []).forEach(p => {
       const meta = parsePonKey(p.pon);
+      if(!meta) return;   // 🚫 invalid PON → skip
 
       const levels = (p.levels||[]).map(l => ({
         level:l.level,
@@ -588,6 +598,7 @@ g2.append("circle")
 
 
 g2.append("text")
+  .attr("pointer-events", "none")
   .attr("x", 0)
   .attr("y", 26)
   .attr("text-anchor","middle")
