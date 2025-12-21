@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Merotra — Hierarchical PON Tree (Balanced Layout)</title>
+  <title>Technocrates — Hierarchical PON Tree (Balanced Layout)</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <!-- keep your adv.css as supplied -->
@@ -35,7 +35,7 @@
 
   <div class="header">
     <div>
-      <div class="header-title">🌐 Merotra Network: Auto populated fiber network tree</div>
+      <div class="header-title">🌐 Technocrates Network: Auto populated fiber network tree</div>
     </div>
 
     <div class="toolbar">
@@ -142,10 +142,19 @@ function getOltNumberFromPon(pon){
   return m ? m[1] : "0";
 }
 function parsePonKey(pon){
-  const m = (pon || "").match(/O(\d+)I(\d+)P(\d+)/i);
-  if(!m) return {olt:9999, ip:9999, port:9999};
-  return {olt:+m[1], ip:+m[2], port:+m[3]};
+  if(!pon) return null;
+
+  const clean = String(pon).trim();
+  const m = clean.match(/^O(\d+)I(\d+)P(\d+)$/i);
+  if(!m) return null;
+
+  return {
+    olt: Number(m[1]),
+    ip: Number(m[2]),
+    port: Number(m[3])
+  };
 }
+
 function ensureColorForOlt(olt){
   if(!colorByOlt.has(String(olt))){
     const idx = colorByOlt.size;
@@ -223,22 +232,28 @@ function applyClientFilters(j){
   const term=(searchInput.value||'').trim().toLowerCase();
 
   const out={windows:[]};
+
   (j.windows||[]).forEach(win=>{
     if(wsel && win.window !== wsel) return;
+
     const newWin={window:win.window, pons:[]};
+
     (win.pons||[]).forEach(p=>{
       if(psel && p.pon !== psel) return;
       if(oltsel && getOltNumberFromPon(p.pon) !== oltsel) return;
-      const newLv = (p.levels||[]).filter(l=>Array.isArray(l.splitters)&&l.splitters.length>0);
-      if(newLv.length===0 && term){
-        if(!deepSearchMatch(p, term)) return;
-      }
-      newWin.pons.push({...p, levels:newLv});
+
+      // 🔹 IMPORTANT: push full PON as-is
+      newWin.pons.push(p);
     });
-    if(newWin.pons.length>0 || !wsel) out.windows.push(newWin);
+
+    if(newWin.pons.length>0 || !wsel){
+      out.windows.push(newWin);
+    }
   });
+
   return out;
 }
+
 function deepSearchMatch(p, term){
   if(!term) return false;
   for(const lvl of (p.levels||[])){
@@ -256,43 +271,83 @@ function deepSearchMatch(p, term){
    (unchanged semantics)
    ========================================== */
 function transformToHierarchy(j){
-  const root = { name:'Merotra Network', type:'network', children:[] };
+  const root = { name:'Technocrates Network', type:'network', children:[] };
 
   (j.windows || []).forEach(win => {
     const winNode = { name: win.window, type:'window', children:[] };
     const oltMap = {};
+
+    // 🔹 REAL PONs FROM JSON
     (win.pons || []).forEach(p => {
       const meta = parsePonKey(p.pon);
-      const levels = (p.levels||[])
-        .map(l=>({
-          level:l.level,
-          splitters:(l.splitters||[]).map(sp=>({
-            recordId:sp.recordId||'',
-            type:sp.type||'',
-            users:(sp.users||[]).map(x=>String(x)),
-            total:sp.total || ((sp.users||[]).length || 0)
-          }))
-        }));
-      const ponNode={ name: p.pon, type:'pon', meta, levels };
+      if(!meta) return;   // 🚫 invalid PON → skip
+
+      const levels = (p.levels||[]).map(l => ({
+        level:l.level,
+        splitters:(l.splitters||[]).map(sp=>({
+          recordId:sp.recordId||'',
+          type:sp.type||'',
+          users:(sp.users||[]).map(x=>String(x)),
+          total:sp.total || ((sp.users||[]).length || 0)
+        }))
+      }));
+
+      const ponNode = {
+        name: p.pon,
+        type: 'pon',
+        meta,
+        levels,
+        isDummy: false
+      };
+
       const oltNum = String(meta.olt);
       if(!oltMap[oltNum]){
-        oltMap[oltNum] = { name: "OLT-"+oltNum, type:'olt', meta:{olt:oltNum}, children:[] };
+        oltMap[oltNum] = {
+          name: "OLT-"+oltNum,
+          type:'olt',
+          meta:{olt:oltNum},
+          children:[]
+        };
       }
+
       oltMap[oltNum].children.push(ponNode);
     });
 
-    // sort PONs inside each OLT by (OLT,IP,Port)
-    Object.values(oltMap).forEach(oltn=>{
-      oltn.children.sort((a,b)=>{
-        if(+a.meta.olt !== +b.meta.olt) return +a.meta.olt - +b.meta.olt;
-        if(+a.meta.ip  !== +b.meta.ip ) return +a.meta.ip  - +b.meta.ip;
-        return +a.meta.port - +b.meta.port;
-      });
+    // 🔹 ADD DUMMY PONs (P1–P4)
+    Object.values(oltMap).forEach(oltNode => {
+      const existingPorts = new Set(
+        oltNode.children.map(p => p.meta.port)
+      );
+
+      for(let port = 1; port <= 4; port++){
+        if(!existingPorts.has(port)){
+          oltNode.children.push({
+            name: `O${oltNode.meta.olt}I1P${port}`,
+            type:'pon',
+            meta:{
+              olt: oltNode.meta.olt,
+              ip: 1,
+              port
+            },
+            levels: [],
+            isDummy: true
+          });
+        }
+      }
     });
 
-    Object.values(oltMap).sort((a,b)=> (+a.meta.olt)-(+b.meta.olt)).forEach(olt=> winNode.children.push(olt));
+    // 🔹 SORT PONs
+    Object.values(oltMap).forEach(oltn=>{
+      oltn.children.sort((a,b)=> a.meta.port - b.meta.port);
+    });
+
+    Object.values(oltMap)
+      .sort((a,b)=> (+a.meta.olt)-(+b.meta.olt))
+      .forEach(olt=> winNode.children.push(olt));
+
     root.children.push(winNode);
   });
+
   return root;
 }
 
@@ -360,30 +415,35 @@ const circles = nodeG.append("circle")
     return 10;
   })
 
-  .attr("fill", d => {
-    if(d.data.type==='network') return '#1e3a8a';
-    if(d.data.type==='window') return '#1d4ed8';
-    if(d.data.type==='olt') return ensureColorForOlt(d.data.meta.olt);
-    if(d.data.type==='pon') return '#0f766e';
-    return '#6b7280';
-  })
+.attr("fill", d => {
+  if(d.data.type==='network') return '#1e3a8a';
+  if(d.data.type==='window') return '#1d4ed8';
+  if(d.data.type==='olt') return '#065f46'; // 🌲 dark green
+
+
+  if(d.data.type==='pon') {
+    return ponHasAnySplitter(d.data)
+      ? '#0f766e'   // 🟢 splitter present
+      : '#9ca3af';  // ⚪ no splitter (GRAY)
+  }
+
+  return '#6b7280';
+})
+
   .attr("stroke","#fff")
   .attr("stroke-width",2);
 
 circles
   .filter(d => d.data.type === 'pon')
   .style("cursor","pointer")
-  .on("click", (ev, d) => {
+.on("click", (ev, d) => {
+  if(d.data.isDummy) return; // 🚫 dummy expand nahi hoga
 
-    if (expandedPon === d.data.name) {
-      expandedPon = null;     // fold
-    } else {
-      expandedPon = d.data.name; // open
-    }
+  expandedPon =
+    expandedPon === d.data.name ? null : d.data.name;
 
-    renderBalancedTree(rootData);
-  });
-
+  renderBalancedTree(rootData);
+});
 
 nodeG.append("text")
   .attr("x", 0)                 // center horizontally
@@ -396,7 +456,12 @@ nodeG.append("text")
   .attr("font-weight", "600")
   .attr("text-anchor", "middle")
   .attr("fill", "#0f172a")
-  .text(d => d.data.name);
+  .text(d => {
+  if(d.data.type === 'pon') {
+    return formatPonLabel(d.data.name);
+  }
+  return d.data.name;
+});
 
   // find PON nodes for constructing their level columns
   const ponNodes = treeRoot.descendants().filter(n => n.data && n.data.type === 'pon');
@@ -516,11 +581,48 @@ nodeG.append("text")
 
   splitterNodes.each(function(d){
     const g2 = d3.select(this);
-    g2.append("circle").attr("r", 12)
-      .attr("fill", d.data.total && d.data.total>0 ? "#10b981" : "#6b7280")
-      .attr("stroke","#fff").attr("stroke-width",2);
+// 1️⃣ current splitter ke users
+const parentUsers = new Set(
+  (d.data.users || []).map(u => normalizeId(u))
+);
+
+// 2️⃣ next level ke possible children
+const possibleChildren = allSplitterPositions.filter(
+  s => s.pon === d.pon && s.level === d.level + 1
+);
+
+// 3️⃣ sirf real children count karo (user match hona chahiye)
+let outgoing = 0;
+
+possibleChildren.forEach(child => {
+  const childUsers = new Set(
+    (child.data.users || []).map(u => normalizeId(u))
+  );
+
+  for (const u of childUsers) {
+    if (parentUsers.has(u)) {
+      outgoing++;
+      break; // ek match mil gaya, bas
+    }
+  }
+});
+
+// 4️⃣ ab capacity check
+const overCapacity = isSplitterOverCapacity(d.data, outgoing);
+
+
+g2.append("circle")
+  .attr("r", 12)
+  .attr("fill", overCapacity
+    ? "#ec4899"              // 🌸 PINK (over capacity)
+    : (d.data.total && d.data.total>0 ? "#10b981" : "#6b7280")
+  )
+  .attr("stroke","#fff")
+  .attr("stroke-width",2);
+
 
 g2.append("text")
+  .attr("pointer-events", "none")
   .attr("x", 0)
   .attr("y", 26)
   .attr("text-anchor","middle")
@@ -725,7 +827,7 @@ function downloadScreenshot(){
   const xml = (new XMLSerializer()).serializeToString(svg);
   const blob = new Blob([xml], {type:"image/svg+xml"});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'merotra-tree.svg'; a.click(); URL.revokeObjectURL(url);
+  const a = document.createElement('a'); a.href = url; a.download = 'Technocrates-tree.svg'; a.click(); URL.revokeObjectURL(url);
 }
 
 /* INIT */
@@ -738,6 +840,34 @@ window.addEventListener('resize', () => {
     applyFiltersAndRender();
   }, 250);
 });
+
+function ponHasAnySplitter(ponData){
+  if(!ponData.levels || ponData.levels.length === 0) return false;
+  return ponData.levels.some(l =>
+    Array.isArray(l.splitters) && l.splitters.length > 0
+  );
+}
+
+function formatPonLabel(ponName){
+  const m = (ponName || "").match(/O(\d+)I\d+P(\d+)/i);
+  if(!m) return ponName;   // fallback
+  return `O${m[1]}P${m[2]}`;
+}
+
+function isSplitterOverCapacity(splitter, outgoingCount){
+  const type = (splitter.type || "").toLowerCase();
+
+  let capacity = 0;
+
+  if(type.includes('16')) capacity = 16;
+  else if(type.includes('8')) capacity = 8;
+  else if(type.includes('4')) capacity = 4;
+  else if(type.includes('2')) capacity = 2;
+  else return false; // unknown type
+
+  return outgoingCount > capacity;
+}
+
 
 
 </script>
