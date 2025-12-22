@@ -1,147 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <base target="_top">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
 
+  <!-- ICONS & FONT -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <!-- STRUCTURE CSS (UNCHANGED) -->
   <link rel="stylesheet" href="look.css">
 </head>
 
 <body>
 
-  <header class="header"></header>
-  <button class="logout-btn" onclick="logout()">Logout</button>
+<header class="header"></header>
+<button class="logout-btn" onclick="logout()">Logout</button>
 
-  <div class="container">
-    <div class="tab-bar" id="tab-bar"></div>
+<div class="container">
 
-    <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
+  <div class="tab-bar" id="tab-bar"></div>
 
-      <!-- HOME TAB -->
-      <div id="home-content" class="tab-content active">
+  <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
 
-        <div class="right-grid">
+    <div id="home-content" class="tab-content active">
 
-          <!-- INTERNET -->
-          <div>
-            <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-router-fill"></i> Internet
-            </div>
+      <div class="right-grid">
 
-            <div class="dropdown-options">
-
-              <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-hdd-rack"></i> Rack
-              </div>
-              <a class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-diagram-3"></i> Down lines
-              </a>
-
-              <a class="right-button btn-internet right-button-small clickable" href="https://vbo.co.in/ISP/Lucknow/tsn/untagusers/" target="_blank">
-                <i class="bi bi-diagram-3"></i> Pending tag
-              </a>
-              
-              <a class="right-button btn-internet right-button-small clickable" href="https://virtualbackoffice4-commits.github.io/tns/tag/" target="_blank">
-                <i class="bi bi-diagram-3"></i> Line Marking
-              </a>
-
-              <a class="right-button btn-internet right-button-small clickable" href="https://vbo.co.in/ISP/Lucknow/tsn/level2/recenttag" target="_blank">
-                <i class="bi bi-diagram-3"></i> Recent tags
-              </a>
-
-              <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-people"></i> Complaint Management
-              </div>
-
-            </div>
+        <!-- ================= INTERNET ================= -->
+        <div>
+          <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-router-fill"></i> Internet
           </div>
 
-          <!-- CABLE -->
-          <div>
-            <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-tv"></i> Cable
-            </div>
+          <div class="dropdown-options">
 
-            <div class="dropdown-options">
+            <a class="right-button btn-internet right-button-small clickable"
+               href="#"
+               onclick="openTab('https://virtualbackoffice4-commits.github.io/tns/rack/', 'Rack & PONs'); return false;">
+              <i class="bi bi-card-checklist"></i> Rack & PONs
+            </a>
 
-              <a class="right-button btn-cable right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-table"></i> Due Payment Schedule
-              </a>
+            <a class="right-button btn-internet right-button-small btn-disabled"
+               href="#"
+               onclick="playErrorSound(); return false;">
+              Down lines
+            </a>
 
-              <a class="right-button btn-cable right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-exclamation-circle"></i> Complaint Management
-              </a>
+            <a class="right-button btn-internet right-button-small clickable"
+               href="#"
+               onclick="openTab('https://virtualbackoffice4-commits.github.io/tns/off/', 'Mark Complain'); return false;">
+              <i class="bi bi-card-checklist"></i> Mark Complain
+            </a>
 
-            </div>
+            <a class="right-button btn-internet right-button-small clickable"
+               href="https://del-desk.excitel.in/"
+               target="_blank">
+              <i class="bi bi-person-square"></i> Procare Login
+            </a>
+
+            <a class="right-button btn-internet right-button-small clickable"
+               href="#"
+               onclick="openTab('https://vbo.co.in/ISP/Lucknow/tsn/tag/adv', 'Mark Complain'); return false;">
+              <i class="bi bi-card-checklist"></i> Network tree
+            </a>
+
+          </div>
+        </div>
+
+        <!-- ================= CABLE ================= -->
+        <div>
+          <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-tv"></i> Cable
           </div>
 
-          <!-- ADMINISTRATION -->
-          <div>
-            <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-buildings"></i> Administration
-            </div>
+          <div class="dropdown-options">
 
-            <div class="dropdown-options">
+            <a class="right-button btn-cable right-button-small btn-disabled"
+               href="#"
+               onclick="playErrorSound(); return false;">
+              <i class="bi bi-table"></i> Due Payment Schedules
+            </a>
 
+            <a class="right-button btn-cable right-button-small btn-disabled"
+               href="#"
+               onclick="playErrorSound(); return false;">
+              <i class="bi bi-exclamation-circle"></i> Mark Complain
+            </a>
 
-              <a class="right-button btn-admin right-button-small clickable" href="https://virtualbackoffice4-commits.github.io/tns/atn/" target="_blank">
-                <i class="bi bi-clipboard-check"></i> Attendance
-              </a>
-              
-              <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-cash-coin"></i> Salary Report
-              </div>
+            <a class="right-button btn-cable right-button-small btn-disabled"
+               href="#"
+               onclick="playErrorSound(); return false;">
+              <i class="bi bi-wallet2"></i> Recharge book
+            </a>
 
-              <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-journal-text"></i> Advance Request
-              </div>
+            <a class="right-button btn-cable right-button-small clickable"
+               href="https://partners.denonline.in/login.aspx"
+               target="_blank">
+              <i class="bi bi-person-square"></i> Den Login
+            </a>
 
-            </div>
+          </div>
+        </div>
+
+        <!-- ================= ADMIN ================= -->
+        <div>
+          <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-buildings-fill"></i> Administration
           </div>
 
-          <!-- STOCK -->
-          <div>
-            <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-box-arrow-in-down"></i> Stock
+          <div class="dropdown-options">
+
+           <!--  <a class="right-button btn-admin right-button-small btn-disabled"
+               href="#"
+               onclick="playErrorSound(); return false;">
+              <i class="bi bi-person-badge"></i> Manager Dashboard
+            </a>
+
+        <a class="right-button btn-admin right-button-small clickable"
+               href="#"
+               onclick="openTab('https://vbo.co.in/ISP/Lucknow/tsn/tes/level2', 'Attendance'); return false;">
+              <i class="bi bi-people"></i> Team Dashboard
+            </a>  -->
+
+            <a class="right-button btn-admin right-button-small clickable"
+               href="#"
+               onclick="openTab('https://virtualbackoffice4-commits.github.io/tns/atn/atnr', 'Attendance'); return false;">
+              <i class="bi bi-journal-richtext"></i> Check attendance
+            </a>
+
+            <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-bar-chart-line"></i> Payroll
             </div>
 
-            <div class="dropdown-options">
-
-              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-arrow-left-right"></i> Inbound / Outbound
-              </div>
-
-              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
-                <i class="bi bi-journal"></i> Stock Book
-              </div>
-
+            <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-bar-chart-line"></i> Financial Reports
             </div>
+
+          </div>
+        </div>
+
+        <!-- ================= STOCK ================= -->
+        <div>
+          <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
+            <i class="bi bi-box-arrow-in-down"></i> Stock
           </div>
 
+          <div class="dropdown-options">
+
+            <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-journals"></i> Stock Book
+            </div>
+
+            <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-graph-up"></i> Set Stock Levels
+            </div>
+
+          </div>
         </div>
 
       </div>
 
+      <!-- ================= NOTES ================= -->
+      <div class="notes-section">
+        <a class="notes-button btn-disabled"
+           href="#"
+           onclick="playErrorSound(); return false;">
+          <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
+        </a>
+      </div>
+
     </div>
   </div>
+</div>
 
-  <footer>Powered by: Trust In Deal Enterprises</footer>
+<footer>Powered by: Trust In Deal Enterprises</footer>
 
-  <div id="popupMessage">Coming soon</div>
-  <audio id="errorSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3" preload="auto"></audio>
+<div id="popupMessage">Coming soon</div>
 
-  <script>
-    function showComingSoon() {
-      const popup = document.getElementById('popupMessage');
-      popup.style.display = 'block';
-      setTimeout(() => { popup.style.display = 'none'; }, 1200);
-    }
-  </script>
+<audio id="errorSound"
+       src="https://cdn.pixabay.com/audio/2022/03/15/audio_d9b5d6c2e8.mp3"
+       preload="auto"></audio>
 
-  <script src="javacsript.js"></script>
+<!-- STRUCTURE JS (UNCHANGED) -->
+<script src="javacsript.js"></script>
 
 </body>
 </html>
