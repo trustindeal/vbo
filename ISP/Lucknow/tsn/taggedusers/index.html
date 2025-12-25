@@ -269,7 +269,11 @@ function showSplitters(pon){
 <td>${r[11]}</td>
 <td>${r[12]}</td>
 <td>${r[13]}</td>
-<td>${r[154]}</td>
+<td>
+<a onclick="showTagUsers('${r[15]}')">
+  ${r[154]}
+</a>
+</td>
 <td>${r[155]}</td>
 <td>${r[156]}</td>
 <td>${r[157]}</td>
@@ -290,6 +294,49 @@ document.getElementById("close").onclick=()=>{
 document.getElementById("popup").onclick=e=>{
   if(e.target.id==="popup") document.getElementById("popup").style.display="none";
 };
+
+function showTagUsers(tagId){
+  const th = document.querySelector("#popupTable thead");
+  const tb = document.querySelector("#popupTable tbody");
+
+  document.getElementById("popupTitle").innerText =
+    `Users — TagID ${tagId}`;
+
+  th.innerHTML = "<tr><th>SN</th><th>User ID</th></tr>";
+  tb.innerHTML = "";
+
+  // 🔥 EXACT TAG ROW (ONE ROW ONLY)
+  let row = rows.find(r => String(r[15]).trim() === String(tagId).trim());
+
+  if(!row){
+    tb.innerHTML = "<tr><td colspan='2'>No users found</td></tr>";
+    openPopup();
+    return;
+  }
+
+  let users = [];
+  let limit = Number(row[154]) || 0; // EY
+
+  // ✅ SAME RANGE: 27 → 151 (UNCHANGED)
+  for(let i = 24; i <= 151; i++){
+    let v = (row[i] || "").toString().trim();
+    if(v) users.push(v);
+    if(users.length === limit) break; // 🔒 EXACT COUNT
+  }
+
+  if(!users.length){
+    tb.innerHTML = "<tr><td colspan='2'>No users in this tag</td></tr>";
+  } else {
+    users.forEach((u, i)=>{
+      tb.innerHTML += `<tr><td>${i+1}</td><td>${u}</td></tr>`;
+    });
+  }
+
+  openPopup();
+}
+
+
+
 </script>
 
 </body>
