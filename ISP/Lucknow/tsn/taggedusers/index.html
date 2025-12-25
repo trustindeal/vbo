@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PON wise Tagged Summary</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  font-family: system-ui, Arial, sans-serif;
+  padding:12px;
+  max-width:1100px;
+  margin:auto;
+  background:#f3f4f6;
+}
+h2{
+  text-align:center;
+  margin-bottom:12px;
+  font-size:20px;
+}
+
+/* loader */
+#loader{
+  text-align:center;
+  padding:40px 10px;
+  font-size:16px;
+  color:#374151;
+}
+
+/* table */
+.table-wrap{
+  overflow-x:auto;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  min-width:auto;
+}
+th,td{
+  border:1px solid #d1d5db;
+  padding:10px 8px;
+  font-size:14px;
+  white-space:nowrap; 
+  width:1%;  
+}
+td{
+  max-width:260px;            /* 🔹 long text limit */
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+th{
+  background:#e5e7eb;
+}
+a{
+  color:#2563eb;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* popup */
+#popup{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+}
+#popupBox{
+  background:#fff;
+  width:100%;
+  max-width:980px;
+  max-height:92%;
+  overflow:auto;
+  padding:14px;
+  border-radius:12px;
+}
+#close{
+  float:right;
+  font-size:24px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+@media(max-width:640px){
+  th,td{font-size:13px}
+  h2{font-size:18px}
+}
+@media(max-width:640px){
+  th,td{
+    white-space:normal;       /* mobile pe wrap */
+  }
+}
+th, td{
+  text-align: center;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>PON wise Tagged Summary</h2>
+
+<div id="loader">🔄 Loading data… please wait</div>
+
+<div class="table-wrap">
+<table id="mainTable" style="display:none">
+<thead>
+<tr>
+  <th>SN</th>
+  <th>PON No</th>
+  <th>Unique Users</th>
+  <th>Total Splitters</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+<!-- POPUP -->
+<div id="popup">
+  <div id="popupBox">
+    <span id="close">✖</span>
+    <h3 id="popupTitle"></h3>
+    <div class="table-wrap">
+      <table id="popupTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const API =
+"https://script.google.com/macros/s/AKfycbyLRcHAYWbiiZud0qvAIDKvuqz6QJAw3nRsBb3ZgVathVDtMymUFbhYfBGsr9KMUD1U/exec?sheet=tagged";
+
+let rows=[];
+
+/* =========================
+   DATE FORMATTER
+========================= */
+function formatDate(v){
+  if(!v) return "";
+  let d=new Date(v);
+  if(isNaN(d)) return v;
+
+  const pad=n=>String(n).padStart(2,"0");
+  return `${pad(d.getMonth()+1)}/${pad(d.getDate())}/${d.getFullYear()} `+
+         `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+/* =========================
+   LOAD DATA
+========================= */
+fetch(API)
+.then(r=>r.json())
+.then(j=>{
+  rows=(j.rows||[]).slice(1);   // 🔴 header ignored
+  buildMain();
+  document.getElementById("loader").style.display="none";
+  document.getElementById("mainTable").style.display="table";
+})
+.catch(()=>{
+  document.getElementById("loader").innerText="❌ Failed to load data";
+});
+
+/* =========================
+   HELPERS
+========================= */
+function usersFromRow(r){
+  let s=new Set();
+  for(let i=24;i<=151;i++){
+    let v=(r[i]||"").toString().trim();
+    if(v) s.add(v);
+  }
+  return s;
+}
+
+/* =========================
+   MAIN TABLE
+========================= */
+function buildMain(){
+  const tb=document.querySelector("#mainTable tbody");
+  tb.innerHTML="";
+  let map={};
+
+  rows.forEach(r=>{
+    let pon=(r[21]||"").toString().trim();
+    if(!pon) return;
+
+    if(!map[pon]) map[pon]={users:new Set(),split:0,rows:[]};
+    usersFromRow(r).forEach(u=>map[pon].users.add(u));
+    if(r[7]) map[pon].split++;
+    map[pon].rows.push(r);
+  });
+
+  let sn=1;
+  Object.keys(map).forEach(p=>{
+    tb.innerHTML+=`
+    <tr>
+      <td>${sn++}</td>
+      <td>${p}</td>
+      <td><a onclick="showUsers('${p}')">${map[p].users.size}</a></td>
+      <td><a onclick="showSplitters('${p}')">${map[p].split}</a></td>
+    </tr>`;
+  });
+}
+
+/* =========================
+   POPUPS
+========================= */
+function showUsers(pon){
+  const th=document.querySelector("#popupTable thead");
+  const tb=document.querySelector("#popupTable tbody");
+  document.getElementById("popupTitle").innerText="Unique users — "+pon;
+
+  th.innerHTML="<tr><th>SN</th><th>User ID</th></tr>";
+  tb.innerHTML="";
+
+  let set=new Set();
+  rows.forEach(r=>{
+    if(r[21]===pon) usersFromRow(r).forEach(u=>set.add(u));
+  });
+
+  let i=1;
+  [...set].forEach(u=>{
+    tb.innerHTML+=`<tr><td>${i++}</td><td>${u}</td></tr>`;
+  });
+
+  openPopup();
+}
+
+function showSplitters(pon){
+  const th=document.querySelector("#popupTable thead");
+  const tb=document.querySelector("#popupTable tbody");
+  document.getElementById("popupTitle").innerText="Splitters — "+pon;
+
+  th.innerHTML=`
+<tr>
+<th>SN</th><th>PON</th><th>Splitter</th><th>JC</th>
+<th>Tagged By</th><th>Tagged On</th><th>Location</th>
+<th>JC</th><th>Pole</th><th>Wire</th>
+<th>Drum</th><th>Input</th><th>Vacant</th>
+<th>Total</th><th>Offline</th><th>Online</th>
+<th>Status</th><th>TagID</th>
+</tr>`;
+
+  tb.innerHTML="";
+  let i=1;
+
+  rows.forEach(r=>{
+    if(r[21]===pon){
+      tb.innerHTML+=`
+<tr>
+<td>${i++}</td>
+<td>${pon}</td>
+<td>${r[7]}</td>
+<td>${r[6]}</td>
+<td>${r[2]}</td>
+<td>${formatDate(r[0])}</td>
+<td>${r[3] ? `<a href="${r[3]}" target="_blank">Map</a>` : ""}</td>
+<td><a href="${r[4]}" target="_blank">JC</a></td>
+<td><a href="${r[5]}" target="_blank">Pole</a></td>
+<td>${r[8]}</td>
+<td>${r[11]}</td>
+<td>${r[12]}</td>
+<td>${r[13]}</td>
+<td>${r[154]}</td>
+<td>${r[155]}</td>
+<td>${r[156]}</td>
+<td>${r[157]}</td>
+<td>${r[15]}</td>
+</tr>`;
+    }
+  });
+
+  openPopup();
+}
+
+function openPopup(){
+  document.getElementById("popup").style.display="flex";
+}
+document.getElementById("close").onclick=()=>{
+  document.getElementById("popup").style.display="none";
+};
+document.getElementById("popup").onclick=e=>{
+  if(e.target.id==="popup") document.getElementById("popup").style.display="none";
+};
+</script>
+
+</body>
+</html>
