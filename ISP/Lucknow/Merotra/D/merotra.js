@@ -9,9 +9,18 @@ function toggleOptions(clickedBtn) {
 
 function playErrorSound() {
   document.getElementById("errorSound").play();
+  showPopupMessage("Coming soon");
+}
+
+function showPopupMessage(message) {
   const popup = document.getElementById("popupMessage");
+  popup.textContent = message;
   popup.classList.add("show");
   setTimeout(() => popup.classList.remove("show"), 2000);
+}
+
+function showDemoAccountToast() {
+  showPopupMessage("Its ademo account!");
 }
 
 // Tab System
