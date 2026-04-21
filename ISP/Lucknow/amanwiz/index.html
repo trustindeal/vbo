@@ -54,10 +54,11 @@
                 <i class="bi bi-person-square"></i> Procare Login
               </a>
 
-              <!-- Network tree - DISABLED -->
+              <!-- Network tree - DISABLED
               <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
                 <i class="bi bi-slash-circle"></i> Network tree
               </div>
+              -->
               
               <!-- Pending tag - UPDATED TEXT AND LINK -->
               <a class="right-button btn-internet right-button-small clickable"
@@ -66,15 +67,17 @@
                 <i class="bi bi-card-checklist"></i> Power analysis
               </a>
               
-              <!-- All tagged Users - DISABLED -->
+              <!-- All tagged Users - DISABLED
               <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
                 <i class="bi bi-card-checklist"></i> All tagged Users
               </div>
+              -->
               
-              <!-- Recent tagged users - DISABLED -->
+              <!-- Recent tagged users - DISABLED
               <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
                 <i class="bi bi-card-checklist"></i> Recent tagged users
               </div>
+              -->
             </div>
           </div>
 
@@ -110,35 +113,38 @@
               <i class="bi bi-buildings-fill"></i> Administration
             </div>
 
-            <a class="right-button btn-internet right-button-small clickable"
-               href="#"
-               onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/controlepannel/', 'Settings'); return false;">
-              <i class="bi bi-card-checklist"></i>Window settings
-            </a>
+            <div class="dropdown-options">
+              <a class="right-button btn-admin right-button-small clickable"
+                 href="#"
+                 onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/controlepannel/', 'Settings'); return false;">
+                <i class="bi bi-card-checklist"></i> Window settings
+              </a>
 
-            <a class="right-button btn-internet right-button-small clickable"
-               href="#"
-               onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/leave/employee/test.html', 'Manager'); return false;">
-              <i class="bi bi-card-checklist"></i> Team dashboard
-            </a>
+              <a class="right-button btn-admin right-button-small clickable"
+                 href="#"
+                 onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/leave/employee/test.html', 'Manager'); return false;">
+                <i class="bi bi-card-checklist"></i> Team dashboard
+              </a>
 
-           <!-- <a class="right-button btn-internet right-button-small clickable"
-               href="#"
-               onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/leave/employee/manager.html', 'Manager'); return false;">
-              <i class="bi bi-card-checklist"></i> Manager dashboard
-            </a> -->
-              
-            <a class="right-button btn-internet right-button-small clickable"
-               href="#"
-               onclick="openTab('https://vbo.co.in/ISP/Lucknow/amanwiz/officemanager/', 'Office Manager'); return false;">
-              <i class="bi bi-card-checklist"></i>Office Manager access
-            </a>
-            <a class="right-button btn-internet right-button-small clickable"
-               href="#"
-               onclick="openTab('https://vbo.co.in/ISP/Lucknow/amanwiz/networkmanager/', 'Network Manager'); return false;">
-              <i class="bi bi-card-checklist"></i>Network Manager access
-            </a>
+             <!-- <a class="right-button btn-admin right-button-small clickable"
+                 href="#"
+                 onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/leave/employee/manager.html', 'Manager'); return false;">
+                <i class="bi bi-card-checklist"></i> Manager dashboard
+              </a> -->
 
+              <a class="right-button btn-admin right-button-small clickable"
+                 href="#"
+                 onclick="openTab('https://vbo.co.in/ISP/Lucknow/amanwiz/officemanager/', 'Office Manager'); return false;">
+                <i class="bi bi-card-checklist"></i> Office Manager access
+              </a>
+
+              <a class="right-button btn-admin right-button-small clickable"
+                 href="#"
+                 onclick="openTab('https://vbo.co.in/ISP/Lucknow/amanwiz/networkmanager/', 'Network Manager'); return false;">
+                <i class="bi bi-card-checklist"></i> Network Manager access
+              </a>
+
+              <!--
               <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
                 <i class="bi bi-journal-richtext"></i> Payroll
               </div>
@@ -146,6 +152,7 @@
               <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
                 <i class="bi bi-bar-chart-line"></i> Financial Reports
               </div>
+              -->
             </div>
           </div>
 
