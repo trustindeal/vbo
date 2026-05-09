@@ -2,7 +2,7 @@ let tabIdCounter = 0;
 const tabs = [];
 let toastTimer;
 let sidebarAnimationTimer;
-const SIDEBAR_STATE_KEY = "amanwiz-desktop-sidebar-collapsed";
+const SIDEBAR_STATE_KEY = "fieldmanager-desktop-sidebar-collapsed";
 
 function isDesktopViewport() {
   return window.innerWidth > 920;
