@@ -8,7 +8,22 @@ function toggleOptions(clickedBtn) {
 }
 
 function playErrorSound() {
-  document.getElementById("errorSound").play();
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 420;
+    gain.gain.value = 0.08;
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.12);
+  } catch (error) {}
+
   const popup = document.getElementById("popupMessage");
   popup.classList.add("show");
   setTimeout(() => popup.classList.remove("show"), 2000);
@@ -17,6 +32,55 @@ function playErrorSound() {
 // Tab System
 let tabIdCounter = 0;
 const tabs = [];
+
+const legacyFrameUrls = {
+  '/rack/': 'https://virtualbackoffice3-cell.github.io/vbo4.0/rack/',
+  '/off/': 'https://virtualbackoffice3-cell.github.io/vbo4.0/off/',
+  '/jctree/': 'https://virtualbackoffice3-cell.github.io/vbo4.0/jctree/',
+  '/power/': 'https://virtualbackoffice3-cell.github.io/vbo4.0/power/',
+  '/controlepannel/': 'https://virtualbackoffice3-cell.github.io/vbo4.0/controlepannel/'
+};
+
+function normalizeFrameUrl(url) {
+  try {
+    const normalizedUrl = new URL(url, window.location.href);
+    const legacyPath = normalizedUrl.pathname.endsWith('/')
+      ? normalizedUrl.pathname
+      : normalizedUrl.pathname + '/';
+
+    if (normalizedUrl.hostname === 'amanwiz.com' && legacyFrameUrls[legacyPath]) {
+      return legacyFrameUrls[legacyPath];
+    }
+
+    if (window.location.protocol === 'https:' && normalizedUrl.protocol === 'http:') {
+      normalizedUrl.protocol = 'https:';
+    }
+
+    return normalizedUrl.href;
+  } catch (error) {
+    return url;
+  }
+}
+
+function showFrameFallback(contentDiv, url) {
+  contentDiv.innerHTML = '';
+
+  const fallbackWrap = document.createElement('div');
+  fallbackWrap.className = 'frame-fallback';
+
+  const message = document.createElement('p');
+  message.textContent = 'This page cannot be displayed here. Open it in a new tab.';
+
+  const fallbackLink = document.createElement('a');
+  fallbackLink.href = url;
+  fallbackLink.target = '_blank';
+  fallbackLink.rel = 'noopener noreferrer';
+  fallbackLink.textContent = 'Open page';
+
+  fallbackWrap.appendChild(message);
+  fallbackWrap.appendChild(fallbackLink);
+  contentDiv.appendChild(fallbackWrap);
+}
 
 function initTabs() {
   const homeId = tabIdCounter++;
@@ -33,11 +97,13 @@ function initTabs() {
 }
 
 function openTab(url, title) {
+  const frameUrl = normalizeFrameUrl(url);
+
   if (url.includes('docs.google.com/spreadsheets') ||
       url.includes('del-desk.excitel.in') ||
       url.includes('partners.denonline.in')) {
 
-    window.open(url, '_blank');
+    window.open(frameUrl, '_blank', 'noopener,noreferrer');
     return;
   }
 
@@ -48,7 +114,7 @@ function openTab(url, title) {
 
   const closeSpan = document.createElement('span');
   closeSpan.className = 'close-tab';
-  closeSpan.textContent = '×';
+  closeSpan.textContent = 'x';
   closeSpan.onclick = (e) => {
     e.stopPropagation();
     closeTab(tabId);
@@ -70,26 +136,18 @@ function openTab(url, title) {
   contentDiv.style.overflow = 'auto';
 
   const iframe = document.createElement('iframe');
-  iframe.src = url;
+  iframe.src = frameUrl;
   iframe.style.width = '100%';
   iframe.style.height = 'calc(100% - 30px)';
   iframe.style.border = 'none';
   iframe.style.display = 'block';
 
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads allow-web-share');
+  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads');
 
   iframe.onload = function() {};
 
   iframe.onerror = function() {
-    contentDiv.innerHTML = '';
-    const fallbackLink = document.createElement('a');
-    fallbackLink.href = url;
-    fallbackLink.target = '_blank';
-    fallbackLink.textContent = 'This site cannot be displayed in frame. Click to open in new tab.';
-    fallbackLink.style.display = 'block';
-    fallbackLink.style.padding = '20px';
-    fallbackLink.style.textAlign = 'center';
-    contentDiv.appendChild(fallbackLink);
+    showFrameFallback(contentDiv, frameUrl);
   };
 
   contentDiv.appendChild(iframe);

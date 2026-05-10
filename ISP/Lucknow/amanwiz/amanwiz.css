@@ -276,6 +276,35 @@ footer {
   padding: 20px;
 }
 
+.frame-fallback {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: #34495e;
+}
+
+.frame-fallback p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.frame-fallback a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: #1f6feb;
+  color: #fff;
+  font-weight: 500;
+}
+
 /* MOBILE */
 @media screen and (max-width: 768px) {
   .container {
