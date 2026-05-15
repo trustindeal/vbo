@@ -618,6 +618,34 @@ body.desktop-sidebar-collapsing .workspace-panel {
   padding-bottom: 4px;
 }
 
+body.workspace-focused .page-shell {
+  gap: 10px;
+  padding: 12px;
+}
+
+body.workspace-focused .hero {
+  border-radius: 18px;
+  padding: 9px 14px;
+}
+
+body.workspace-focused .eyebrow {
+  display: none;
+}
+
+body.workspace-focused .hero h1 {
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+body.workspace-focused .logout-btn,
+body.workspace-focused .drawer-toggle {
+  padding: 9px 12px;
+}
+
+body.workspace-focused .footer {
+  display: none;
+}
+
 .toast {
   position: fixed;
   left: 50%;
