@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
   <base target="_top">
-  <title>Office Manager Dashboard</title>
+  <title>Network Manager Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
@@ -15,8 +15,8 @@
   <div class="page-shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Office Control Panel</p>
-        <h1>Welcome, Office Manager</h1>
+        <p class="eyebrow">Network Control Panel</p>
+        <h1>Welcome, Network Manager</h1>
       </div>
       <div class="hero-actions">
         <button class="drawer-toggle" type="button" onclick="toggleDrawer()" aria-expanded="false" aria-controls="control-panel">
@@ -48,26 +48,29 @@
         </div>
 
         <div class="menu-grid">
+          <article class="menu-card notes-card">
+            <a class="menu-link" href="https://virtualbackoffice3-cell.github.io/vbo4.0/task/manager" onclick="return handleMenuLinkClick(event, 'https://virtualbackoffice3-cell.github.io/vbo4.0/task/manager', 'Team management')">
+              <span class="menu-icon"><i class="bi bi-kanban"></i></span>
+              <span class="menu-copy">
+                <span class="menu-title">Team management</span>
+                <span class="menu-subtitle">Open in workspace</span>
+              </span>
+              <i class="bi bi-layout-sidebar-inset menu-link-indicator"></i>
+            </a>
+          </article>
+
           <article class="menu-card internet-card">
             <button class="menu-toggle" type="button" onclick="toggleOptions(this)" aria-expanded="false">
               <span class="menu-icon"><i class="bi bi-globe-central-south-asia"></i></span>
               <span class="menu-copy">
-                <span class="menu-title">Internet</span>
-                <span class="menu-subtitle">Users & complaints tools</span>
+                <span class="menu-title">OLT Rack</span>
+                <span class="menu-subtitle">Open in new window</span>
               </span>
               <i class="bi bi-chevron-down menu-arrow"></i>
             </button>
             <div class="dropdown-options">
-              <a class="submenu-btn is-link" href="#" onclick="openTab('https://vbo.co.in/ISP/Lucknow/amanwiz/officemanager/userandcomplaints/', 'Users & complaints'); return false;">
-                <span class="submenu-main">Users & complaints</span>
-                <span class="submenu-meta">Open now</span>
-              </a>
-              <a class="submenu-btn is-link" href="https://virtualbackoffice3-cell.github.io/vbo4.0/jctreel2/" target="_blank" rel="noopener noreferrer">
-                <span class="submenu-main">JC Tree</span>
-                <span class="submenu-meta">Open now</span>
-              </a>
-              <a class="submenu-btn is-link" href="https://virtualbackoffice3-cell.github.io/vbo4.0/dropline/" target="_blank" rel="noopener noreferrer">
-                <span class="submenu-main">User down reason report</span>
+              <a class="submenu-btn is-link" href="https://virtualbackoffice3-cell.github.io/vbo4.0/rack/" target="_blank" rel="noopener noreferrer">
+                <span class="submenu-main">OLT Rack</span>
                 <span class="submenu-meta">Open now</span>
               </a>
             </div>
@@ -77,37 +80,16 @@
             <button class="menu-toggle" type="button" onclick="toggleOptions(this)" aria-expanded="false">
               <span class="menu-icon"><i class="bi bi-person-workspace"></i></span>
               <span class="menu-copy">
-                <span class="menu-title">Admin</span>
-                <span class="menu-subtitle">Team approvals and controls</span>
+                <span class="menu-title">JC Tree</span>
+                <span class="menu-subtitle">Open in new window</span>
               </span>
               <i class="bi bi-chevron-down menu-arrow"></i>
             </button>
             <div class="dropdown-options">
-              <a
-                class="submenu-btn is-link"
-                href="https://virtualbackoffice3-cell.github.io/vbo4.0/controlepannel/"
-                target="_blank"
-                rel="noopener noreferrer">
-                <span class="submenu-main">Window setting</span>
+              <a class="submenu-btn is-link" href="https://virtualbackoffice3-cell.github.io/vbo4.0/jctreel2/" target="_blank" rel="noopener noreferrer">
+                <span class="submenu-main">JC Tree</span>
                 <span class="submenu-meta">Open now</span>
               </a>
-           <!--   <button
-                class="submenu-btn is-disabled"
-                type="button"
-                data-coming-soon="true"
-                data-url="https://virtualbackoffice3-cell.github.io/vbo4.0/leave/employee/manager.html">
-                <span class="submenu-main">Leave approval</span>
-                <span class="submenu-meta">Coming soon</span>
-              </button> -->
-              <a
-                class="submenu-btn is-link"
-                href="https://vbo.co.in/ISP/Lucknow/amanwiz/fieldengineer/"
-                target="_blank"
-                rel="noopener noreferrer">
-                <span class="submenu-main">Field engineer access</span>
-                <span class="submenu-meta">Open now</span>
-              </a>
-              
             </div>
           </article>
 
@@ -115,38 +97,36 @@
             <button class="menu-toggle" type="button" onclick="toggleOptions(this)" aria-expanded="false">
               <span class="menu-icon"><i class="bi bi-cash-coin"></i></span>
               <span class="menu-copy">
-                <span class="menu-title">Financial Report</span>
-                <span class="menu-subtitle">Daily numbers and summaries</span>
+                <span class="menu-title">Power</span>
+                <span class="menu-subtitle">Open in new window</span>
               </span>
               <i class="bi bi-chevron-down menu-arrow"></i>
             </button>
             <div class="dropdown-options">
-              <button
-                class="submenu-btn is-disabled"
-                type="button"
-                data-coming-soon="true"
-                data-url="https://www.google.com">
-                <span class="submenu-main">Daily report</span>
-                <span class="submenu-meta">Coming soon</span>
-              </button>
+              <a class="submenu-btn is-link" href="https://virtualbackoffice3-cell.github.io/vbo4.0/power/" target="_blank" rel="noopener noreferrer">
+                <span class="submenu-main">Power</span>
+                <span class="submenu-meta">Open now</span>
+              </a>
             </div>
           </article>
 
-          <article class="menu-card notes-card">
-            <a
-              class="menu-link"
-              href="#"
-              onclick="handleMenuLinkClick(event, 'https://docs.google.com/spreadsheets/d/12o1ZLRurLkomqVogNbJQ2AJKOLuH18xMHferoy5CB-E/edit?usp=sharing', 'Working Notes')">
-              <span class="menu-icon"><i class="bi bi-journal-richtext"></i></span>
+          <article class="menu-card internet-card">
+            <button class="menu-toggle" type="button" onclick="toggleOptions(this)" aria-expanded="false">
+              <span class="menu-icon"><i class="bi bi-globe-central-south-asia"></i></span>
               <span class="menu-copy">
-                <span class="menu-title">Working Notes</span>
-                <span class="menu-subtitle">Open the shared Google Sheet</span>
+                <span class="menu-title">User down reason report</span>
+                <span class="menu-subtitle">Open in new window</span>
               </span>
-              <i class="bi bi-arrow-up-right-circle menu-link-indicator" aria-hidden="true"></i>
-            </a>
+              <i class="bi bi-chevron-down menu-arrow"></i>
+            </button>
+            <div class="dropdown-options">
+              <a class="submenu-btn is-link" href="https://virtualbackoffice3-cell.github.io/vbo4.0/dropline/" target="_blank" rel="noopener noreferrer">
+                <span class="submenu-main">User down reason report</span>
+                <span class="submenu-meta">Open now</span>
+              </a>
+            </div>
           </article>
         </div>
-
       </section>
 
       <section class="workspace-panel" aria-label="Workspace">

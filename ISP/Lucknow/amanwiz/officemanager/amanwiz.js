@@ -132,6 +132,9 @@ function handleMenuLinkClick(event, url, title) {
     return false;
   }
   openTab(url, title);
+  if (isDesktopViewport()) {
+    setDesktopSidebarState(true);
+  }
   return false;
 }
 
@@ -210,6 +213,7 @@ function switchTab(tabId) {
   activeTab.content.style.display = "block";
   activeTab.content.classList.add("active");
   activeTab.btn.classList.add("active");
+  document.body.classList.toggle("workspace-focused", !activeTab.isHome);
 }
 
 function closeTab(tabId) {
