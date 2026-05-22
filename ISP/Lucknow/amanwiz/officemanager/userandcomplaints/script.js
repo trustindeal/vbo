@@ -5,16 +5,26 @@ let filtered = [];
 let currentMode = "all";
 let currentView = "cards";
 let currentDownList = [];
-let searchDebounceTimer;
-let currentPage = 1;
-const PAGE_SIZE = 1000;
+const INITIAL_VISIBLE_LIMIT = 200;
+const VISIBLE_BATCH_SIZE = 200;
+let visibleLimit = INITIAL_VISIBLE_LIMIT;
+let visibleRows = [];
+let searchTimer = null;
+const REMARK_OPTIONS = [
+  "Red light",
+  "Bad power no net",
+  "Frequent speed problem",
+  "Device change",
+  "Shifting request",
+  "Device recovery",
+  "Other problem"
+];
 
 const cardContainer = document.getElementById("cardView");
 const tbody = document.querySelector("#dataTable tbody");
 const tableWrap = document.getElementById("tableWrap");
 const spinner = document.getElementById("spinnerOverlay");
 const toastEl = document.getElementById("toast");
-const paginationBar = document.getElementById("paginationBar");
 
 const globalSearch = document.getElementById("globalSearch");
 const powerRange = document.getElementById("powerRange");
@@ -28,12 +38,20 @@ const menuToggle = document.getElementById("menuToggle");
 const topMenu = document.getElementById("topMenu");
 const userCount = document.getElementById("userCount");
 const btnToggleView = document.getElementById("btnToggleView");
+const loadMoreBtn = document.createElement("button");
+loadMoreBtn.id = "loadMoreBtn";
+loadMoreBtn.type = "button";
+loadMoreBtn.style.cssText = "display:none;margin:16px auto;padding:10px 18px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-weight:600;";
+loadMoreBtn.onclick = () => {
+  visibleLimit += VISIBLE_BATCH_SIZE;
+  if (currentView === "cards") renderCards();
+  else renderTable();
+};
+if (tableWrap && tableWrap.parentNode) {
+  tableWrap.parentNode.insertBefore(loadMoreBtn, tableWrap.nextSibling);
+}
 
 let isComplainsView = false;
-
-function closeTopMenu() {
-  topMenu.classList.remove("show");
-}
 
 /* ===============================
    ✅ PON Excel-style multi select
@@ -46,7 +64,6 @@ const ponMultiSearchInput = document.getElementById("ponMultiSearchInput");
 const ponClearBtn = document.getElementById("ponClearBtn");
 const ponOkBtn = document.getElementById("ponOkBtn");
 let selectedPonsSet = new Set();
-let availablePons = [];
 
 /* ===============================
    ✅ Modal (Popup)
@@ -58,6 +75,41 @@ const modalCloseBtn = document.getElementById("modalCloseBtn");
 const modalActions = document.getElementById("modalActions");
 const btnDownUsers = document.getElementById("btnDownUsers");
 const modalCloseButton = document.getElementById("modalCloseButton");
+let addressModal = document.getElementById("addressModal");
+if (!addressModal) {
+  addressModal = document.createElement("div");
+  addressModal.id = "addressModal";
+  addressModal.className = "addressModalOverlay";
+  addressModal.innerHTML = `
+    <div class="addressModalBox">
+      <div class="addressModalHead">
+        <strong>Full Address</strong>
+        <button class="addressModalClose" type="button">Close</button>
+      </div>
+      <div class="addressModalText"></div>
+    </div>
+  `;
+  document.body.appendChild(addressModal);
+}
+const addressModalText = addressModal.querySelector(".addressModalText");
+const addressModalClose = addressModal.querySelector(".addressModalClose");
+
+function openAddressModal(address) {
+  if (!address) return;
+  addressModalText.textContent = address;
+  addressModal.style.display = "flex";
+}
+
+function closeAddressModal() {
+  addressModal.style.display = "none";
+}
+
+addressModalClose.onclick = closeAddressModal;
+addressModal.onclick = (event) => {
+  if (event.target === addressModal) {
+    closeAddressModal();
+  }
+};
 
 /* ===============================
    ✅ Confirmation Modal for Existing Complaints
@@ -194,7 +246,7 @@ async function fetchWindowData(windowName) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return (data.rows || []).map(row => ({ 
+    return (data.rows || []).map(row => prepareRow({ 
       ...row, 
       down_list: row.down_list || "",
       _complaint_id: row.ComplaintID || row.id || "",
@@ -205,6 +257,170 @@ async function fetchWindowData(windowName) {
     showToast(`Failed to load ${windowName}`);
     return [];
   }
+}
+
+function buildSearchText(row) {
+  return [
+    row._window,
+    row.PON,
+    row.Users,
+    row.NMID,
+    row["Registered no"],
+    row["Calling no"],
+    row["Last called no"],
+    row.Name,
+    row.MAC,
+    row.Serial,
+    row.Location,
+    row.Remarks,
+    row.reason,
+    row.additional_detail,
+    row.Team,
+    row.Mode,
+    row["User status"]
+  ].map(v => String(v || "").toLowerCase()).join(" ");
+}
+
+function prepareRow(row) {
+  const prepared = { ...row };
+  prepared._searchText = buildSearchText(prepared);
+  return prepared;
+}
+
+function updateVisibleRows() {
+  visibleRows = filtered.slice(0, visibleLimit);
+  if (!loadMoreBtn) return;
+  if (filtered.length > visibleRows.length) {
+    loadMoreBtn.style.display = "block";
+    loadMoreBtn.textContent = `Show more (${visibleRows.length}/${filtered.length})`;
+  } else {
+    loadMoreBtn.style.display = "none";
+  }
+}
+
+function scheduleApplyFilters() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    visibleLimit = INITIAL_VISIBLE_LIMIT;
+    applyAllFilters();
+  }, 250);
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function getRegisteredPhone(r) {
+  return r["Registered no"] || r.registered_phone || r.primary_phone || r.Phone || "";
+}
+
+function getCallingPhone(r) {
+  return r["Calling no"] || r.calling_phone || "";
+}
+
+function getEffectivePhone(r) {
+  return getCallingPhone(r) || r["Last called no"] || getRegisteredPhone(r) || "";
+}
+
+function buildRemarkSelect(value) {
+  const normalizedValue = value === "Other pronlem" || value === "Other problem" ? "Other" : value;
+  const selectedValue = REMARK_OPTIONS.includes(normalizedValue) || normalizedValue === "Other" ? normalizedValue : (normalizedValue ? "Other" : "");
+  const defaultOption = `<option value="" ${selectedValue ? "" : "selected"}>Select task catagory</option>`;
+  const options = REMARK_OPTIONS.map(opt => {
+    const optionValue = opt === "Other problem" ? "Other" : opt;
+    return `<option value="${escapeHtml(optionValue)}" ${optionValue === selectedValue ? "selected" : ""}>${escapeHtml(opt)}</option>`;
+  }
+  ).join("");
+  return `<select class="remarkInput">${defaultOption}${options}</select>`;
+}
+
+function buildAdditionalDetailInput(value, detailValue = "") {
+  const enabled = value === "Other" || value === "Other pronlem" || value === "Other problem" || (value && !REMARK_OPTIONS.includes(value));
+  const inputValue = value === "Other" || value === "Other pronlem" || value === "Other problem" ? detailValue : value;
+  return `<input class="additionalDetailInput" value="${enabled ? escapeHtml(inputValue) : ""}" placeholder="Remarks" ${enabled ? "" : "disabled"}>`;
+}
+
+function syncAdditionalDetail(root) {
+  const remark = root.querySelector(".remarkInput");
+  const detail = root.querySelector(".additionalDetailInput");
+  if (!remark || !detail) return;
+
+  const isOther = remark.value === "Other";
+  detail.disabled = !isOther;
+  if (!isOther) detail.value = "";
+}
+
+function wireRemarkDetail(root) {
+  const remark = root.querySelector(".remarkInput");
+  if (!remark) return;
+  remark.onchange = () => syncAdditionalDetail(root);
+  syncAdditionalDetail(root);
+}
+
+function getAdditionalDetail(root) {
+  const remark = root.querySelector(".remarkInput");
+  const detail = root.querySelector(".additionalDetailInput");
+  return remark && detail && remark.value === "Other" ? detail.value.trim() : "";
+}
+
+async function saveCallingPhone(r, root) {
+  const input = root.querySelector(".callingPhoneInput");
+  const button = root.querySelector(".callingPhoneSave");
+  if (!input || !button) return;
+
+  const userId = r.Users || r.user_id || "";
+  if (!userId) {
+    showToast("User ID missing");
+    return;
+  }
+
+  const callingPhone = input.value.trim();
+  const oldText = button.textContent;
+  button.disabled = true;
+  button.textContent = "Saving";
+
+  try {
+    const response = await fetch(`${baseUrl}/${r._window}/user/calling_phone`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId, calling_phone: callingPhone })
+    });
+    const result = await response.json();
+    if (!response.ok || result.status !== "ok") {
+      throw new Error(result.message || "Save failed");
+    }
+
+    [rawRows, filtered].forEach(list => {
+      list.forEach(row => {
+        const sameUser = String(row.Users || row.user_id || "").toLowerCase() === String(userId).toLowerCase();
+        if (row._window === r._window && sameUser) {
+          row["Calling no"] = callingPhone;
+          row.calling_phone = callingPhone;
+          row["Last called no"] = callingPhone || getRegisteredPhone(row);
+        }
+      });
+    });
+    r["Calling no"] = callingPhone;
+    r.calling_phone = callingPhone;
+    r["Last called no"] = callingPhone || getRegisteredPhone(r);
+    showToast("Calling no saved", true);
+  } catch (error) {
+    showToast(error.message || "Calling no save failed");
+  } finally {
+    button.disabled = false;
+    button.textContent = oldText;
+  }
+}
+
+function wireCallingPhoneSave(root, r) {
+  const button = root.querySelector(".callingPhoneSave");
+  if (!button) return;
+  button.onclick = () => saveCallingPhone(r, root);
 }
 
 async function fetchOpenComplaintUsers(windowName) {
@@ -363,14 +579,19 @@ async function handleMarkComplaint(r, cardElement, remarkInput, modeSelect, team
    ✅ Execute Mark Complaint (Actual API call)
 ================================= */
 async function executeMarkComplaint(r, cardElement, remarkInput, modeSelect, teamSelect, markButton) {
+  const callingPhone = getCallingPhone(r);
+  const registeredPhone = getRegisteredPhone(r);
   const payload = {
     user_id: r.Users || "",
     name: r.Name || "",
     address: r.Location || "",
     reason: remarkInput.value || "",
+    additional_detail: getAdditionalDetail(cardElement),
     Mode: modeSelect.value,
     Power: r.Power,
-    Phone: r["Last called no"] || "",
+    Phone: callingPhone || registeredPhone || r["Last called no"] || "",
+    registered_phone: registeredPhone,
+    calling_phone: callingPhone,
     Team: teamSelect.value,
     pon: r.PON || ""
   };
@@ -433,107 +654,6 @@ function getDefaultTeam(windowName) {
   if (windowName === "MEDANTA") return "TeamMedanta";
   if (windowName === "SEVAI") return "TeamSevai";
   return "";
-}
-
-function buildSearchIndex(row) {
-  if (!row || typeof row !== "object") return "";
-
-  return Object.entries(row)
-    .filter(([key]) => !key.startsWith("_"))
-    .map(([, value]) => String(value || "").toLowerCase())
-    .join(" | ");
-}
-
-function enrichRows(rows) {
-  return (rows || []).map((row, index) => ({
-    ...row,
-    _searchIndex: buildSearchIndex(row),
-    _powerNumber: row.Power != null && row.Power !== "" ? Number(row.Power) : null,
-    _sortTimestamp: safeParseDate(row._created_at || row.created_at).getTime(),
-    _rowKey: row._rowKey || `${row._window || "ROW"}_${row.Users || row.user_id || "user"}_${row.ComplaintID || row.id || index}`
-  }));
-}
-
-function getTotalPages() {
-  return Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-}
-
-function getPaginatedRows() {
-  const start = (currentPage - 1) * PAGE_SIZE;
-  return filtered.slice(start, start + PAGE_SIZE);
-}
-
-function renderPagination() {
-  if (!paginationBar) return;
-
-  const total = filtered.length;
-  const totalPages = getTotalPages();
-
-  if (total === 0) {
-    paginationBar.className = "pagination-bar visible";
-    paginationBar.innerHTML = `
-      <div class="pagination-meta">Filtered users: 0</div>
-      <div class="pagination-actions"></div>
-    `;
-    return;
-  }
-
-  const start = (currentPage - 1) * PAGE_SIZE + 1;
-  const end = Math.min(currentPage * PAGE_SIZE, total);
-
-  paginationBar.className = "pagination-bar visible";
-  paginationBar.innerHTML = `
-    <div class="pagination-meta">Filtered users: ${total} | Showing ${start}-${end}</div>
-    <div class="pagination-actions">
-      ${total > PAGE_SIZE
-        ? `<button type="button" class="page-btn" id="pagePrev" ${currentPage === 1 ? "disabled" : ""}>Previous</button>
-      <span class="page-indicator">Page ${currentPage} / ${totalPages}</span>
-      <button type="button" class="page-btn" id="pageNext" ${currentPage === totalPages ? "disabled" : ""}>Next</button>`
-        : `<span class="page-indicator">Page 1 / 1</span>`}
-    </div>
-  `;
-
-  const prevBtn = document.getElementById("pagePrev");
-  const nextBtn = document.getElementById("pageNext");
-
-  if (prevBtn) {
-    prevBtn.onclick = () => {
-      if (currentPage > 1) {
-        currentPage -= 1;
-        rerenderCurrentView();
-      }
-    };
-  }
-
-  if (nextBtn) {
-    nextBtn.onclick = () => {
-      if (currentPage < totalPages) {
-        currentPage += 1;
-        rerenderCurrentView();
-      }
-    };
-  }
-}
-
-function rerenderCurrentView() {
-  renderPagination();
-  if (currentView === "cards") renderCards();
-  else renderTable();
-}
-
-function getLockedTeamOption(windowName) {
-  const team = getDefaultTeam(windowName);
-  return team ? `<option value="${team}">${team}</option>` : '<option value="">N/A</option>';
-}
-
-function lockTeamSelect(selectEl, windowName) {
-  if (!selectEl) return;
-  const team = getDefaultTeam(windowName);
-  selectEl.innerHTML = getLockedTeamOption(windowName);
-  selectEl.value = team;
-  selectEl.disabled = true;
-  selectEl.setAttribute("aria-label", `${team} locked`);
-  selectEl.title = `${team} locked`;
 }
 
 /* ===============================
@@ -638,7 +758,7 @@ function showDownUsersInModal() {
   modalBody.innerHTML = users.map((u, i) => `
     <div class="modalEntry">
       <div class="modalRow"><b>${i + 1}. ${u.Name || "N/A"}</b></div>
-      <div class="modalRow"><b>📞 Phone:</b> ${u["Last called no"] || ""}</div>
+      <div class="modalRow"><b>Phone:</b> Reg ${getRegisteredPhone(u) || ""} / Call ${getCallingPhone(u) || ""}</div>
       <div class="modalRow"><b>📍 Location:</b> ${u.Location || ""}</div>
       <div class="modalRow"><b>🔌 Status:</b> ${u["User status"] || ""}</div>
       <div class="modalRow"><b>🧷 MAC:</b> ${u.MAC || ""}</div>
@@ -656,31 +776,8 @@ function showDownUsersInModal() {
 function updatePonButtonText() {
   const cnt = selectedPonsSet.size;
   if (!ponMultiBtn) return;
-  if (cnt === 0 || cnt === availablePons.length) ponMultiBtn.textContent = "All PON";
+  if (cnt === 0) ponMultiBtn.textContent = "All PON";
   else ponMultiBtn.textContent = `PON (${cnt} selected)`;
-}
-
-function isAllPonSelected() {
-  return availablePons.length > 0 && selectedPonsSet.size === availablePons.length;
-}
-
-function syncPonSelections() {
-  if (!ponMultiList) return;
-
-  const allCheckbox = ponMultiList.querySelector('.ponItem[data-pon="__ALL__"] input[type="checkbox"]');
-  if (allCheckbox) {
-    allCheckbox.checked = isAllPonSelected();
-  }
-
-  ponMultiList.querySelectorAll('.ponItem[data-pon]').forEach((item) => {
-    const pon = item.getAttribute("data-pon");
-    if (pon === "__ALL__") return;
-
-    const checkbox = item.querySelector('input[type="checkbox"]');
-    if (checkbox) {
-      checkbox.checked = selectedPonsSet.has(pon);
-    }
-  });
 }
 
 if (ponMultiBtn && ponMultiDropdown) {
@@ -703,17 +800,11 @@ if (ponMultiList) {
 
     const pon = item.getAttribute("data-pon");
     const cb = item.querySelector("input[type='checkbox']");
-    if (!cb) return;
+    cb.checked = !cb.checked;
 
-    if (pon === "__ALL__") {
-      selectedPonsSet = isAllPonSelected() ? new Set() : new Set(availablePons);
-    } else {
-      const nextChecked = !cb.checked;
-      if (nextChecked) selectedPonsSet.add(pon);
-      else selectedPonsSet.delete(pon);
-    }
+    if (cb.checked) selectedPonsSet.add(pon);
+    else selectedPonsSet.delete(pon);
 
-    syncPonSelections();
     updatePonButtonText();
   };
 }
@@ -724,10 +815,6 @@ if (ponMultiSearchInput) {
     const items = ponMultiList.querySelectorAll(".ponItem");
     items.forEach(it => {
       const p = (it.getAttribute("data-pon") || "").toLowerCase();
-      if (p === "__all__") {
-        it.style.display = "flex";
-        return;
-      }
       it.style.display = p.includes(q) ? "flex" : "none";
     });
   };
@@ -736,16 +823,20 @@ if (ponMultiSearchInput) {
 if (ponClearBtn) {
   ponClearBtn.onclick = () => {
     selectedPonsSet.clear();
-    syncPonSelections();
+    if (ponMultiList) {
+      ponMultiList.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = false);
+    }
     updatePonButtonText();
-    applyAllFilters(true);
+    visibleLimit = INITIAL_VISIBLE_LIMIT;
+    applyAllFilters();
   };
 }
 
 if (ponOkBtn) {
   ponOkBtn.onclick = () => {
     ponMultiDropdown.classList.remove("show");
-    applyAllFilters(true);
+    visibleLimit = INITIAL_VISIBLE_LIMIT;
+    applyAllFilters();
   };
 }
 
@@ -965,14 +1056,15 @@ async function fetchData() {
         fetchWindowData("MEDANTA"),
         fetchWindowData("SEVAI")
       ]);
-      rawRows = enrichRows([...amanwizData, ...medantaData, ...sevaiData]);
+      rawRows = [...amanwizData, ...medantaData, ...sevaiData];
     } else {
-      rawRows = enrichRows(await fetchWindowData(currentWindow));
+      rawRows = await fetchWindowData(currentWindow);
     }
 
     showToast(rawRows.length ? `${rawRows.length} users loaded` : "No users found");
     populateFilters();
-    applyAllFilters(true);
+    visibleLimit = INITIAL_VISIBLE_LIMIT;
+    applyAllFilters();
   } catch (err) {
     showToast("Load failed");
   } finally {
@@ -982,30 +1074,21 @@ async function fetchData() {
 
 function populateFilters() {
   const pons = [...new Set(rawRows.map(r => r.PON || "").filter(Boolean))].sort();
-  availablePons = pons;
-
-  if (selectedPonsSet.size > 0) {
-    selectedPonsSet = new Set([...selectedPonsSet].filter((pon) => availablePons.includes(pon)));
-  }
 
   if (ponMultiList) {
-    ponMultiList.innerHTML = `
-      <div class="ponItem all-pon-item" data-pon="__ALL__">
-        <input type="checkbox" ${isAllPonSelected() ? "checked" : ""}/>
-        <span>All PON</span>
-      </div>
-      ${pons.map(p => `
+    ponMultiList.innerHTML = pons.map(p => `
       <div class="ponItem" data-pon="${p}">
         <input type="checkbox" ${selectedPonsSet.has(p) ? "checked" : ""}/>
         <span>${p}</span>
       </div>
-    `).join("")}
-    `;
+    `).join("");
   }
-  syncPonSelections();
   updatePonButtonText();
 
   if (filterTeam) filterTeam.style.display = "none";
+
+  const modes = [...new Set(rawRows.map(r => r.Mode || "").filter(Boolean))].sort();
+  filterMode.innerHTML = '<option value="">All Mode</option>' + modes.map(m => `<option value="${m}">${m}</option>`).join('');
 
   const statuses = [...new Set(rawRows.map(r => r["User status"] || "").filter(Boolean))].sort();
   let html = '<option value="">All Status</option>';
@@ -1013,12 +1096,12 @@ function populateFilters() {
   filterStatus.innerHTML = html;
 }
 
-function applyAllFilters(resetPage = false) {
-  let data = rawRows;
+function applyAllFilters() {
+  let data = [...rawRows];
 
   const term = globalSearch.value.trim().toLowerCase();
   if (term) {
-    data = data.filter(r => r._searchIndex.includes(term));
+    data = data.filter(r => (r._searchText || buildSearchText(r)).includes(term));
   }
 
   const pr = (powerRange?.value || "").trim();
@@ -1032,7 +1115,7 @@ function applyAllFilters(resetPage = false) {
         const maxAbs = Math.max(a, b);
         const minVal = -maxAbs;
         const maxVal = -minAbs;
-        data = data.filter(r => r._powerNumber != null && r._powerNumber >= minVal && r._powerNumber <= maxVal);
+        data = data.filter(r => r.Power != null && Number(r.Power) >= minVal && Number(r.Power) <= maxVal);
       }
     }
   }
@@ -1041,18 +1124,17 @@ function applyAllFilters(resetPage = false) {
     data = data.filter(r => selectedPonsSet.has(r.PON));
   }
 
+  if (filterMode.value) data = data.filter(r => r.Mode === filterMode.value);
   if (filterStatus.value) data = data.filter(r => r["User status"] === filterStatus.value);
 
   filtered = data;
-  if (resetPage) {
-    currentPage = 1;
-  }
-  currentPage = Math.min(currentPage, getTotalPages());
+  updateVisibleRows();
 
   const runtimeTs = (filtered[0] && filtered[0]._runtime_timestamp) ? filtered[0]._runtime_timestamp : "";
   setHeadingCountAndTimestamp(filtered.length, runtimeTs);
 
-  rerenderCurrentView();
+  if (currentView === "cards") renderCards();
+  else renderTable();
 }
 
 /* ===============================
@@ -1061,19 +1143,22 @@ function applyAllFilters(resetPage = false) {
 async function renderCards() {
   cardContainer.innerHTML = "";
   tableWrap.style.display = "none";
-  const rowsToRender = getPaginatedRows();
+  updateVisibleRows();
 
   if (!filtered.length) {
     cardContainer.style.display = "grid";
     cardContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">No users found</div>';
+    if (loadMoreBtn) loadMoreBtn.style.display = "none";
     return;
   }
 
-  const hasSections = rowsToRender.some(r => r._page_id);
+  const hasSections = visibleRows.some(r => r._page_id);
   if (!hasSections) {
     cardContainer.style.display = "grid";
     const fragment = document.createDocumentFragment();
-    rowsToRender.forEach((r, index) => {
+    
+    // Render cards without blocking on badge checks
+    visibleRows.forEach((r, index) => {
       renderSingleCard(r, index, fragment);
     });
     cardContainer.appendChild(fragment);
@@ -1083,7 +1168,7 @@ async function renderCards() {
   cardContainer.style.display = "block";
 
   const groups = {};
-  rowsToRender.forEach(r => {
+  visibleRows.forEach(r => {
     const key = r._page_id || "Others";
     if (!groups[key]) groups[key] = [];
     groups[key].push(r);
@@ -1094,8 +1179,10 @@ async function renderCards() {
   // Setup lazy badge checker
   const badgeObserver = setupLazyBadgeCheck();
 
+  const fragment = document.createDocumentFragment();
+
   groupKeys.forEach(gk => {
-    groups[gk].sort((a, b) => b._sortTimestamp - a._sortTimestamp);
+    groups[gk].sort((a, b) => safeParseDate(b._created_at) - safeParseDate(a._created_at));
 
     const section = document.createElement("div");
     section.className = "sectionWrap";
@@ -1109,17 +1196,16 @@ async function renderCards() {
     grid.className = "sectionGrid";
     section.appendChild(grid);
 
-    const gridFragment = document.createDocumentFragment();
     groups[gk].forEach((r, idx) => {
-      const card = renderSingleCard(r, idx, gridFragment);
+      const card = renderSingleCard(r, idx, grid);
       if (badgeObserver && r.Users && !r._complain_open) {
         badgeObserver.observe(card);
       }
     });
-    grid.appendChild(gridFragment);
     
-    cardContainer.appendChild(section);
+    fragment.appendChild(section);
   });
+  cardContainer.appendChild(fragment);
 }
 
 function renderSingleCard(r, index, container) {
@@ -1158,19 +1244,21 @@ function renderSingleCard(r, index, container) {
       </div>
       <div class="card-row"><span class="card-label">Window:</span><span class="card-value">${r._window || ""}</span></div>
       <div class="card-row"><span class="card-label">User ID:</span><span class="card-value">${r.Users || ""}</span></div>
-      <div class="card-row"><span class="card-label">Mobile:</span><span class="card-value">${r["Last called no"] || ""}</span></div>
+      <div class="card-row"><span class="card-label">Reg No:</span><span class="card-value">${getRegisteredPhone(r) || ""}</span></div>
+      <div class="card-row">
+        <span class="card-label">Calling No:</span>
+        <div class="phoneEdit">
+          <input class="callingPhoneInput" value="${escapeHtml(getCallingPhone(r))}" inputmode="tel">
+          <button class="callingPhoneSave" type="button">Save</button>
+        </div>
+      </div>
       <div class="card-row"><span class="card-label">PON:</span><span class="card-value">${r.PON || ""}</span></div>
-      <div class="card-row"><span class="card-label">Location:</span><span class="card-value">${r.Location || ""}</span></div>
+      <div class="card-row"><span class="card-label">Location:</span><button class="card-value addressLink" type="button" title="${escapeHtml(r.Location || "")}">${r.Location || ""}</button></div>
       <div class="card-row"><span class="card-label">Power:</span><span class="card-value">${r.Power?.toFixed(2) || ""}</span></div>
       <div class="card-row"><span class="card-label">Down users:</span><span class="card-value">${downCount}</span></div>
       <div class="card-row"><span class="card-label">MAC / Serial:</span><span class="card-value">${r.MAC || ""} / ${r.Serial || ""}</span></div>
-      <div class="card-row"><span class="card-label">Remark:</span><input class="remarkInput" value="${remarkValue}"></div>
-      <div class="card-row">
-        <span class="card-label">Team:</span>
-        <select class="teamSel">
-          ${getLockedTeamOption(r._window)}
-        </select>
-      </div>
+      <div class="card-row"><span class="card-label">Task catagory:</span>${buildRemarkSelect(remarkValue)}</div>
+      <div class="card-row"><span class="card-label">Remarks:</span>${buildAdditionalDetailInput(remarkValue, r.additional_detail || "")}</div>
       <div class="card-row">
         <span class="card-label">Mode:</span>
         <select class="modeSel">
@@ -1193,11 +1281,19 @@ function renderSingleCard(r, index, container) {
     }
   };
 
-  const teamSel = card.querySelector(".teamSel");
-  lockTeamSelect(teamSel, r._window);
+  const teamSel = { value: r.Team || getDefaultTeam(r._window) };
 
   const modeSel = card.querySelector(".modeSel");
   modeSel.value = r.Mode || "Manual";
+  const addressLink = card.querySelector(".addressLink");
+  if (addressLink) {
+    addressLink.onclick = (event) => {
+      event.stopPropagation();
+      openAddressModal(r.Location || "");
+    };
+  }
+  wireRemarkDetail(card);
+  wireCallingPhoneSave(card, r);
 
   // MARK BUTTON - With loading state and button disable
   const markBtn = card.querySelector(".mark-btn");
@@ -1244,9 +1340,12 @@ function renderSingleCard(r, index, container) {
           name: r.Name || "",
           address: r.Location || "",
           reason: card.querySelector(".remarkInput").value || "",
+          additional_detail: getAdditionalDetail(card),
           Mode: modeSel.value,
           Power: r.Power,
-          Phone: r["Last called no"] || "",
+          Phone: getEffectivePhone(r),
+          registered_phone: getRegisteredPhone(r),
+          calling_phone: getCallingPhone(r),
           Team: teamSel.value,
           pon: r.PON || ""
         };
@@ -1281,7 +1380,7 @@ function renderSingleCard(r, index, container) {
   };
 
   container.appendChild(card);
-  requestAnimationFrame(() => card.classList.add("visible"));
+  setTimeout(() => card.classList.add("visible"), Math.min(index, 30) * 12);
   
   return card; // Return card for observer
 }
@@ -1293,19 +1392,21 @@ async function renderTable() {
   tbody.innerHTML = "";
   cardContainer.style.display = "none";
   tableWrap.style.display = "block";
+  updateVisibleRows();
 
   if (!filtered.length) {
     tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;padding:20px;color:var(--text-secondary);">No users found</td></tr>';
+    if (loadMoreBtn) loadMoreBtn.style.display = "none";
     return;
   }
 
-  const tableData = [...getPaginatedRows()];
+  const tableData = [...visibleRows];
 
   if (tableData.some(r => r._page_id)) {
     tableData.sort((a, b) => {
       const po = pageOrder(a._page_id) - pageOrder(b._page_id);
       if (po !== 0) return po;
-      return b._sortTimestamp - a._sortTimestamp;
+      return safeParseDate(b._created_at) - safeParseDate(a._created_at);
     });
   }
 
@@ -1345,15 +1446,22 @@ async function renderTable() {
       <td>${r._window || ""}</td>
       <td>${r.PON || ""}</td>
       <td>${r.Users || ""}</td>
-      <td>${r["Last called no"] || ""}</td>
+      <td>
+        <div class="phoneStack">
+          <div><span>Reg:</span> ${getRegisteredPhone(r) || ""}</div>
+          <div class="phoneEdit">
+            <span>Call:</span>
+            <input class="callingPhoneInput" value="${escapeHtml(getCallingPhone(r))}" inputmode="tel">
+            <button class="callingPhoneSave" type="button">Save</button>
+          </div>
+        </div>
+      </td>
       <td>${r.Name || ""}</td>
       <td>${r.MAC || ""}<br><small>${r.Serial || ""}</small></td>
       <td>${downCount}</td>
-      <td><input class="remarkInput remarkCol" value="${remarkValue}"></td>
-      <td class="teamCol resizableCol">
-        <select class="teamSel">
-          ${getLockedTeamOption(r._window)}
-        </select>
+      <td>
+        ${buildRemarkSelect(remarkValue)}
+        ${buildAdditionalDetailInput(remarkValue, r.additional_detail || "")}
       </td>
       <td class="modeCol resizableCol">
         <select class="modeSel">
@@ -1380,11 +1488,12 @@ async function renderTable() {
       }
     };
 
-    const teamSelect = tr.querySelector(".teamSel");
-    lockTeamSelect(teamSelect, r._window);
+    const teamSelect = { value: r.Team || getDefaultTeam(r._window) };
 
     const modeSelect = tr.querySelector(".modeSel");
     modeSelect.value = r.Mode || "Manual";
+    wireRemarkDetail(tr);
+    wireCallingPhoneSave(tr, r);
 
     // MARK BUTTON - With loading state
     const markBtn = tr.querySelector(".mark-btn");
@@ -1427,9 +1536,12 @@ async function renderTable() {
             name: r.Name || "",
             address: r.Location || "",
             reason: tr.querySelector(".remarkInput").value || "",
+            additional_detail: getAdditionalDetail(tr),
             Mode: modeSelect.value,
             Power: r.Power,
-            Phone: r["Last called no"] || "",
+            Phone: getEffectivePhone(r),
+            registered_phone: getRegisteredPhone(r),
+            calling_phone: getCallingPhone(r),
             Team: teamSelect.value,
             pon: r.PON || ""
           };
@@ -1463,7 +1575,6 @@ async function renderTable() {
 
     fragment.appendChild(tr);
   }
-
   tbody.appendChild(fragment);
 }
 
@@ -1483,7 +1594,7 @@ document.addEventListener("click", (e) => {
 btnToggleView.onclick = () => {
   currentView = currentView === "cards" ? "table" : "cards";
   btnToggleView.textContent = currentView === "cards" ? "Switch to Table" : "Switch to Cards";
-  rerenderCurrentView();
+  applyAllFilters();
 };
 
 document.getElementById("btnScreenshot").onclick = () => {
@@ -1507,22 +1618,23 @@ document.getElementById("btnScreenshot").onclick = () => {
 };
 
 document.getElementById("btnCsv").onclick = () => {
-  if (!filtered.length) {
+  if (!visibleRows.length) {
     showToast("No data to export");
     return;
   }
 
   const headers = [
-    "Window", "PON", "User ID", "Mobile", "Name",
+    "Window", "PON", "User ID", "Registered No", "Calling No", "Name",
     "Mac / Serial", "Power", "Location"
   ];
 
-  const rows = filtered.map(r => {
+  const rows = visibleRows.map(r => {
     return [
       r._window || "",
       r.PON || "",
       r.Users || "",
-      r["Last called no"] || "",
+      getRegisteredPhone(r) || "",
+      getCallingPhone(r) || "",
       r.Name || "",
       `${r.MAC || ""} / ${r.Serial || ""}`,
       r.Power != null ? Number(r.Power).toFixed(2) : "",
@@ -1550,12 +1662,11 @@ document.getElementById("btnCsv").onclick = () => {
 document.getElementById("windowSelect").onchange = (e) => {
   currentWindow = e.target.value;
   isComplainsView = false;
-  closeTopMenu();
+  visibleLimit = INITIAL_VISIBLE_LIMIT;
   fetchData();
 };
 
 document.getElementById("btnComplains").onclick = async () => {
-  closeTopMenu();
   showSpinner();
   try {
     isComplainsView = true;
@@ -1580,24 +1691,27 @@ document.getElementById("btnComplains").onclick = async () => {
       allData = (data.rows || []).map(r => ({ ...r, _window: currentWindow }));
     }
 
-    rawRows = enrichRows(allData.map(r => ({
+    rawRows = allData.map(r => prepareRow({
       ...r,
       Users: r.user_id,
       Name: r.name,
       Location: r.address,
-      "Last called no": r.Phone || "",
+      "Registered no": r.registered_phone || r.Phone || "",
+      "Calling no": r.calling_phone || "",
+      "Last called no": r.calling_phone || r.Phone || r.registered_phone || "",
       PON: r.pon || "",
       "User status": (r.statusUpDown || r["User status"] || "DOWN").toUpperCase(),
       down_list: r.down_list || "",
       downusers: r.downusers || 0,
       _complaint_id: r.id,
       _complain_open: true
-    })));
+    }));
 
     showToast(rawRows.length ? `${rawRows.length} complaints loaded` : "No complaints found");
 
     populateFilters();
-    applyAllFilters(true);
+    visibleLimit = INITIAL_VISIBLE_LIMIT;
+    applyAllFilters();
 
   } catch (e) {
     showToast("Failed to load complaints");
@@ -1608,20 +1722,20 @@ document.getElementById("btnComplains").onclick = async () => {
 
 document.getElementById("btnRefresh").onclick = () => {
   isComplainsView = false;
-  closeTopMenu();
+  visibleLimit = INITIAL_VISIBLE_LIMIT;
   fetchData();
 };
 
-document.getElementById("btnCsv").addEventListener("click", closeTopMenu);
-document.getElementById("btnScreenshot").addEventListener("click", closeTopMenu);
-btnToggleView.addEventListener("click", closeTopMenu);
-
-globalSearch.oninput = () => {
-  clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(() => applyAllFilters(true), 120);
+globalSearch.oninput = scheduleApplyFilters;
+if (powerRange) powerRange.oninput = scheduleApplyFilters;
+filterMode.onchange = () => {
+  visibleLimit = INITIAL_VISIBLE_LIMIT;
+  applyAllFilters();
 };
-if (powerRange) powerRange.oninput = () => applyAllFilters(true);
-filterStatus.onchange = () => applyAllFilters(true);
+filterStatus.onchange = () => {
+  visibleLimit = INITIAL_VISIBLE_LIMIT;
+  applyAllFilters();
+};
 
 // init
 fetchData();

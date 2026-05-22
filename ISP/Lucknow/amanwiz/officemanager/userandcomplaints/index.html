@@ -50,12 +50,23 @@
             </select>
 
             <button class="nav-btn" id="btnComplains">Complains</button>
+            <button class="nav-btn" id="btnPower">Power & event analysis</button>
             <button class="nav-btn" id="btnRefresh">Refresh</button>
             <button class="nav-btn" id="btnToggleView">Switch to Table</button>
             <button class="nav-btn" id="btnCsv">Export CSV</button>
             <button class="nav-btn" id="btnScreenshot">Screenshot</button>
         </nav>
     </header>
+
+<script>
+    const btnGoogle = document.getElementById("btnPower");
+
+if (btnGoogle) {
+  btnGoogle.onclick = () => {
+    window.location.href = "https://virtualbackoffice2.github.io/rack/off/vbo4.0/power/";
+  };
+}
+    </script>
     
     <main id="contentWrap">
         <section class="filters">
@@ -89,6 +100,10 @@
                 <option value="TeamSevai">TeamSevai</option>
             </select>
 
+            <select id="filterMode">
+                <option value="">All Mode</option>
+            </select>
+
             <select id="filterStatus">
                 <option value="">All Status</option>
             </select>
@@ -97,8 +112,6 @@
         <div id="spinnerOverlay">
             <div class="spinner"></div>
         </div>
-
-        <section id="paginationBar" class="pagination-bar"></section>
 
         <section id="cardView" class="card-view"></section>
 
@@ -109,12 +122,11 @@
   <th>Window</th>
   <th>PON</th>
   <th>User ID</th>
-  <th>Mobile</th>
+  <th>Reg / Calling</th>
   <th>Name</th>
   <th>MAC / Serial</th>
   <th>Down</th>
-  <th>Remark</th>
-  <th>Team</th>
+  <th>Task catagory</th>
   <th>Mode</th>
   <th>Power</th>
   <th>Actions</th>

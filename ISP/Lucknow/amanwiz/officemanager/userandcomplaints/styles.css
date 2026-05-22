@@ -21,33 +21,9 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background: var(--bg);
   color: var(--text-primary);
-  overflow-x: scroll;
+  overflow-x: auto; /* ✅ CHANGED: hidden se auto */
   scroll-behavior: smooth;
   touch-action: manipulation;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0,0,0,0.18) rgba(0,0,0,0.04);
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-html::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.04);
-}
-
-html::-webkit-scrollbar-thumb,
-body::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.18);
-  border-radius: 999px;
-}
-
-html::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,0,0,0.24);
 }
 
 /* ===============================
@@ -211,61 +187,6 @@ header h1 {
   padding: 14px;
 }
 
-.pagination-bar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  margin-bottom: 12px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-}
-
-.pagination-bar.visible {
-  display: flex;
-}
-
-.pagination-meta {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.pagination-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.page-btn {
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text-primary);
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.page-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.page-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.page-indicator {
-  min-width: 82px;
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 /* ===============================
    CARD VIEW
 ================================= */
@@ -354,7 +275,30 @@ header h1 {
   word-break: break-word;
 }
 
-.remarkInput, .modeSel, .teamSel {
+.addressLink {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  line-height: 1.25;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.addressLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  background: transparent;
+}
+
+.remarkInput, .additionalDetailInput, .callingPhoneInput, .modeSel, .teamSel {
   width: 100%;
   padding: 6px;
   border: 1px solid var(--border);
@@ -362,6 +306,39 @@ header h1 {
   font-size: 0.85rem;
   background: #fff;
   min-width: 0;
+}
+
+.additionalDetailInput:disabled {
+  background: #f4f6f8;
+  color: var(--text-secondary);
+}
+
+.phoneEdit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.callingPhoneInput {
+  min-width: 90px;
+}
+
+.callingPhoneSave {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.phoneStack {
+  display: grid;
+  gap: 6px;
+  min-width: 170px;
 }
 
 .mark-btn, .remove-btn {
@@ -591,6 +568,53 @@ tbody tr:hover {
   z-index: 9999;
 }
 
+.addressModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.addressModalBox {
+  width: min(520px, 100%);
+  border: 1px solid rgba(255,255,255,0.62);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.94);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+}
+
+.addressModalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.addressModalClose {
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: #eef2f7;
+  cursor: pointer;
+}
+
+.addressModalText {
+  padding: 16px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .modalBox {
   width: min(720px, 92vw);
   max-height: 85vh;
@@ -778,12 +802,6 @@ tbody tr.onlineRow td {
   cursor: pointer;
 }
 
-.ponItem.all-pon-item {
-  font-weight: 600;
-  border-bottom: 1px solid #eef2f6;
-  margin-bottom: 4px;
-}
-
 .ponItem:hover {
   background: rgba(0, 123, 255, 0.07);
 }
@@ -792,8 +810,6 @@ tbody tr.onlineRow td {
   width: 16px;
   height: 16px;
   accent-color: var(--accent);
-  cursor: pointer;
-  pointer-events: none;
 }
 
 .ponItem span {
@@ -922,19 +938,4 @@ tbody tr.onlineRow td {
 td .warning-emoji {
   margin-left: 4px;
   font-size: 12px;
-}
-
-@media (max-width: 520px) {
-  .pagination-bar.visible {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .pagination-actions {
-    justify-content: space-between;
-  }
-
-  .page-indicator {
-    min-width: auto;
-  }
 }
