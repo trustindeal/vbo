@@ -1,1 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <!-- ZOOM IN + ZOOM OUT ENABLED -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
+
+  <!-- ICONS & FONT -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- EXTERNAL CSS -->
+  <link rel="stylesheet" href="ispdemo.css?v=20260531">
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="brand-title">Fiber Network Management System</div>
+    <div class="demo-badge">Demo account</div>
+  </header>
+  
+  <div class="container">
+
+    <div class="tab-bar" id="tab-bar"></div>
+
+    <div id="tab-contents" class="tab-contents" style="position: relative; width: 100%; flex-grow: 1; overflow: hidden;">
+
+      <!-- HOME TAB -->
+      <div id="home-content" class="tab-content active">
+
+        <div class="right-grid">
+
+          <!-- INTERNET -->
+          <div>
+            <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
+              <i class="bi bi-router-fill"></i> Internet
+            </div>
+
+            <div class="dropdown-options">
+            <div class="right-button btn-internet right-button-small clickable"
+                 onclick="openTab('https://virtualbackoffice2.github.io/rack/vbo4.0/demo', 'Rack')">
+              <i class="bi bi-card-checklist"></i> Rack
+            </div>
+              
+              <!-- User & complaints - UPDATED LINK -->
+              <div class="right-button btn-internet right-button-small clickable"
+                   onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/off/demo', 'User & complaints')">
+                <i class="bi bi-card-checklist"></i> User & complaints
+              </div>
+
+              <div class="right-button btn-internet right-button-small clickable"
+                   onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/power/demo', 'Power and event analysis')">
+                <i class="bi bi-lightning-charge"></i> Power and event analysis
+              </div>
+
+              <!-- Network tree - DISABLED
+              <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-slash-circle"></i> Network tree
+              </div>
+              -->
+              
+              <!-- Pending tag - UPDATED TEXT AND LINK -->
+              <div class="right-button btn-internet right-button-small clickable" onclick="showComingSoon()">
+                <i class="bi bi-card-checklist"></i>Live user down reason report
+              </div>
+
+              <div class="right-button btn-internet right-button-small clickable"
+                   onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/jctree/demo', 'JC tree')">
+                <i class="bi bi-card-checklist"></i> JC tree
+              </div>
+
+              <div class="right-button btn-internet right-button-small clickable"
+                   onclick="openTab('https://trustindealamanwiz-a11y.github.io/PrimaryMarker/demo.html', 'Check live user with fiber break')">
+                <i class="bi bi-card-checklist"></i> Check live user with fiber break
+              </div>
+
+              <div class="right-button btn-internet right-button-small clickable"
+                   onclick="window.open('https://del-desk.excitel.in/', '_blank', 'noopener,noreferrer')">
+                <i class="bi bi-person-square"></i> Procare Login
+              </div>
+              
+              <!-- All tagged Users - DISABLED
+              <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-card-checklist"></i> All tagged Users
+              </div>
+              -->
+              
+              <!-- Recent tagged users - DISABLED
+              <div class="right-button btn-internet right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-card-checklist"></i> Recent tagged users
+              </div>
+              -->
+            </div>
+          </div>
+
+          <!-- CABLE - UPDATED TO OTHER BUSINESS AND DISABLED -->
+          <div>
+            <div class="right-button btn-cable clickable btn-disabled" onclick="playErrorSound()">
+              <i class="bi bi-tv"></i> Other business
+            </div>
+
+            <div class="dropdown-options">
+              <!-- All options disabled for Other Business -->
+              <div class="right-button btn-cable right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-table"></i> Due Payment Schedules
+              </div>
+
+              <div class="right-button btn-cable right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-exclamation-circle"></i> Mark Complain
+              </div>
+
+              <div class="right-button btn-cable right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-wallet2"></i> Recharge Sheet
+              </div>
+
+              <div class="right-button btn-cable right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-person-square"></i> Den Login
+              </div>
+            </div>
+          </div>
+
+          <!-- ADMIN - MAIN BUTTON ACTIVE, SUB BUTTONS DISABLED -->
+          <div>
+            <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
+              <i class="bi bi-buildings-fill"></i> Administration
+            </div>
+
+            <div class="dropdown-options">
+              <div class="right-button btn-admin right-button-small clickable"
+                   onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/task/admin-demo', 'Task management')">
+                <i class="bi bi-card-checklist"></i> Task management
+              </div>
+
+              <div class="right-button btn-admin right-button-small clickable"
+                   onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/controlepannel/demo', 'Window settings')">
+                <i class="bi bi-card-checklist"></i> Window settings
+              </div>
+
+              <div class="right-button btn-admin right-button-small clickable"
+                   onclick="showAccessPopup('Field Engineer Access')">
+                <i class="bi bi-card-checklist"></i>Field engineer access
+              </div>
+
+              <div class="right-button btn-admin right-button-small clickable"
+                   onclick="showAccessPopup('Office Manager Access')">
+                <i class="bi bi-card-checklist"></i> Office Manager access
+              </div>
+
+              <div class="right-button btn-admin right-button-small clickable"
+                   onclick="showAccessPopup('Network Manager Access')">
+                <i class="bi bi-card-checklist"></i> Network Manager access
+              </div>
+
+              <div class="right-button btn-admin right-button-small clickable"
+                   onclick="openTab('https://virtualbackoffice3-cell.github.io/vbo4.0/dayendreport/demo', 'Cash settlement report')">
+                <i class="bi bi-card-checklist"></i> Cash settlement report
+              </div>
+              
+              <!--
+              <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-journal-richtext"></i> Payroll
+              </div>
+
+              <div class="right-button btn-admin right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-bar-chart-line"></i> Financial Reports
+              </div>
+              -->
+            </div>
+          </div>
+
+          <!-- STOCK -->
+          <div>
+            <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
+              <i class="bi bi-box-arrow-in-down"></i> Stock
+            </div>
+
+            <div class="dropdown-options">
+              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-journals"></i> Stock Book
+              </div>
+
+              <div class="right-button btn-stock right-button-small btn-disabled" onclick="playErrorSound()">
+                <i class="bi bi-graph-up"></i> Set Stock Levels
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- NOTES - DISABLED -->
+        <div class="notes-section">
+          <div class="notes-button btn-disabled" onclick="playErrorSound()">
+            <i class="bi bi-journal-text" style="font-size:1.8rem;"></i><br> Notes
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <footer>Powered by: Trust In Deal Enterprises</footer>
+
+  <div id="popupMessage">Activates on demand !</div>
+
+  <div id="accessPopup" class="access-popup" onclick="closeAccessPopup(event)">
+    <div class="access-popup-card">
+      <button class="access-popup-close" type="button" onclick="hideAccessPopup()" aria-label="Close">x</button>
+      <div class="access-popup-icon">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <h2 id="accessPopupTitle">Role-Based Access Control</h2>
+      <p>
+        Configure employee access with precision. Define which modules, tools,
+        reports, and actions each team member can use based on their role.
+      </p>
+      <div class="access-popup-note">
+        Designed for operational control, accountability, and scalable team management.
+      </div>
+    </div>
+  </div>
+  <!-- EXTERNAL JS -->
+  <script src="ispdemo.js?v=20260531"></script>
+
+</body>
+
+</html>
+
+
 
