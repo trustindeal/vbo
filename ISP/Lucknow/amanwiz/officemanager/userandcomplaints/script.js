@@ -340,12 +340,19 @@ function buildRemarkSelect(value) {
 }
 
 function buildAdditionalDetailInput(value, detailValue = "") {
-  return `<input class="additionalDetailInput" value="${escapeHtml(detailValue)}" placeholder="Remarks">`;
+  const enabled = value === "Other" || value === "Other pronlem" || value === "Other problem" || (value && !REMARK_OPTIONS.includes(value));
+  const inputValue = value === "Other" || value === "Other pronlem" || value === "Other problem" ? detailValue : value;
+  return `<input class="additionalDetailInput" value="${enabled ? escapeHtml(inputValue) : ""}" placeholder="Remarks" ${enabled ? "" : "disabled"}>`;
 }
 
-function getAdditionalDetail(root) {
+function syncAdditionalDetail(root) {
+  const remark = root.querySelector(".remarkInput");
   const detail = root.querySelector(".additionalDetailInput");
-  return detail ? detail.value.trim() : "";
+  if (!remark || !detail) return;
+
+  const isOther = remark.value === "Other";
+  detail.disabled = !isOther;
+  if (!isOther) detail.value = "";
 }
 
 function wireRemarkDetail(root) {
