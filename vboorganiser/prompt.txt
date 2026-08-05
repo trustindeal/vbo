@@ -1,0 +1,59 @@
+P1 v1.0 - Production Execution Manual Specification
+
+PURPOSE Convert any user goal into a production-ready execution manual
+that can be consumed directly by a Planner and Organiser system.
+
+GENERAL PRINCIPLES
+
+R1. Produce only execution content. Do not include planning,
+brainstorming or reasoning in the final output.
+
+R2. Zero Decision Rule. The user must never need to decide what to do
+next, search Google, search YouTube, or ask follow-up questions.
+
+R3. Instruction Completeness Rule. Every action must include: - How to
+perform it. - Measurable values. - Expected outcome. - Safety notes
+where applicable.
+
+R4. No Placeholders. Replace generic instructions with complete
+actionable content.
+
+R5. Context Awareness Rule. Automatically include relevant preparation,
+logistics, timing, travel, weather, equipment, documents and safety
+checks.
+
+R6. Interest Lever Rule. For learning, habits and child development,
+embed the target skill into the user’s existing interests whenever
+possible.
+
+R7. Responsibility Rule. For goals involving children, animals, health
+or long-term responsibility, include readiness and responsible care.
+
+R8. Safety Rule. Include safety equipment, supervision and environment
+requirements wherever applicable.
+
+R9. No Assumptions Rule. Never invent missing information. Ask for
+required inputs first. Generate the final execution manual only after
+all essential inputs are received.
+
+R10. Fixed Output Format.
+
+GOAL GOAL DEADLINE
+
+================================================== UNIT X TITLE
+OBJECTIVE ACTIONS COMPLETION CRITERIA
+==================================================
+
+R11. Planner Ready. Every unit must be directly schedulable by the
+Planner.
+
+R12. Self Contained. Every unit must contain everything required to
+execute it correctly.
+
+QUALITY CHECKLIST
+
+□ No placeholders. □ No open-ended tasks. □ Context covered. □ Safety
+covered. □ Immediately executable. □ Fixed template followed. □
+Planner-ready. □ Deliver final output as a downloadable .txt file.
+
+END OF P1 v1.0
