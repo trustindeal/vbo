@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VBO Organiser</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <h1 id="viewTitle">VBO Organiser</h1>
+          </div>
+          <div class="topbar-actions">
+            <div class="filter-wrap hidden">
+              <button id="filterToggle" class="filter-toggle" type="button">Filter titles</button>
+              <div id="filterMenu" class="filter-menu hidden">
+                <input id="filterSearch" type="search" placeholder="Search titles">
+                <div id="filterOptions" class="filter-options"></div>
+                <div class="filter-actions">
+                  <button id="selectAllFilter" class="link-btn" type="button">Select all</button>
+                  <button id="clearFilter" class="link-btn" type="button">Clear</button>
+                  <button id="applyFilter" type="button">Apply</button>
+                </div>
+              </div>
+            </div>
+            <button id="homeBtn" class="icon-btn hidden" type="button" aria-label="Home" title="Home">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <section id="alert" class="alert hidden" role="status"></section>
+
+        <section id="today" class="view active">
+          <div class="metric-grid">
+            <button class="metric metric-card" data-view-jump="notes" type="button">
+              <span>Notes</span><strong id="noteTotal">0</strong>
+              <small><b id="notePending">0</b> pending - <b id="noteOverdue">0</b> overdue</small>
+            </button>
+            <button class="metric metric-card" data-view-jump="schedule" type="button">
+              <span>Schedule</span><strong id="scheduleTotal">0</strong>
+              <small><b id="schedulePending">0</b> pending - <b id="scheduleOverdue">0</b> overdue</small>
+            </button>
+            <button class="metric metric-card" data-view-jump="goals" type="button">
+              <span>Goals</span><strong id="goalTotal">0</strong>
+              <small><b id="goalPending">0</b> pending - <b id="goalOverdue">0</b> overdue</small>
+            </button>
+          </div>
+          <div class="content-grid three">
+            <section class="panel">
+              <h2>Notes</h2>
+              <div id="todayNotes" class="stack"></div>
+            </section>
+            <section class="panel">
+              <h2>Schedule</h2>
+              <div id="todaySchedule" class="stack"></div>
+            </section>
+            <section class="panel">
+              <h2>Goals</h2>
+              <div id="todayGoals" class="stack"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="goals" class="view">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Goals</h2>
+              <div class="panel-actions">
+                <button class="link-btn prompt-btn" id="goalPromptBtn" type="button">Goal prompt</button>
+                <button class="icon-btn info-icon" id="promptGuideBtn" type="button" aria-label="Goal prompt guide" title="Goal prompt guide">i</button>
+                <button class="icon-btn primary-icon add-icon" data-create="goal" type="button" aria-label="Add goal" title="Add goal">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+              </div>
+            </div>
+            <div id="goalsList" class="stack"></div>
+          </section>
+        </section>
+
+        <section id="schedule" class="view">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Schedule</h2>
+              <button class="icon-btn primary-icon add-icon" data-create="schedule" type="button" aria-label="Add schedule" title="Add schedule">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+            <div id="scheduleList" class="stack"></div>
+          </section>
+        </section>
+
+        <section id="notes" class="view">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Notes</h2>
+              <button class="icon-btn primary-icon add-icon" data-create="note" type="button" aria-label="Add note" title="Add note">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+            </div>
+            <div id="notesList" class="stack"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="modalBackdrop" class="modal-backdrop hidden">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="panel-head">
+          <h2 id="modalTitle">Add</h2>
+          <button id="closeModal" class="icon-btn" type="button" aria-label="Close" title="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <form id="modalForm" class="form-panel"></form>
+      </section>
+    </div>
+
+    <div id="confirmBackdrop" class="modal-backdrop hidden">
+      <section class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <h2 id="confirmTitle">Confirm action</h2>
+        <p id="confirmText">Are you sure?</p>
+        <div class="action-row">
+          <button id="confirmYes" class="delete-btn" type="button">Confirm</button>
+          <button id="confirmNo" class="icon-btn" type="button">Cancel</button>
+        </div>
+      </section>
+    </div>
+
+    <template id="emptyTemplate">
+      <div class="empty-state">Nothing pending to do!</div>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
