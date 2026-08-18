@@ -1,1 +1,131 @@
-1
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KwikkWash | Moradabad Partner Console</title>
+    <meta name="robots" content="noindex,nofollow,noarchive">
+    <link rel="canonical" href="https://kwikkwash.com/cp/">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-area">
+                    <span class="logo-icon">KW</span>
+                    <div class="logo-text">
+                        <h1>KwikkWash</h1>
+                        <span class="logo-badge">Moradabad Partner Console</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button id="menuToggle" class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <div class="platform-status">
+                        <span class="status-indicator"></span>
+                        <span>Live Console</span>
+                    </div>
+                    <div class="user-profile">
+                        <span class="profile-initials">MP</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3 class="section-title">Workspace</h3>
+                    <nav class="db-nav">
+                        <button class="db-nav-item active" data-db="user">
+                            <span class="nav-icon">B</span>
+                            <span class="nav-label">Branch Bookings</span>
+                        </button>
+                        <button class="db-nav-item" data-db="employee">
+                            <span class="nav-icon">T</span>
+                            <span class="nav-label">Branch Team</span>
+                        </button>
+                        <button class="db-nav-item" data-db="partner">
+                            <span class="nav-icon">P</span>
+                            <span class="nav-label">Services</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3 class="section-title">Current View</h3>
+                    <div id="tableSelector" class="table-nav"></div>
+                </div>
+
+                <div class="sidebar-section quick-stats">
+                    <h3 class="section-title">Quick Overview</h3>
+                    <div class="stats-card">
+                        <div class="stat-row">
+                            <span>Total</span>
+                            <strong id="totalCount">0</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span id="primaryMetricLabel">Open</span>
+                            <strong class="text-success" id="activeCount">0</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span id="secondaryMetricLabel">Closed</span>
+                            <strong class="text-muted" id="inactiveCount">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <button id="sidebarOverlay" class="sidebar-overlay" type="button" aria-label="Close menu"></button>
+
+            <div class="content-area">
+                <section class="workspace-header">
+                    <div>
+                        <p class="eyebrow">Moradabad Partner Access</p>
+                        <h2 id="workspaceTitle">Branch Bookings</h2>
+                        <p id="workspaceSubtitle">Read-only view for Moradabad bookings, team activity, and service availability.</p>
+                    </div>
+                    <div class="workspace-meta">
+                        <span>City</span>
+                        <strong>Moradabad</strong>
+                    </div>
+                </section>
+
+                <div class="action-bar">
+                    <div class="search-wrapper">
+                        <span class="search-icon">/</span>
+                        <input type="text" id="searchInput" placeholder="Search records..." autocomplete="off">
+                        <button id="clearSearch" class="clear-btn" title="Clear search">x</button>
+                    </div>
+                    <span class="readonly-badge">Read Only</span>
+                </div>
+
+                <div id="toast" class="toast-container"></div>
+
+                <div class="data-card">
+                    <div class="card-header">
+                        <div>
+                            <p class="eyebrow">Live Data</p>
+                            <h2 id="tableTitle">Loading...</h2>
+                        </div>
+                        <span class="record-badge" id="recordCount">0 records</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="tableContainer" class="table-responsive">
+                            <div class="loading-state">
+                                <div class="spinner"></div>
+                                <p>Loading data...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
