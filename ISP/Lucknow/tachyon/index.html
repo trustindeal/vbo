@@ -8,7 +8,7 @@
   <style>
     /* ---------- RESET / BASE ---------- */
     * { box-sizing: border-box; }
-    html { width: 100%; }
+    html { width: 100%; height: 100%; }
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
@@ -16,6 +16,7 @@
       background: #f4f6f8;
       color: #333;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       overflow-x: hidden;
       display: flex;
@@ -365,69 +366,132 @@
 
     /* ---------- RESPONSIVE ---------- */
     @media screen and (max-width: 768px) {
-      .header { padding: 8px 10px 6px; }
+      :root { --mobile-tab-height: 38px; }
+
+      body {
+        height: 100dvh;
+        background: #ffffff;
+      }
+
+      body.embedded-tab-active .header,
+      body.embedded-tab-active footer {
+        display: none;
+      }
+
+      .header { padding: 4px 6px 3px; }
       .brand-lockup {
-        flex-direction: column;
-        gap: 4px;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 8px;
       }
       .brand-logo {
-        width: min(62vw, 210px);
-        max-height: 50px;
+        width: min(34vw, 130px);
+        max-height: 32px;
       }
       .brand-copy {
-        text-align: center;
+        text-align: left;
       }
       .brand-title {
-        font-size: 1.05rem;
+        font-size: 0.88rem;
         letter-spacing: 0.2px;
       }
       .brand-title small {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         margin-top: 1px;
       }
 
       .container {
-        padding: 4px 6px 6px;
+        padding: 0 0 var(--mobile-tab-height);
+        background: #ffffff;
+        width: 100vw;
+        max-width: 100vw;
+        overflow: hidden;
       }
 
       .right-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-        padding-top: 2px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
+        padding: 4px;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      .right-grid > div {
+        min-width: 0;
       }
 
       .right-button {
-        padding: 0.7rem 0.4rem;
-        font-size: 0.78rem;
-        min-height: 64px;
-        border-radius: 12px;
+        padding: 0.5rem 0.3rem;
+        font-size: 0.72rem;
+        min-height: 56px;
+        border-radius: 8px;
       }
       .right-button i {
-        font-size: 1.2rem;
+        font-size: 1rem;
         margin-bottom: 0.1rem;
       }
 
-      .tab-bar { padding: 2px 2px 0; margin-bottom: 4px; }
+      .tab-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        height: var(--mobile-tab-height);
+        align-items: center;
+        gap: 4px;
+        padding: 3px 4px calc(3px + env(safe-area-inset-bottom));
+        margin: 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 0;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+      }
       .tab-btn {
-        padding: 4px 10px;
-        font-size: 0.7rem;
+        min-width: 58px;
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 5px 9px;
+        font-size: 0.68rem;
+        border-radius: 7px;
+        border: 1px solid transparent;
+      }
+      .tab-btn.active {
+        border-bottom: 1px solid #2563eb;
       }
       .close-tab { margin-left: 5px; font-size: 0.7rem; }
 
-      .tab-contents .tab-content,
-      .tab-contents .tab-content.active {
-        padding: 4px 4px !important;
-        height: calc(100% - 24px) !important;
+      .tab-contents {
+        height: 100%;
+        width: 100%;
+        max-width: 100vw;
       }
 
-      footer { font-size: 0.6rem; margin: 2px 0; }
+      .tab-contents .tab-content,
+      .tab-contents .tab-content.active {
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        overflow: auto;
+      }
+
+      .tab-contents .tab-content iframe {
+        height: 100% !important;
+      }
+
+      footer { display: none; }
 
       #popupMessage {
         padding: 12px 20px;
         font-size: 0.85rem;
       }
       .access-popup-card {
-        padding: 20px 16px 18px;
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
+        padding: 16px 14px 14px;
       }
       .access-popup-card h2 { font-size: 1.05rem; }
       .access-popup-card p { font-size: 0.85rem; }
@@ -673,6 +737,7 @@
         tab.content.style.display = 'block';
         tab.btn.classList.add('active');
         tab.content.classList.add('active');
+        document.body.classList.toggle('embedded-tab-active', !tab.isHome);
       }
     }
 
