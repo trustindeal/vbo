@@ -1,1 +1,705 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ---------- RESET / BASE ---------- */
+    * { box-sizing: border-box; }
+    html { width: 100%; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+      color: #333;
+      height: 100vh;
+      overflow: hidden;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    a { text-decoration: none !important; }
 
+    /* ---------- HEADER ---------- */
+    .header {
+      padding: 10px 16px 8px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .brand-lockup {
+      width: min(100%, 820px);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .brand-logo {
+      width: clamp(170px, 24vw, 260px);
+      height: auto;
+      max-height: 70px;
+      object-fit: contain;
+      flex-shrink: 0;
+      display: block;
+    }
+    .brand-copy {
+      min-width: 0;
+      text-align: left;
+    }
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: 0.3px;
+      line-height: 1.3;
+    }
+    .brand-title small {
+      font-weight: 400;
+      font-size: 0.75rem;
+      color: #64748b;
+      display: block;
+      margin-top: 2px;
+      letter-spacing: 0.2px;
+    }
+
+    /* ---------- CONTAINER ---------- */
+    .container {
+      max-width: 100%;
+      margin: 0;
+      padding: 6px 12px 8px;
+      background: linear-gradient(145deg, #ffffff, #f0f2f5);
+      flex: 1;
+      min-height: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ---------- GRID (4 columns desktop, 2 mobile) ---------- */
+    .right-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.8rem;
+      flex-grow: 1;
+      align-content: start;
+      padding-top: 4px;
+      min-width: 0;
+    }
+    .right-grid > div {
+      min-width: 0;
+    }
+
+    /* ---------- BUTTONS ---------- */
+    .right-button {
+      border-radius: 14px;
+      padding: 1rem 0.6rem;
+      color: #202124;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+      border: 1px solid rgba(0,0,0,0.04);
+      min-height: 80px;
+      width: 100%;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .right-button:hover:not(.btn-disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+    }
+    .right-button i {
+      font-size: 1.6rem;
+      margin-bottom: 0.2rem;
+      transition: color 0.25s ease;
+    }
+    .right-button:hover:not(.btn-disabled) i {
+      color: #2563eb;
+    }
+
+    /* button variants */
+    .btn-internet { background: #dcfce7; border-color: #86efac; }
+    .btn-cable    { background: #f1f5f9; border-color: #e2e8f0; }
+    .btn-fiber    { background: #f1f5f9; border-color: #e2e8f0; }
+    .btn-admin    { background: #f1f5f9; border-color: #e2e8f0; }
+
+    .btn-disabled {
+      background: #f1f5f9 !important;
+      color: #94a3b8 !important;
+      cursor: not-allowed;
+      box-shadow: none !important;
+      border-color: #e2e8f0 !important;
+      transform: none !important;
+    }
+    .btn-disabled i {
+      color: #94a3b8 !important;
+    }
+    .btn-disabled:hover {
+      transform: none !important;
+      box-shadow: none !important;
+      background: #f1f5f9 !important;
+    }
+
+    /* ---------- TAB SYSTEM ---------- */
+    .tab-bar {
+      display: flex;
+      overflow-x: auto;
+      background: linear-gradient(145deg, #ffffff, #f0f2f5);
+      margin-bottom: 8px;
+      padding: 4px 4px 0;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f1f2f6;
+      flex-shrink: 0;
+      gap: 2px;
+    }
+    .tab-bar::-webkit-scrollbar { height: 4px; }
+    .tab-bar::-webkit-scrollbar-track { background: #f1f2f6; }
+    .tab-bar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+    .tab-btn {
+      padding: 6px 14px;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      font-size: 0.82rem;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      position: relative;
+      font-weight: 500;
+    }
+    .tab-btn:hover { background: rgba(37,99,235,0.06); color: #1e293b; }
+    .tab-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      border-color: #e2e8f0;
+      border-bottom: 2px solid #2563eb;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.02);
+    }
+    .close-tab {
+      margin-left: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      opacity: 0.5;
+      font-size: 0.8rem;
+      transition: opacity 0.2s, color 0.2s;
+    }
+    .tab-btn:hover .close-tab { opacity: 1; color: #dc2626; }
+
+    .tab-contents {
+      position: relative;
+      width: 100%;
+      flex-grow: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .tab-contents .tab-content {
+      opacity: 0;
+      transform: translateX(-100%);
+      transition: opacity 1s ease, transform 1s ease;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: calc(100% - 30px);
+      padding: 12px 8px;
+      box-sizing: border-box;
+      overflow: auto;
+    }
+    .tab-contents .tab-content.active {
+      opacity: 1;
+      transform: translateX(0);
+      position: relative;
+      height: calc(100% - 30px);
+      padding: 12px 8px;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      margin: 4px 0 2px;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #94a3b8;
+      letter-spacing: 0.2px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- POPUPS ---------- */
+    #popupMessage {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #dc2626;
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+      animation: fadeOut 3s forwards;
+      font-weight: 500;
+    }
+    #popupMessage.show { display: block; }
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .access-popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 200;
+    }
+    .access-popup.show { display: flex; }
+    .access-popup-card {
+      width: min(440px, 100%);
+      position: relative;
+      padding: 28px 24px 24px;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #1f2937;
+      text-align: center;
+      box-shadow: 0 20px 48px rgba(15, 23, 42, 0.20);
+      border: 1px solid #e5e7eb;
+    }
+    .access-popup-close {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 6px;
+      background: #f3f4f6;
+      color: #4b5563;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .access-popup-close:hover { background: #e5e7eb; }
+    .access-popup-icon {
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 1.5rem;
+    }
+    .access-popup-card h2 {
+      margin: 0 0 10px;
+      color: #111827;
+      font-size: 1.2rem;
+      line-height: 1.25;
+    }
+    .access-popup-card p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .access-popup-note {
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* ---------- FRAME FALLBACK ---------- */
+    .frame-fallback {
+      display: flex;
+      min-height: 180px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      padding: 20px;
+      text-align: center;
+      color: #334155;
+    }
+    .frame-fallback p { margin: 0; font-size: 0.9rem; }
+    .frame-fallback a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media screen and (max-width: 768px) {
+      .header { padding: 8px 10px 6px; }
+      .brand-lockup {
+        flex-direction: column;
+        gap: 4px;
+      }
+      .brand-logo {
+        width: min(62vw, 210px);
+        max-height: 50px;
+      }
+      .brand-copy {
+        text-align: center;
+      }
+      .brand-title {
+        font-size: 1.05rem;
+        letter-spacing: 0.2px;
+      }
+      .brand-title small {
+        font-size: 0.6rem;
+        margin-top: 1px;
+      }
+
+      .container {
+        padding: 4px 6px 6px;
+      }
+
+      .right-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        padding-top: 2px;
+      }
+
+      .right-button {
+        padding: 0.7rem 0.4rem;
+        font-size: 0.78rem;
+        min-height: 64px;
+        border-radius: 12px;
+      }
+      .right-button i {
+        font-size: 1.2rem;
+        margin-bottom: 0.1rem;
+      }
+
+      .tab-bar { padding: 2px 2px 0; margin-bottom: 4px; }
+      .tab-btn {
+        padding: 4px 10px;
+        font-size: 0.7rem;
+      }
+      .close-tab { margin-left: 5px; font-size: 0.7rem; }
+
+      .tab-contents .tab-content,
+      .tab-contents .tab-content.active {
+        padding: 4px 4px !important;
+        height: calc(100% - 24px) !important;
+      }
+
+      footer { font-size: 0.6rem; margin: 2px 0; }
+
+      #popupMessage {
+        padding: 12px 20px;
+        font-size: 0.85rem;
+      }
+      .access-popup-card {
+        padding: 20px 16px 18px;
+      }
+      .access-popup-card h2 { font-size: 1.05rem; }
+      .access-popup-card p { font-size: 0.85rem; }
+    }
+
+    /* ---------- EXTRA SMALL (optional polish) ---------- */
+    @media screen and (max-width: 400px) {
+      .right-button {
+        padding: 0.5rem 0.3rem;
+        font-size: 0.7rem;
+        min-height: 56px;
+      }
+      .right-button i { font-size: 1rem; }
+      .brand-title { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="brand-lockup">
+      <img class="brand-logo" src="logo.png" alt="Tachyon Broadband">
+      <div class="brand-copy">
+        <div class="brand-title">
+          Lucknow HO
+          <small>Network Operations Dashboard</small>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== CONTAINER ===== -->
+  <div class="container">
+
+    <!-- TAB BAR -->
+    <div class="tab-bar" id="tab-bar"></div>
+
+    <!-- TAB CONTENTS -->
+    <div id="tab-contents" class="tab-contents" style="position:relative; width:100%; flex-grow:1; overflow:hidden;">
+
+      <!-- HOME TAB -->
+      <div id="home-content" class="tab-content active">
+
+        <!-- 4‑COLUMN GRID -->
+        <div class="right-grid">
+
+          <!-- 1. INTERNET (active) -->
+          <div>
+            <div class="right-button btn-internet clickable"
+                 onclick="openTab('https://virtualbackoffice4-commits.github.io/tns', 'Internet')">
+              <i class="bi bi-router-fill"></i> Internet
+            </div>
+          </div>
+
+          <!-- 2. CABLE (disabled) -->
+          <div>
+            <div class="right-button btn-cable btn-disabled"
+                 onclick="showComingSoon()">
+              <i class="bi bi-tv"></i> Cable
+            </div>
+          </div>
+
+          <!-- 3. FIBER / JC MAP (disabled) -->
+          <div>
+            <div class="right-button btn-fiber btn-disabled"
+                 onclick="showComingSoon()">
+              <i class="bi bi-diagram-3"></i> Fiber / JC MAP
+            </div>
+          </div>
+
+          <!-- 4. ADMINISTRATION (disabled) -->
+          <div>
+            <div class="right-button btn-admin btn-disabled"
+                 onclick="showComingSoon()">
+              <i class="bi bi-buildings-fill"></i> Administration
+            </div>
+          </div>
+
+        </div><!-- /right-grid -->
+
+      </div><!-- /home-content -->
+
+    </div><!-- /tab-contents -->
+
+  </div><!-- /container -->
+
+  <!-- ===== FOOTER ===== -->
+  <footer>Powered by: Trust In Deal Enterprises</footer>
+
+  <!-- ===== POPUPS ===== -->
+  <div id="popupMessage">Activates on demand !</div>
+
+  <div id="accessPopup" class="access-popup" onclick="closeAccessPopup(event)">
+    <div class="access-popup-card">
+      <button class="access-popup-close" type="button" onclick="hideAccessPopup()" aria-label="Close">x</button>
+      <div class="access-popup-icon">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <h2 id="accessPopupTitle">Role-Based Access Control</h2>
+      <p>
+        Configure employee access with precision. Define which modules, tools,
+        reports, and actions each team member can use based on their role.
+      </p>
+      <div class="access-popup-note">
+        Designed for operational control, accountability, and scalable team management.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== JAVASCRIPT ===== -->
+  <script>
+    // ---------- POPUPS ----------
+    function showComingSoon() {
+      const popup = document.getElementById("popupMessage");
+      popup.classList.add("show");
+      setTimeout(() => popup.classList.remove("show"), 2000);
+    }
+
+    function showAccessPopup(title) {
+      const popup = document.getElementById("accessPopup");
+      const popupTitle = document.getElementById("accessPopupTitle");
+      popupTitle.textContent = title;
+      popup.classList.add("show");
+    }
+
+    function hideAccessPopup() {
+      document.getElementById("accessPopup").classList.remove("show");
+    }
+
+    function closeAccessPopup(event) {
+      if (event.target.id === "accessPopup") hideAccessPopup();
+    }
+
+    // ---------- TAB SYSTEM ----------
+    let tabIdCounter = 0;
+    const tabs = [];
+
+    function normalizeFrameUrl(url) {
+      try {
+        const normalizedUrl = new URL(url, window.location.href);
+        if (window.location.protocol === 'https:' && normalizedUrl.protocol === 'http:') {
+          normalizedUrl.protocol = 'https:';
+        }
+        return normalizedUrl.href;
+      } catch (_) { return url; }
+    }
+
+    function showFrameFallback(contentDiv, url) {
+      contentDiv.innerHTML = '';
+      const wrap = document.createElement('div');
+      wrap.className = 'frame-fallback';
+      const msg = document.createElement('p');
+      msg.textContent = 'This page cannot be displayed here. Open it in a new tab.';
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Open page';
+      wrap.appendChild(msg);
+      wrap.appendChild(link);
+      contentDiv.appendChild(wrap);
+    }
+
+    function initTabs() {
+      const homeId = tabIdCounter++;
+      const homeBtn = document.createElement('div');
+      homeBtn.className = 'tab-btn active';
+      homeBtn.textContent = 'Home';
+      homeBtn.onclick = () => switchTab(homeId);
+      document.getElementById('tab-bar').appendChild(homeBtn);
+
+      const homeContent = document.getElementById('home-content');
+      homeContent.classList.add('tab-content', 'active');
+
+      tabs.push({ id: homeId, btn: homeBtn, content: homeContent, isHome: true });
+    }
+
+    function openTab(url, title) {
+      const frameUrl = normalizeFrameUrl(url);
+
+      // Google Sheets → open in new tab
+      if (url.includes('docs.google.com/spreadsheets')) {
+        window.open(frameUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      const tabId = tabIdCounter++;
+      const tabBtn = document.createElement('div');
+      tabBtn.className = 'tab-btn';
+      tabBtn.textContent = title;
+
+      const closeSpan = document.createElement('span');
+      closeSpan.className = 'close-tab';
+      closeSpan.textContent = 'x';
+      closeSpan.onclick = (e) => {
+        e.stopPropagation();
+        closeTab(tabId);
+      };
+      tabBtn.appendChild(closeSpan);
+      tabBtn.onclick = () => switchTab(tabId);
+
+      document.getElementById('tab-bar').appendChild(tabBtn);
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'tab-content';
+      contentDiv.style.position = 'absolute';
+      contentDiv.style.top = '0';
+      contentDiv.style.left = '0';
+      contentDiv.style.width = '100%';
+      contentDiv.style.height = '100%';
+      contentDiv.style.display = 'none';
+      contentDiv.style.overflow = 'auto';
+
+      const iframe = document.createElement('iframe');
+      iframe.src = frameUrl;
+      iframe.style.width = '100%';
+      iframe.style.height = 'calc(100% - 30px)';
+      iframe.style.border = 'none';
+      iframe.style.display = 'block';
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-downloads');
+
+      iframe.onerror = function() {
+        showFrameFallback(contentDiv, frameUrl);
+      };
+
+      contentDiv.appendChild(iframe);
+      document.getElementById('tab-contents').appendChild(contentDiv);
+
+      tabs.push({ id: tabId, btn: tabBtn, content: contentDiv, isHome: false });
+      switchTab(tabId);
+    }
+
+    function switchTab(tabId) {
+      tabs.forEach(tab => {
+        tab.content.style.display = 'none';
+        tab.btn.classList.remove('active');
+        tab.content.classList.remove('active');
+      });
+
+      const tab = tabs.find(t => t.id === tabId);
+      if (tab) {
+        tab.content.style.display = 'block';
+        tab.btn.classList.add('active');
+        tab.content.classList.add('active');
+      }
+    }
+
+    function closeTab(tabId) {
+      const index = tabs.findIndex(t => t.id === tabId);
+      if (index === -1 || tabs[index].isHome) return;
+
+      const tab = tabs[index];
+      tab.content.style.opacity = '0';
+      tab.content.style.transform = 'translateX(20px)';
+      tab.btn.style.opacity = '0';
+      tab.btn.style.transform = 'translateX(20px)';
+
+      setTimeout(() => {
+        tab.btn.remove();
+        tab.content.remove();
+        tabs.splice(index, 1);
+
+        if (tabs.length > 0) {
+          switchTab(tabs[Math.max(0, index - 1)].id);
+        }
+      }, 800);
+    }
+
+    // ---------- START ----------
+    window.addEventListener('load', initTabs);
+  </script>
+
+</body>
+</html>
