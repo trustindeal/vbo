@@ -72,7 +72,7 @@ function openTab(url, title) {
   const iframe = document.createElement('iframe');
   iframe.src = url;
   iframe.style.width = '100%';
-  iframe.style.height = 'calc(100% - 30px)';
+  iframe.style.height = '100%';
   iframe.style.border = 'none';
   iframe.style.display = 'block';
 
