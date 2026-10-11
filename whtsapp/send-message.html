@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBONotif - Send Message</title>
+    <link rel="stylesheet" href="css/send-message.css">
+</head>
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-name">VBO<span>Notif</span></div>
+            <div class="brand-subtitle">WhatsApp Messaging Platform</div>
+        </div>
+
+        <nav class="nav">
+            <a href="dashboard.html" class="nav-item"><span>▣</span> Dashboard</a>
+            <a href="inbox.html" class="nav-item"><span>◉</span> Inbox</a>
+            <a href="contacts.html" class="nav-item"><span>◌</span> Contacts</a>
+            <a href="send-message.html" class="nav-item active"><span>➤</span> Send Message</a>
+            <a href="templates.html" class="nav-item"><span>▤</span> Templates</a>
+            <a href="wallet.html" class="nav-item"><span>₹</span> Wallet / Credits</a>
+            <a href="#" class="nav-item"><span>▥</span> Reports</a>
+            <a href="#" class="nav-item"><span>⚙</span> Settings</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logoutButton" class="logout-button">⇥ Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <h1>Send Message</h1>
+                <p>Send a WhatsApp message to a contact</p>
+            </div>
+
+            <div class="account-chip">
+                <div class="account-avatar">V</div>
+                <div>
+                    <strong id="clientName">Loading...</strong>
+                    <small>Active account</small>
+                </div>
+            </div>
+        </header>
+
+        <section class="send-content">
+            <div class="send-panel">
+                <div class="panel-header">
+                    <h2>New WhatsApp Message</h2>
+                    <p>Send to a number, multiple numbers, or a saved contact group.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Send To</label>
+                    <div class="send-mode">
+                        <button type="button" class="mode-button active" data-mode="single">Single Number</button>
+                        <button type="button" class="mode-button" data-mode="multiple">Multiple Numbers</button>
+                        <button type="button" class="mode-button" data-mode="group">Contact Group</button>
+                    </div>
+                </div>
+
+                <div id="singleMode" class="recipient-mode">
+                    <div class="form-group">
+                        <label for="singleNumber">WhatsApp Number</label>
+                        <input id="singleNumber" type="text" placeholder="e.g. 919876543210">
+                    </div>
+                </div>
+
+                <div id="multipleMode" class="recipient-mode hidden">
+                    <div class="form-group">
+                        <label for="multipleNumbers">WhatsApp Numbers</label>
+                        <textarea id="multipleNumbers" rows="6" placeholder="Enter one number per line&#10;919876543210&#10;919876543211"></textarea>
+                        <small class="field-help">One number per line. Duplicate numbers will be removed automatically.</small>
+                    </div>
+                </div>
+
+                <div id="groupMode" class="recipient-mode hidden">
+                    <div class="form-group">
+                        <label for="groupSelect">Contact Group</label>
+                        <select id="groupSelect">
+                            <option value="">Loading groups...</option>
+                        </select>
+                    </div>
+
+                    <div class="group-actions">
+                        <button type="button" id="createGroupButton" class="secondary-button">+ Create Group</button>
+                        <button type="button" id="manageGroupButton" class="secondary-button">Manage Group</button>
+                    </div>
+
+                    <div id="groupManager" class="group-manager hidden">
+                        <div class="group-manager-header">
+                            <div>
+                                <strong>Contact Groups</strong>
+                                <small>Manage names, members and groups</small>
+                            </div>
+                            <button type="button" id="closeGroupManagerButton" class="group-close-button">×</button>
+                        </div>
+                        <div id="groupManagerList" class="group-manager-list"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="templateSelect">Message Template</label>
+                    <select id="templateSelect">
+                        <option value="">No template — type message manually</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="messageInput">Message</label>
+                    <textarea id="messageInput" rows="7" placeholder="Type your message..."></textarea>
+                </div>
+
+                <div class="send-options">
+                    <label class="radio-option">
+                        <input type="radio" name="sendTiming" value="now" checked>
+                        <span>Send Now</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="sendTiming" value="schedule">
+                        <span>Schedule</span>
+                    </label>
+                </div>
+
+                <div id="scheduleFields" class="schedule-fields hidden">
+                    <div class="schedule-row">
+                        <div class="form-group">
+                            <label for="scheduleDate">Date</label>
+                            <input id="scheduleDate" type="date">
+                        </div>
+                        <div class="form-group">
+                            <label for="scheduleSlot">2-Hour Slot</label>
+                            <select id="scheduleSlot" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:7px;background:#fff;font-size:14px;"></select>
+                        </div>
+                    </div>
+                    <div style="margin-top:8px;padding:10px 12px;border:1px solid #dbeafe;border-radius:8px;background:#f8fbff;font-size:12px;color:#4b5563;">
+                        <strong style="color:#111827;">Sending window:</strong> Fixed 2 hours. The system will calculate the central sending rate from all clients scheduled in this slot.
+                    </div>
+                </div>
+
+                
+
+                <div class="send-footer">
+                    <div class="charge-info">
+                        <span>Message charge</span>
+                        <strong id="messageCharge">₹0.00</strong>
+                    </div>
+                    <button id="sendButton" class="send-button">Send WhatsApp Message</button>
+                </div>
+
+                <div id="messageStatus" class="message-status hidden"></div>
+
+                <section class="schedule-history-panel" id="scheduleHistoryPanel">
+                    <div class="schedule-history-header">
+                        <div>
+                            <h3>Schedule History</h3>
+                            <p>Upcoming schedules and already executed schedules.</p>
+                        </div>
+                        <button type="button" id="refreshScheduleHistory" class="secondary-button">↻ Refresh</button>
+                    </div>
+                    <div class="schedule-history-tabs">
+                        <button type="button" class="schedule-history-tab active" data-schedule-tab="upcoming">Upcoming</button>
+                        <button type="button" class="schedule-history-tab" data-schedule-tab="history">History</button>
+                    </div>
+                    <div id="scheduleHistoryList" class="schedule-history-list">
+                        <div class="empty-state">Loading schedules...</div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+<script src="js/send-message.js"></script>
+
+</body>
+</html>
+
+
