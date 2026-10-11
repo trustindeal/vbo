@@ -1,0 +1,579 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f7fa;
+    color: #172033;
+}
+
+button,
+input {
+    font-family: inherit;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+}
+
+.sidebar {
+    width: 245px;
+    background: #111827;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.brand {
+    padding: 28px 22px 25px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand-name {
+    font-size: 27px;
+    font-weight: 700;
+}
+
+.brand-name span {
+    color: #20c969;
+}
+
+.brand-subtitle {
+    margin-top: 6px;
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+.nav {
+    padding: 18px 12px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 14px;
+    margin-bottom: 4px;
+    border-radius: 9px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.nav-item span {
+    width: 20px;
+    text-align: center;
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: white;
+}
+
+.nav-item.active {
+    background: #20c969;
+    color: white;
+}
+
+.sidebar-bottom {
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.logout-button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    padding: 11px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+}
+
+.main {
+    margin-left: 245px;
+    width: calc(100% - 245px);
+    min-height: 100vh;
+}
+
+.topbar {
+    height: 86px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.topbar h1 {
+    margin: 0;
+    font-size: 25px;
+}
+
+.topbar p {
+    margin: 5px 0 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.account-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.account-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #20c969;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.account-chip strong {
+    display: block;
+    font-size: 13px;
+}
+
+.account-chip small {
+    color: #16a34a;
+    font-size: 11px;
+}
+
+.inbox {
+    margin: 22px;
+    height: calc(100vh - 130px);
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 13px;
+    display: flex;
+    overflow: hidden;
+}
+
+.conversation-list {
+    width: 330px;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.inbox-search {
+    padding: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.inbox-search input {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    padding: 11px 13px;
+    outline: none;
+    background: #f8fafc;
+}
+
+.inbox-search input:focus {
+    border-color: #20c969;
+}
+
+.contacts {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.contact {
+    padding: 15px;
+    border-bottom: 1px solid #f1f3f5;
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.contact:hover,
+.contact.selected {
+    background: #f0fdf4;
+}
+
+.contact-avatar {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #15803d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.contact-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.contact-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.contact-name {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contact-time {
+    color: #9ca3af;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.contact-last {
+    color: #6b7280;
+    font-size: 12px;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-area {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+}
+
+.empty-chat {
+    margin: auto;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #ecfdf3;
+    color: #20c969;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 25px;
+}
+
+.empty-chat h2 {
+    color: #374151;
+    font-size: 18px;
+    margin: 0;
+}
+
+.empty-chat p {
+    font-size: 12px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.chat-view {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    height: 70px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+}
+
+.chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #20c969;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.chat-header strong {
+    display: block;
+    font-size: 14px;
+}
+
+.chat-header span {
+    display: block;
+    margin-top: 3px;
+    color: #6b7280;
+    font-size: 11px;
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px;
+    background: #f8fafc;
+}
+
+.message-row {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.message-row.incoming {
+    justify-content: flex-start;
+}
+
+.message-row.outgoing {
+    justify-content: flex-end;
+}
+
+.message-bubble {
+    max-width: 65%;
+    padding: 10px 13px;
+    border-radius: 11px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.incoming .message-bubble {
+    background: white;
+    border: 1px solid #e5e7eb;
+}
+
+.outgoing .message-bubble {
+    background: #dcfce7;
+}
+
+.message-time {
+    display: block;
+    margin-top: 5px;
+    color: #9ca3af;
+    font-size: 9px;
+    text-align: right;
+}
+
+
+.message-ticks {
+    margin-left: 4px;
+    font-size: 11px;
+    letter-spacing: -1px;
+}
+
+.message-ticks-read {
+    color: #34b7f1;
+    font-weight: 600;
+}
+
+.message-ticks-failed {
+    color: #ef4444;
+    font-weight: 600;
+}
+.message-box {
+    display: flex;
+    gap: 10px;
+    padding: 13px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.message-box input {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+    padding: 12px 14px;
+    outline: none;
+}
+
+.message-box input:focus {
+    border-color: #20c969;
+}
+
+.message-box button {
+    width: 45px;
+    border: 0;
+    border-radius: 9px;
+    background: #20c969;
+    color: white;
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.loading {
+    padding: 25px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+@media (max-width: 800px) {
+    .sidebar {
+        width: 65px;
+    }
+
+    .brand-subtitle,
+    .brand-name span {
+        display: none;
+    }
+
+    .brand {
+        padding: 20px 12px;
+    }
+
+    .nav-item {
+        justify-content: center;
+        padding: 12px 5px;
+        font-size: 0;
+    }
+
+    .nav-item span {
+        font-size: 16px;
+    }
+
+    .main {
+        margin-left: 65px;
+        width: calc(100% - 65px);
+    }
+
+    .conversation-list {
+        width: 270px;
+    }
+
+    .inbox {
+        margin: 10px;
+    }
+}
+
+
+/* WhatsApp template message UI */
+.template-body {
+    margin-bottom: 8px;
+}
+
+.template-button {
+    margin-top: 9px;
+    padding: 7px 12px;
+    border: 1px solid #20c969;
+    border-radius: 7px;
+    background: white;
+    color: #15803d;
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.template-footer {
+    margin-top: 7px;
+    color: #6b7280;
+    font-size: 10px;
+}
+
+.template-label {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    color: #6b7280;
+    font-size: 9px;
+    margin-right: 5px;
+}
+
+/* WhatsApp-style template message polish */
+.template-button {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 34px;
+    margin-top: 8px;
+    padding: 7px 12px;
+    border: 1px solid #d7d7d7;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #008f4c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.template-button:hover {
+    background: #f5fff9;
+}
+
+.template-button-icon {
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.template-button-link {
+    color: #008f4c;
+}
+
+.template-footer {
+    margin-top: 6px;
+    color: #667781;
+    font-size: 10px;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 5px;
+    min-height: 12px;
+}
+
+.message-meta .message-time {
+    display: inline-block;
+    margin-top: 0;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.template-label {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    color: #667781;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.message-ticks {
+    font-size: 11px;
+    letter-spacing: -1px;
+    font-weight: 600;
+}
+
+.message-ticks-read {
+    color: #53bdeb;
+}
+
+/* FINAL WHATSAPP TEMPLATE UI FIX 2 */
+.template-button{box-sizing:border-box;width:100%;min-height:34px;margin-top:8px;padding:7px 12px;border:1px solid #d1d7db;border-radius:7px;background:#fff;color:#008069;display:flex;align-items:center;justify-content:center;gap:7px;text-align:center;font-weight:600;font-size:12px;line-height:1.2;text-decoration:none;cursor:pointer}.template-button:hover{background:#f5f6f6}.template-button-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px}.template-button-icon-svg{width:14px;height:14px}.message-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;min-height:13px}.message-meta .message-time{display:inline-block;margin-top:0;margin-left:auto;white-space:nowrap}.template-label{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:#667781;font-size:9px;white-space:nowrap}.message-ticks{margin-left:3px;font-size:11px;line-height:1;letter-spacing:-1px;vertical-align:-1px}.message-ticks-read{color:#53bdeb;font-weight:600}
