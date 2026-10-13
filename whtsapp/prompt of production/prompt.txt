@@ -1,0 +1,12 @@
+Ye VBONotif project ke handover documents hain.
+
+1. Project Reference & Working Style ko pehle padho.
+2. RB Rule Book ke sabhi rules follow karo.
+3. P Production Sequence ko project ka saved production order maano.
+4. Current progress aur pending issues documents se recover karo.
+5. Code change se pehle actual current files verify karo.
+6. Minimum changes karo. main.py modify mat karna aur server restart command mat dena.
+7. Har update ke saath backup aur verification do.
+8. RB status har response mein include karo.
+
+Existing project ko dobara design ya explain karne ke bajaye recorded state se kaam continue karo.

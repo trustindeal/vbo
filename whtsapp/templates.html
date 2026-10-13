@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBONotif - Templates</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/templates.css">
+    <link rel="stylesheet" href="css/ui-improvements.css">
+</head>
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-name">VBO<span>Notif</span></div>
+            <div class="brand-subtitle">WhatsApp Messaging Platform</div>
+        </div>
+
+        <nav class="nav">
+            <a href="dashboard.html" class="nav-item">
+                <span>▣</span> Dashboard
+            </a>
+
+            <a href="inbox.html" class="nav-item">
+                <span>◉</span> Inbox
+            </a>
+
+            <a href="contacts.html" class="nav-item">
+                <span>◌</span> Contacts
+            </a>
+
+            <a href="send-message.html" class="nav-item"><span>➤</span> Send Message</a>
+
+            <a href="templates.html" class="nav-item active">
+                <span>▤</span> Templates
+            </a>
+
+            <a href="wallet.html" class="nav-item">
+                <span>₹</span> Wallet / Credits
+            </a>
+
+            <a href="reports.html" class="nav-item"><span>▤</span> Reports</a>
+            <a href="integrations.html" class="nav-item">
+                <span>⌘</span> API &amp; Integrations
+            </a>
+
+            <a href="chatbot.html" class="nav-item">
+                <span>◉</span> Chatbot
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logoutButton" class="logout-button">
+                ⇥ Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <h1>Templates</h1>
+                <p>Create and manage your WhatsApp message templates</p>
+            </div>
+
+            <div class="account-chip">
+                <div class="account-avatar">V</div>
+                <div>
+                    <strong id="clientName">Loading...</strong>
+                    <small id="accountStatus">Checking account...</small>
+                </div>
+            </div>
+        </header>
+
+        <section class="templates-content">
+
+            <div class="templates-toolbar">
+
+                <div class="template-search">
+                    <input
+                        type="search"
+                        id="templateSearch"
+                        placeholder="Search templates..."
+                        autocomplete="off"
+                    >
+                </div>
+
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="UTILITY">Utility</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="AUTHENTICATION">Authentication</option>
+                </select>
+
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+
+                <button id="syncMetaButton" class="secondary-button">
+                    ↻ Sync Meta
+                </button>
+
+                <button id="createTemplateButton" class="create-template-button">
+                    + Create Template
+                </button>
+
+            </div>
+
+            <div id="templateGrid" class="template-grid"></div>
+
+            <div id="emptyTemplates" class="empty-templates">
+                <div class="empty-icon">▤</div>
+                <h3>No templates found</h3>
+                <p>Create your first WhatsApp template to get started.</p>
+                <button class="create-template-button" id="emptyCreateButton">
+                    + Create Template
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+</div>
+
+<!-- Create / Edit Template Modal -->
+<div id="templateModal" class="template-modal-overlay">
+
+    <div class="template-modal">
+
+        <div class="template-modal-header">
+            <div>
+                <h2 id="modalTitle">Create Template</h2>
+                <p>Create a WhatsApp message template</p>
+            </div>
+
+            <button id="closeTemplateModal" class="modal-close">
+                x
+            </button>
+        </div>
+
+        <div class="template-builder">
+
+            <div class="template-form">
+
+                <div class="template-form-row">
+
+                    <div class="template-field">
+                        <label>Template Name</label>
+                        <input
+                            type="text"
+                            id="templateName"
+                            placeholder="e.g. order_confirmation"
+                        >
+                    </div>
+
+                    <div class="template-field">
+                        <label>Category</label>
+                        <select id="templateCategory">
+                            <option value="UTILITY">Utility</option>
+                            <option value="MARKETING">Marketing</option>
+                            <option value="AUTHENTICATION">Authentication</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="template-form-row">
+
+                    <div class="template-field">
+                        <label>Language</label>
+                        <select id="templateLanguage">
+                            <option value="en_US">English (US)</option>
+                            <option value="en_GB">English (UK)</option>
+                            <option value="hi">Hindi</option>
+                            <option value="ur">Urdu</option>
+                        </select>
+                    </div>
+
+                    <div class="template-field">
+                        <label>Header Type</label>
+                        <select id="templateHeaderType">
+                            <option value="NONE">None</option>
+                            <option value="TEXT">Text</option>
+                            <option value="IMAGE">Image</option>
+                            <option value="VIDEO">Video</option>
+                            <option value="DOCUMENT">Document</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="template-field">
+                    <label>Header Text</label>
+                    <input
+                        type="text"
+                        id="templateHeader"
+                        placeholder="Optional header"
+                    >
+                </div>
+
+                <div class="template-field">
+                    <label>Message Body</label>
+                    <textarea
+                        id="templateBody"
+                        rows="7"
+                        placeholder="Hello {{1}}, your order {{2}} has been confirmed."
+                    ></textarea>
+                    <small>
+                        Use {{1}}, {{2}}, {{3}} for dynamic variables.
+                    </small>
+                </div>
+
+                <div class="template-field">
+                    <label>Footer</label>
+                    <input
+                        type="text"
+                        id="templateFooter"
+                        placeholder="Optional footer"
+                    >
+                </div>
+
+                <div class="template-field">
+                    <label>Buttons</label>
+
+                    <div class="button-row">
+                        <select id="buttonType">
+                            <option value="">No Button</option>
+                            <option value="URL">Visit Website</option>
+                            <option value="PHONE">Call Phone</option>
+                            <option value="QUICK_REPLY">Quick Reply</option>
+                        </select>
+
+                        <input
+                            type="text"
+                            id="buttonText"
+                            placeholder="Button text"
+                        >
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="template-preview-area">
+
+                <div class="preview-title">
+                    WhatsApp Preview
+                </div>
+
+                <div class="whatsapp-preview">
+
+                    <div class="preview-message">
+
+                        <div
+                            id="previewHeader"
+                            class="preview-header"
+                        ></div>
+
+                        <div
+                            id="previewBody"
+                            class="preview-body"
+                        >
+                            Your message preview will appear here.
+                        </div>
+
+                        <div
+                            id="previewFooter"
+                            class="preview-footer"
+                        ></div>
+
+                        <div
+                            id="previewButton"
+                            class="preview-button"
+                        ></div>
+
+                        <div class="preview-time">
+                            10:30 AM
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="template-modal-footer">
+
+            <button
+                id="cancelTemplateButton"
+                class="secondary-button"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="saveTemplateButton"
+                class="create-template-button"
+            >
+                Save Template
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="js/vbonotif-popups.js"></script>
+<script src="js/ui-shell.js"></script>
+<script src="js/templates.js"></script>
+
+</body>
+</html>
+
+
