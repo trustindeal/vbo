@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBONotif - Inbox</title>
+    <link rel="stylesheet" href="css/inbox.css">
+    <link rel="stylesheet" href="css/ui-improvements.css">
+</head>
+<body class="inbox-page">
+
+<div class="app">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-name">VBO<span>Notif</span></div>
+            <div class="brand-subtitle">WhatsApp Messaging Platform</div>
+        </div>
+
+        <nav class="nav">
+            <a href="dashboard.html" class="nav-item"><span>&#9635;</span> Dashboard</a>
+            <a href="inbox.html" class="nav-item active"><span>&#9673;</span> Inbox</a>
+            <a href="contacts.html" class="nav-item"><span>&#9676;</span> Contacts</a>
+            <a href="send-message.html" class="nav-item"><span>&#10148;</span> Send Message</a>
+            <a href="templates.html" class="nav-item"><span>&#9636;</span> Templates</a>
+            <a href="wallet.html" class="nav-item"><span>&#8377;</span> Wallet / Credits</a>
+            <a href="reports.html" class="nav-item"><span>&#9636;</span> Reports</a>
+            <a href="integrations.html" class="nav-item"><span>&#8984;</span> API &amp; Integrations</a>
+            <a href="chatbot.html" class="nav-item"><span>&#9673;</span> Chatbot</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logoutButton" class="logout-button"> Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar inbox-wa-topbar">
+            <div class="inbox-wa-brand">WhatsApp</div>
+            <div class="inbox-menu-wrap">
+                <button type="button" id="inboxArchiveButton" class="inbox-menu-button inbox-archive-button" aria-label="Show archived conversations" aria-pressed="false" title="Archived conversations">
+                    <span id="inboxArchiveIcon" class="inbox-archive-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" focusable="false"><path d="m480-240 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160ZM200-640v440h560v-440H200Zm0 520q-33 0-56.5-23.5T120-200v-499q0-14 4.5-27t13.5-24l50-61q11-14 27.5-21.5T250-840h460q18 0 34.5 7.5T772-811l50 61q9 11 13.5 24t4.5 27v499q0 33-23.5 56.5T760-120H200Zm16-600h528l-34-40H250l-34 40Zm264 300Z"/></svg></span>
+                    <span id="inboxArchiveLabel" class="inbox-archive-label">Inbox</span>
+                </button>
+                <button type="button" id="inboxBlockedButton" class="inbox-menu-button inbox-blocked-button" aria-label="Show blocked conversations" aria-pressed="false" title="Blocked conversations">
+                    <span id="inboxBlockedIcon" class="inbox-blocked-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" focusable="false"><path d="m840-234-80-80v-446q0-17 11.5-28.5T800-800q17 0 28.5 11.5T840-760v526ZM360-714l-80-80v-6q0-17 11.5-28.5T320-840q17 0 28.5 11.5T360-800v86Zm160 160-80-80v-246q0-17 11.5-28.5T480-920q17 0 28.5 11.5T520-880v326Zm160 81h-80v-367q0-17 11.5-28.5T640-880q17 0 28.5 11.5T680-840v367Zm37 343L360-487v224L212-367l157 229q5 8 14 13t19 5h278q10 0 19.5-2.5T717-130ZM402-40q-30 0-56-13.5T303-92L48-465l24-23q19-19 45-22t47 12l116 81v-150L27-820l57-57L876-85l-57 57-44-44q-20 15-44 23.5T680-40H402Zm137-268Zm61-165Z"/></svg></span>
+                    <span id="inboxBlockedLabel" class="inbox-blocked-label">Inbox</span>
+                </button>
+                <button type="button" id="inboxRefreshButton" class="inbox-menu-button inbox-refresh-button" aria-label="Refresh chats" title="Refresh chats">&#8635;</button>
+                <button type="button" id="inboxMenuButton" class="inbox-menu-button" aria-label="Open menu" aria-expanded="false">&#8942;</button>
+                <nav id="inboxMenu" class="inbox-menu" hidden>
+                    <a href="dashboard.html">Dashboard</a>
+                    <a href="contacts.html">Contacts</a>
+                    <a href="send-message.html">Send Message</a>
+                    <a href="templates.html">Templates</a>
+                    <a href="wallet.html">Wallet / Credits</a>
+                    <a href="reports.html">Reports</a>
+                    <a href="integrations.html">API &amp; Integrations</a>
+                    <a href="chatbot.html">Chatbot</a>
+                    <button type="button" id="inboxMenuLogout">Logout</button>
+                </nav>
+            </div>
+        </header>
+
+        <section class="inbox">
+
+            <div class="conversation-list">
+
+                <div class="inbox-search">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search conversations..."
+                    >
+                </div>
+
+                <div id="contactList" class="contacts">
+                    <div class="loading">Loading conversations...</div>
+                </div>
+
+            </div>
+
+            <div class="chat-area">
+
+                <div id="emptyChat" class="empty-chat">
+                    <div class="empty-icon">&#9673;</div>
+                    <h2>Select a conversation</h2>
+                    <p>Choose a contact from the list to view the conversation.</p>
+                </div>
+
+                <div id="chatView" class="chat-view hidden">
+
+                    <div class="chat-header">
+                        <button type="button" id="chatBackButton" class="chat-back-button" aria-label="Back to chats">&#8249;</button>
+                        <div class="chat-avatar" id="chatAvatar">T</div>
+
+                        <div>
+                            <strong id="chatName">Contact</strong>
+                            <span id="chatNumber">Phone number</span>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button type="button" id="chatMenuButton" class="chat-header-action" title="Menu" aria-label="Menu">&#8942;</button>
+                            <div id="chatMenuDropdown" class="chat-menu-dropdown" hidden>
+                                <button type="button" id="chatMenuSelectOption" class="chat-menu-item">Select messages</button>
+                                <button type="button" id="chatMenuHideOption" class="chat-menu-item chat-menu-item-danger">Archive conversation</button>
+                                <button type="button" id="chatMenuBlockOption" class="chat-menu-item chat-menu-item-danger">Block conversation</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="inboxMessageLoading" class="inbox-message-loading" hidden role="status">
+                        <span class="inbox-message-loading-spinner"></span>
+                        <span id="inboxMessageLoadingLabel">Loading messages</span>
+                        <span id="inboxMessageLoadingTime">0s</span>
+                    </div>
+                    <div id="messages" class="messages"></div>
+
+                    <div class="message-box">
+                        <input type="file" id="attachmentInput" multiple hidden>
+                        <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" hidden>
+                        <button type="button" id="attachmentButton" class="composer-icon-button" title="Attach file" aria-label="Attach file"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" focusable="false"><path d="M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160Zm40 200q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg></button>
+                        <button type="button" id="cameraButton" class="composer-icon-button" title="Take photo or video" aria-label="Take photo or video"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" focusable="false"><path d="M480-260q75 0 127.5-52.5T660-440q0-75-52.5-127.5T480-620q-75 0-127.5 52.5T300-440q0 75 52.5 127.5T480-260Zm0-80q-42 0-71-29t-29-71q0-42 29-71t71-29q42 0 71 29t29 71q0 42-29 71t-71 29ZM160-120q-33 0-56.5-23.5T80-200v-480q0-33 23.5-56.5T160-760h126l74-80h240l74 80h126q33 0 56.5 23.5T880-680v480q0 33-23.5 56.5T800-120H160Zm0-80h640v-480H638l-73-80H395l-73 80H160v480Zm320-240Z"/></svg></button>
+                        <button type="button" id="emojiButton" class="composer-icon-button" title="Add emoji" aria-label="Add emoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" focusable="false"><path d="M480-480Zm0 400q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q43 0 83 8.5t77 24.5v90q-35-20-75.5-31.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160q133 0 226.5-93.5T800-480q0-32-6.5-62T776-600h86q9 29 13.5 58.5T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm320-600v-80h-80v-80h80v-80h80v80h80v80h-80v80h-80ZM620-520q25 0 42.5-17.5T680-580q0-25-17.5-42.5T620-640q-25 0-42.5 17.5T560-580q0 25 17.5 42.5T620-520Zm-280 0q25 0 42.5-17.5T400-580q0-25-17.5-42.5T340-640q-25 0-42.5 17.5T280-580q0 25 17.5 42.5T340-520Zm263.5 221.5Q659-337 684-400H276q25 63 80.5 101.5T480-260q68 0 123.5-38.5Z"/></svg></button>
+                        <div id="emojiPicker" class="emoji-picker" hidden aria-label="Emoji picker"></div>
+                        <input
+                            type="text"
+                            id="messageInput"
+                            placeholder="Type a message..."
+                            autocomplete="off"
+                        >
+                        <button id="sendButton">&#10148;</button>
+                    </div>
+
+                    <div id="bulkActionBar" class="bulk-action-bar" hidden>
+                        <button type="button" id="bulkCancel" class="bulk-action-cancel">Cancel</button>
+                        <span id="bulkCount" class="bulk-action-count">0 selected</span>
+                        <button type="button" id="bulkDelete" class="bulk-action-delete">Delete selected</button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+</div>
+
+<script src="js/vbonotif-popups.js"></script>
+<script src="js/ui-shell.js"></script>
+<script id="inboxMenuInit">
+(function () {
+    const menuButton = document.getElementById("inboxMenuButton");
+    const menu = document.getElementById("inboxMenu");
+    const refreshButton = document.getElementById("inboxRefreshButton");
+    const logoutButton = document.getElementById("inboxMenuLogout");
+
+    if (menuButton && menu) {
+        function closeMenu() {
+            menu.hidden = true;
+            menuButton.setAttribute("aria-expanded", "false");
+        }
+
+        menuButton.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            menu.hidden = !menu.hidden;
+            menuButton.setAttribute("aria-expanded", String(!menu.hidden));
+        });
+
+        menu.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
+
+        document.addEventListener("click", closeMenu);
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") closeMenu();
+        });
+    }
+
+    if (logoutButton) {
+        logoutButton.addEventListener("click", function () {
+            const originalLogout = document.getElementById("logoutButton");
+            if (originalLogout) originalLogout.click();
+        });
+    }
+
+    if (refreshButton) {
+        refreshButton.addEventListener("click", async function () {
+            if (refreshButton.disabled) return;
+            refreshButton.disabled = true;
+            refreshButton.classList.add("is-refreshing");
+            try {
+                if (typeof loadContacts === "function") {
+                    await loadContacts();
+                }
+                const activeWaId = typeof selectedWaId !== "undefined" ? selectedWaId : null;
+                if (activeWaId && typeof openChat === "function") {
+                    await openChat(activeWaId);
+                }
+            } catch (error) {
+                console.error("Chat refresh failed:", error);
+            } finally {
+                refreshButton.disabled = false;
+                refreshButton.classList.remove("is-refreshing");
+            }
+        });
+    }
+})();
+</script>
+
+<div id="inboxLightbox" class="inbox-lightbox" hidden>
+    <button type="button" class="inbox-lightbox-close" aria-label="Close">X</button>
+    <img id="inboxLightboxImage" alt="Attachment preview">
+</div>
+
+<div id="inboxComposer" class="inbox-composer" hidden>
+    <div class="inbox-composer-panel">
+        <div class="inbox-composer-header">Send attachment</div>
+        <div class="inbox-composer-body">
+            <div id="inboxComposerPreview" class="inbox-composer-preview"></div>
+            <textarea id="inboxComposerCaption" class="inbox-composer-caption" placeholder="Add a caption..." rows="3"></textarea>
+        </div>
+        <div class="inbox-composer-actions">
+            <button type="button" id="inboxComposerCancel" class="inbox-composer-cancel">Cancel</button>
+            <button type="button" id="inboxComposerSend" class="inbox-composer-send">Send</button>
+        </div>
+    </div>
+</div>
+
+<div id="inboxCropper" class="inbox-cropper" hidden>
+    <div class="inbox-cropper-panel">
+        <div class="inbox-cropper-header">Crop image</div>
+        <div class="inbox-cropper-stage" id="inboxCropperStage">
+            <img id="inboxCropperImage" alt="Crop preview">
+            <div id="inboxCropperSelection" class="inbox-cropper-selection"></div>
+        </div>
+        <div class="inbox-cropper-actions">
+            <button type="button" id="inboxCropperReset" class="inbox-composer-cancel">Reset</button>
+            <button type="button" id="inboxCropperCancel" class="inbox-composer-cancel">Cancel</button>
+            <button type="button" id="inboxCropperApply" class="inbox-composer-send">Apply</button>
+        </div>
+    </div>
+</div>
+
+<div id="inboxToast" class="inbox-toast" hidden>
+    <span id="inboxToastMessage" class="inbox-toast-message"></span>
+    <button type="button" id="inboxToastAction" class="inbox-toast-action" hidden>Undo</button>
+    <button type="button" id="inboxToastClose" class="inbox-toast-close" aria-label="Dismiss notification">X</button>
+</div>
+<script src="js/inbox.js"></script>
+</body>
+</html>
+
