@@ -52,8 +52,8 @@
         }
         try {
             const reg = await navigator.serviceWorker.register(SW_PATH, { scope: "./" });
-            swRegistration = reg;
-            return reg;
+            swRegistration = await navigator.serviceWorker.ready;
+            return swRegistration || reg;
         } catch (e) {
             console.warn("SW registration failed:", e);
             return null;
@@ -67,6 +67,7 @@
     }
 
     async function getExistingSubscription() {
+        if (!swRegistration) await registerServiceWorker();
         if (!swRegistration) return null;
         try {
             return await swRegistration.pushManager.getSubscription();
@@ -96,6 +97,12 @@
             });
         }
 
+        await saveSubscription(sub);
+        localStorage.setItem(LS_KEY, "1");
+        return true;
+    }
+
+    async function saveSubscription(sub) {
         const subJson = sub.toJSON();
         const res = await fetch(API_BASE + "/subscribe", {
             method: "POST",
@@ -110,9 +117,6 @@
         if (!res.ok || !data.success) {
             throw new Error(data.detail || "Subscribe failed");
         }
-
-        localStorage.setItem(LS_KEY, "1");
-        return true;
     }
 
     async function unsubscribeFromPush() {
@@ -161,8 +165,19 @@
         const localFlag = localStorage.getItem(LS_KEY);
         if (localFlag === "0") return "off";
         if (perm === "granted") {
+            const sub = await getExistingSubscription();
+            if (!sub) return "off";
             const onServer = await isSubscribedOnServer();
-            return onServer ? "on" : "off";
+            if (onServer) return "on";
+
+            // Recover a valid browser subscription if its server row was lost.
+            if (localFlag === "1") {
+                try {
+                    await saveSubscription(sub);
+                    return "on";
+                } catch (e) {}
+            }
+            return "off";
         }
         return "off";
     }
@@ -223,6 +238,8 @@
             document.getElementById("pushToggleStateMenu")
         ].filter(Boolean);
         if (!cbs.length) return;
+
+        if (isPushSupported()) await registerServiceWorker();
 
         const render = async function () {
             if (!isPushSupported()) {
