@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBONotif - Chatbot</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/ui-improvements.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-name">VBO<span>Notif</span></div>
+            <div class="brand-subtitle">WhatsApp Messaging Platform</div>
+        </div>
+
+        <nav class="nav">
+            <a href="dashboard.html" class="nav-item"><span>▣</span> Dashboard</a>
+            <a href="inbox.html" class="nav-item"><span>◉</span> Inbox</a>
+            <a href="contacts.html" class="nav-item"><span>◌</span> Contacts</a>
+            <a href="send-message.html" class="nav-item"><span>➤</span> Send Message</a>
+            <a href="templates.html" class="nav-item"><span>▤</span> Templates</a>
+            <a href="wallet.html" class="nav-item"><span>₹</span> Wallet / Credits</a>
+            <a href="reports.html" class="nav-item"><span>▤</span> Reports</a>
+            <a href="integrations.html" class="nav-item"><span>⌘</span> API &amp; Integrations</a>
+            <a href="chatbot.html" class="nav-item active"><span>◉</span> Chatbot</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logoutButton" class="logout-button">⇥ Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <h1>Chatbot</h1>
+                <p>Build and manage your WhatsApp chatbot</p>
+            </div>
+            <div class="account-chip">
+                <div class="account-avatar">V</div>
+                <div>
+                    <strong id="clientName">Loading...</strong>
+                    <small id="accountStatus">Checking account...</small>
+                </div>
+            </div>
+        </header>
+
+        <section class="dashboard-content">
+            <div class="section-grid">
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Bot Configuration</h2>
+                            <p>Choose how your chatbot should work</p>
+                        </div>
+                        <span class="status-badge" id="chatbotStatus">Not checked</span>
+                    </div>
+                    <div class="rate-row">
+                        <span>Bot mode</span>
+                        <strong id="chatbotMode">Not configured</strong>
+                    </div>
+                    <div class="rate-row">
+                        <span>Flow status</span>
+                        <strong id="flowStatus">Not loaded</strong>
+                    </div>
+                    <p id="chatbotMessage" role="status">Chatbot configuration will appear here after connecting the API.</p>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Conversation Flow</h2>
+                            <p>Design the customer conversation</p>
+                        </div>
+                    </div>
+                    <p>Visual flow builder</p>
+                    <p>Build messages, questions, menus, conditions and API steps in one connected flow.</p>
+                    <button type="button" class="quick-action" id="openFlowBuilder">
+                        <span>◇</span>
+                        <strong>Build Conversation Flow</strong>
+                        <small>Flow editor setup is the next step</small>
+                    </button>
+                    <div id="flowEditorPanel" class="flow-editor-panel" hidden>
+                        <div class="panel-header">
+                            <div>
+                                <h2>Flow Builder</h2>
+                                <p>Create and connect your conversation steps</p>
+                            </div>
+                        </div>
+
+                        <div class="flow-editor-toolbar">
+                            <label>
+                                Flow name
+                                <input id="flowNameInput" type="text" value="Main flow" maxlength="120">
+                            </label>
+                            <label>
+                                Mode
+                                <select id="flowModeInput">
+                                    <option value="static">Static</option>
+                                    <option value="dynamic">Dynamic</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="flow-editor-toolbar">
+                            <button type="button" id="addMessageNode">+ Message</button>
+                            <button type="button" id="addEndNode">+ End</button>
+                            <button type="button" id="connectFlowNodes">Connect / Reset connection</button>
+                        </div>
+
+                        <p class="flow-editor-help">
+                            Select a node to edit it. To connect nodes, select the source first,
+                            then the destination, and click Connect.
+                        </p>
+
+                        <div id="flowNodeList" class="flow-node-list" aria-live="polite"></div>
+
+                        <div id="flowNodeEditor" class="flow-node-editor" hidden>
+                            <h3 id="selectedNodeTitle">Selected node</h3>
+                            <label>
+                                Node type
+                                <select id="selectedNodeType">
+                                    <option value="start">Start</option>
+                                    <option value="message">Message</option>
+                                    <option value="end">End</option>
+                                </select>
+                            </label>
+                            <label id="selectedNodeTextLabel">
+                                Message text
+                                <textarea id="selectedNodeText" rows="3" maxlength="4000"></textarea>
+                            </label>
+                            <button type="button" id="applyNodeChanges">Apply node changes</button>
+                            <button type="button" id="deleteSelectedNode">Delete node</button>
+                        </div>
+
+                        <p id="flowEditorMessage" role="status"></p>
+                    </div>
+                </section>
+            </div>
+
+            <section class="panel quick-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Flow Management</h2>
+                        <p>Draft, validate and publish your chatbot flow</p>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button type="button" class="quick-action" id="loadFlowButton">
+                        <span>↻</span><strong>Load Flow</strong><small>Read saved flow</small>
+                    </button>
+                    <button type="button" class="quick-action" id="saveDraftButton">
+                        <span>▣</span><strong>Save Draft</strong><small>Save flow changes</small>
+                    </button>
+                    <button type="button" class="quick-action" id="validateFlowButton">
+                        <span>✓</span><strong>Validate</strong><small>Check flow rules</small>
+                    </button>
+                    <button type="button" class="quick-action" id="publishFlowButton">
+                        <span>↑</span><strong>Publish</strong><small>Publish validated flow</small>
+                    </button>
+                </div>
+                <p id="flowMessage" role="status">API actions are not connected yet.</p>
+            </section>
+        </section>
+    </main>
+</div>
+
+<script src="js/vbonotif-popups.js"></script>
+<script src="js/ui-shell.js"></script>
+<script src="js/chatbot.js"></script>
+</body>
+</html>
+
