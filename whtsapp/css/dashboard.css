@@ -1,0 +1,408 @@
+﻿* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f7fa;
+    color: #172033;
+}
+
+button,
+a {
+    font-family: inherit;
+}
+
+.app {
+    min-height: 100vh;
+    display: flex;
+}
+
+.sidebar {
+    width: 245px;
+    background: #111827;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.brand {
+    padding: 28px 22px 25px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand-name {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+}
+
+.brand-name span {
+    color: #20c969;
+}
+
+.brand-subtitle {
+    margin-top: 6px;
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+.nav {
+    padding: 18px 12px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 14px;
+    margin-bottom: 4px;
+    border-radius: 9px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.nav-item span {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: white;
+}
+
+.nav-item.active {
+    background: #20c969;
+    color: white;
+}
+
+.sidebar-bottom {
+    padding: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.logout-button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    padding: 11px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+}
+
+.logout-button:hover {
+    background: rgba(255,255,255,0.07);
+    color: white;
+}
+
+.main {
+    margin-left: 245px;
+    width: calc(100% - 245px);
+    min-height: 100vh;
+}
+
+.topbar {
+    height: 86px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 34px;
+}
+
+.topbar h1 {
+    margin: 0;
+    font-size: 25px;
+}
+
+.topbar p {
+    margin: 5px 0 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.account-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.account-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #20c969;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.account-chip strong {
+    display: block;
+    font-size: 13px;
+}
+
+.account-chip small {
+    color: #6b7280;
+    font-size: 11px;
+}
+
+.dashboard-content {
+    padding: 28px 34px 40px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 13px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 11px;
+    background: #ecfdf3;
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.small-value {
+    font-size: 16px;
+}
+
+.section-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 13px;
+    padding: 22px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.panel h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.panel-header p {
+    margin: 5px 0 0;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.status-badge {
+    background: #ecfdf3;
+    color: #15803d;
+    border-radius: 20px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.whatsapp-account {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 24px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.wa-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #20c969;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.whatsapp-account strong {
+    display: block;
+    font-size: 14px;
+}
+
+.whatsapp-account span {
+    display: block;
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.rate-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f2f5;
+    font-size: 13px;
+}
+
+.rate-row:last-child {
+    border-bottom: 0;
+}
+
+.rate-row span {
+    color: #6b7280;
+}
+
+.quick-panel {
+    margin-top: 18px;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.quick-action {
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.quick-action:hover {
+    border-color: #20c969;
+    transform: translateY(-1px);
+}
+
+.quick-action > span {
+    display: block;
+    color: #20c969;
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.quick-action strong {
+    display: block;
+    font-size: 13px;
+}
+
+.quick-action small {
+    display: block;
+    margin-top: 5px;
+    color: #6b7280;
+    font-size: 11px;
+}
+
+@media (max-width: 1000px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .sidebar {
+        width: 65px;
+    }
+
+    .brand-subtitle,
+    .brand-name span,
+    .nav-item:not(.active) {
+        display: none;
+    }
+
+    .brand {
+        padding: 20px 12px;
+    }
+
+    .brand-name {
+        font-size: 20px;
+    }
+
+    .nav-item {
+        justify-content: center;
+        padding: 12px 5px;
+    }
+
+    .nav-item span {
+        margin: 0;
+    }
+
+    .main {
+        margin-left: 65px;
+        width: calc(100% - 65px);
+    }
+
+    .topbar {
+        padding: 0 18px;
+    }
+
+    .dashboard-content {
+        padding: 18px;
+    }
+
+    .section-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
