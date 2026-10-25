@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBONotif - Chatbot</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/ui-improvements.css">
+</head>
+<body class="chatbot-page">
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-name">VBO<span>Notif</span></div>
+            <div class="brand-subtitle">WhatsApp Messaging Platform</div>
+        </div>
+
+        <nav class="nav">
+            <a href="dashboard.html" class="nav-item"><span>▣</span> Dashboard</a>
+            <a href="inbox.html" class="nav-item"><span>◉</span> Inbox</a>
+            <a href="contacts.html" class="nav-item"><span>◌</span> Contacts</a>
+            <a href="send-message.html" class="nav-item"><span>➤</span> Send Message</a>
+            <a href="templates.html" class="nav-item"><span>▤</span> Templates</a>
+            <a href="wallet.html" class="nav-item"><span>₹</span> Wallet / Credits</a>
+            <a href="reports.html" class="nav-item"><span>▤</span> Reports</a>
+            <a href="integrations.html" class="nav-item"><span>⌘</span> API &amp; Integrations</a>
+            <a href="chatbot.html" class="nav-item active"><span>◉</span> Chatbot</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logoutButton" class="logout-button">⇥ Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <h1>Chatbot</h1>
+                <p>Build and manage your WhatsApp chatbot</p>
+            </div>
+            <div class="chatbot-topbar-actions">
+                <button type="button" id="chatbotGuideButton" class="chatbot-guide-button"
+                        aria-haspopup="dialog" aria-controls="chatbotGuideModal">
+                    Guide
+                </button>
+                <div class="account-chip">
+                    <div class="account-avatar">V</div>
+                    <div>
+                        <strong id="clientName">Loading...</strong>
+                        <small id="accountStatus">Checking account...</small>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="dashboard-content chatbot-content">
+            <div class="section-grid">
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Bot Configuration</h2>
+                            <p>Choose how your chatbot should work</p>
+                        </div>
+                        <span class="status-badge" id="chatbotStatus">Not checked</span>
+                    </div>
+                    <div class="rate-row">
+                        <span>Bot mode</span>
+                        <strong id="chatbotMode">Not configured</strong>
+                    </div>
+                    <div class="rate-row">
+                        <span>Flow status</span>
+                        <strong id="flowStatus">Not loaded</strong>
+                    </div>
+                    <p id="chatbotMessage" role="status">Chatbot configuration will appear here after connecting the API.</p>
+                    <div class="bot-settings-form">
+                        <label class="bot-toggle-field"><input id="botEnabledInput" type="checkbox"> <span>Enable automatic replies</span></label>
+                        <label class="bot-timeout-field"><span>Reply session timeout</span><span class="timeout-control"><input id="botTimeoutInput" type="number" min="5" max="43200" value="1440"><em>minutes</em></span></label>
+                        <label class="bot-timeout-field"><span>Handoff timeout</span><span class="timeout-control"><input id="handoffTimeoutInput" type="number" min="5" max="43200" value="1440"><em>minutes</em></span></label>
+                        <button type="button" id="saveBotSettings" class="chatbot-primary-button">Save settings</button>
+                    </div>
+                    <p>Only static published flows are currently supported.</p>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2>Conversation Flow</h2>
+                            <p>Design the customer conversation</p>
+                        </div>
+                    </div>
+                    <p>Visual flow builder</p>
+                    <p class="flow-intro">Choose a starting template, then edit each step. Your draft stays separate from the live published flow.</p>
+                    <button type="button" class="quick-action flow-open-button" id="openFlowBuilder">
+                        <span>◇</span>
+                        <strong>Build Conversation Flow</strong>
+                        <small>Open the visual builder</small>
+                    </button>
+                    <div id="flowEditorPanel" class="flow-editor-panel" hidden>
+                        <div class="panel-header">
+                            <div>
+                                <h2>Flow Builder</h2>
+                                <p>Create and connect your conversation steps</p>
+                            </div>
+                        </div>
+
+                        <div class="flow-name-row">
+                            <label>
+                                Flow name
+                                <input id="flowNameInput" type="text" value="Main flow" maxlength="120">
+                            </label>
+                            <input id="flowModeInput" type="hidden" value="static">
+                        </div>
+
+                        <div class="flow-starter-grid">
+                            <button type="button" class="flow-starter-card" id="startSimpleFlow"><strong>Simple welcome</strong><small>Send a greeting and finish</small></button>
+                            <button type="button" class="flow-starter-card" id="startSupportFlow"><strong>Support menu</strong><small>Give choices and hand off to a person</small></button>
+                        </div>
+                        <p class="flow-editor-help flow-help-text">Start with a template or add your own steps. Select a step to edit it, then connect steps in the order customers should see them.</p>
+
+                        <div class="flow-action-grid">
+                            <button type="button" id="addMessageNode">+ Message</button>
+                            <button type="button" id="addQuestionNode">+ Question</button>
+                            <button type="button" id="addMenuNode">+ Menu</button>
+                            <button type="button" id="addHandoffNode">+ Handoff</button>
+                            <button type="button" id="addEndNode">+ End</button>
+                        </div>
+
+                        <div class="flow-connect-card"><span><strong>Connect steps</strong><small>Select the source step, then destination step.</small></span><button type="button" id="connectFlowNodes">Connect selected steps</button></div>
+
+                        <div id="flowNodeList" class="flow-node-list" aria-live="polite"></div>
+
+                        <div id="flowNodeEditor" class="flow-node-editor" hidden>
+                            <h3 id="selectedNodeTitle">Selected node</h3>
+                            <label>
+                                Node type
+                                <select id="selectedNodeType">
+                                    <option value="start">Start</option>
+                                    <option value="message">Message</option>
+                                    <option value="question">Question</option>
+                                    <option value="menu">Menu</option>
+                                    <option value="handoff">Handoff</option>
+                                    <option value="end">End</option>
+                                </select>
+                            </label>
+                            <label id="selectedNodeTextLabel">
+                                Message text
+                                <textarea id="selectedNodeText" rows="3" maxlength="4000"></textarea>
+                            </label>
+                            <label id="selectedNodeOptionsLabel" hidden>
+                                Menu options — one per line: Label | target node ID
+                                <textarea id="selectedNodeOptions" rows="4" maxlength="4000"></textarea>
+                            </label>
+                            <div id="selectedHandoffFields" hidden>
+                                <p class="flow-editor-help">When this step is reached, VBONotif alerts the employee on WhatsApp. The alert includes the customer number and the VBONotif login page, where the employee can open Inbox and reply.</p>
+                                <label>
+                                    Employee country code
+                                    <select id="handoffCountryCode">
+                                        <option value="91">India +91</option>
+                                        <option value="1">USA / Canada +1</option>
+                                        <option value="44">United Kingdom +44</option>
+                                        <option value="971">UAE +971</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    Employee WhatsApp number
+                                    <input id="handoffEmployeeNumber" type="tel" inputmode="numeric" maxlength="15" placeholder="9876543210">
+                                </label>
+                                <label>
+                                    Employee notification template
+                                    <select id="handoffTemplateSelect" disabled>
+                                        <option value="">Loading approved templates…</option>
+                                    </select>
+                                </label>
+                                <p id="handoffTemplateHelp" class="flow-editor-help">Select an approved template for the employee alert. Templates that need more than one value use the normal-text fallback.</p>
+                                <label>
+                                    Customer confirmation (optional)
+                                    <textarea id="handoffCustomerConfirmation" rows="2" maxlength="1200" placeholder="Our team will contact you shortly."></textarea>
+                                </label>
+                                <p class="flow-editor-help">If no usable template is selected, the employee receives: <code>Customer seeking your help: https://vbo.co.in/whtsapp</code>.</p>
+                            </div>
+                            <button type="button" id="applyNodeChanges">Apply node changes</button>
+                            <button type="button" id="deleteSelectedNode">Delete node</button>
+                        </div>
+
+                        <p id="flowEditorMessage" role="status"></p>
+                    </div>
+                </section>
+            </div>
+
+            <section class="panel quick-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Flow Management</h2>
+                        <p>Draft, validate and publish your chatbot flow</p>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button type="button" class="quick-action" id="loadFlowButton">
+                        <span>↻</span><strong>Load Flow</strong><small>Read saved flow</small>
+                    </button>
+                    <button type="button" class="quick-action" id="saveDraftButton">
+                        <span>▣</span><strong>Save Draft</strong><small>Save flow changes</small>
+                    </button>
+                    <button type="button" class="quick-action" id="validateFlowButton">
+                        <span>✓</span><strong>Validate</strong><small>Check flow rules</small>
+                    </button>
+                    <button type="button" class="quick-action" id="publishFlowButton">
+                        <span>↑</span><strong>Publish</strong><small>Publish validated flow</small>
+                    </button>
+                </div>
+                <p id="flowMessage" role="status">Load your saved flow to begin editing, then save, validate, and publish when ready.</p>
+            </section>
+        </section>
+    </main>
+</div>
+
+<div id="chatbotGuideModal" class="chatbot-guide-overlay" hidden>
+    <section class="chatbot-guide-modal" role="dialog" aria-modal="true" aria-labelledby="chatbotGuideTitle">
+        <div class="chatbot-guide-header">
+            <div>
+                <span class="chatbot-guide-label">Quick guide</span>
+                <h2 id="chatbotGuideTitle">Chatbot setup in 5 simple steps</h2>
+            </div>
+            <button type="button" id="chatbotGuideClose" class="chatbot-guide-close" aria-label="Close guide">&times;</button>
+        </div>
+        <p class="chatbot-guide-intro">In steps ko follow karke aap apna WhatsApp bot easily ready kar sakte hain.</p>
+        <ol class="chatbot-guide-steps">
+            <li><strong>Bot on karein:</strong> <em>Enable automatic replies</em> tick karein aur reply timeout set karein.</li>
+            <li><strong>Handoff timeout set karein:</strong> Human support ke baad bot kitni der mein dobara active hoga, minutes mein choose karein.</li>
+            <li><strong>Flow banayein:</strong> <em>Build Conversation Flow</em> se Simple welcome ya Support menu template select karein.</li>
+            <li><strong>Steps edit aur connect karein:</strong> Message, Menu, Question ya Handoff mein details fill karein; phir steps ko order mein connect karein.</li>
+            <li><strong>Live karein:</strong> Pehle <em>Save Draft</em>, phir <em>Validate</em>. Errors na hon to <em>Publish</em> karein.</li>
+        </ol>
+        <div class="chatbot-guide-note">
+            <strong>Yaad rakhein:</strong> Customer ko reply sirf published flow se jayega. Handoff node mein employee number aur notification template bhi set kar sakte hain.
+        </div>
+        <div class="chatbot-guide-support">
+            <span>More details / help:</span>
+            <a href="tel:+917007902013">+91 70079 02013</a>
+        </div>
+        <button type="button" id="chatbotGuideDone" class="chatbot-guide-done">Got it</button>
+    </section>
+</div>
+
+<script src="js/vbonotif-popups.js"></script>
+<script src="js/ui-shell.js"></script>
+<script src="js/chatbot.js"></script>
+</body>
+</html>
+
