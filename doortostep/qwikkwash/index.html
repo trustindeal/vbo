@@ -6,6 +6,7 @@
 
  
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,8 +17,8 @@
     <div class="ho-brand">
       <span class="ho-brand-mark">KW</span>
       <div class="ho-brand-copy">
-        <h1>Kwikkwash Rampur -HO</h1>
-        <p>Operations Console</p>
+        <h1>KwikkWash HO</h1>
+        <p>Company Operations Console</p>
       </div>
     </div>
   </header>
@@ -36,26 +37,22 @@
           <!-- Different Access -->
           <div>
             <div class="right-button btn-internet clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-router-fill"></i> Different Access
+              <i class="bi bi-grid-1x2-fill"></i> Different Access
             </div>
 
             <div class="dropdown-options">
 
               <div class="right-button btn-internet right-button-small clickable"
      onclick="openTab('https://kwikkwash.com/', 'Customer application')">
-  <i class="bi bi-hdd-rack"></i> Customer application
+  <i class="bi bi-phone-fill"></i> Customer application
 </div>
               <div class="right-button btn-internet right-button-small clickable"
      onclick="openTab('https://vbo.co.in/doortostep/qwikkwash/moradabad', 'Moradabad')">
-  <i class="bi bi-hdd-rack"></i> Moradabad
+  <i class="bi bi-geo-alt-fill"></i> Moradabad
 </div>              
-<div class="right-button btn-admin right-button-small clickable"
-     onclick="openTab('https://kwikkwash.com/rampur/employeeland/005premveer', 'Team access')">
-  005premveer
-</div>
-<div class="right-button btn-admin right-button-small clickable"
-     onclick="openTab('https://kwikkwash.com/rampur/employeeland/006tejpalsingh', 'Team access')">
-  006tejpalsingh
+              <div class="right-button btn-internet right-button-small clickable"
+     onclick="openTab('https://vbo.co.in/doortostep/qwikkwash/rampur', 'Rampur')">
+  <i class="bi bi-geo-alt-fill"></i> Rampur
 </div>              
 
             </div>
@@ -64,14 +61,14 @@
           <!-- Administration -->
           <div>
             <div class="right-button btn-cable clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-tv"></i> Administration
+              <i class="bi bi-shield-lock-fill"></i> Administration
             </div>
 
 <div class="dropdown-options">
 
 <div class="right-button btn-admin right-button-small clickable"
      onclick="openTab('https://kwikkwash.com/wc/', 'WebControls')">
-  Web Controls
+  <i class="bi bi-sliders"></i> Web Controls
 </div>
 
 
@@ -88,7 +85,7 @@
           <!-- ACCOUNTS -->
           <div>
             <div class="right-button btn-admin clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-buildings"></i> Accounts & records
+              <i class="bi bi-receipt-cutoff"></i> Accounts & records
             </div>
 
             <div class="dropdown-options">
@@ -108,33 +105,83 @@
             </div>
           </div>
 
-          <!-- Dashboards -->
+          <!-- WhatsApp -->
           <div>
-            <div class="right-button btn-stock clickable" onclick="toggleOptions(this)">
-              <i class="bi bi-box-arrow-in-down"></i> Dashboards
-            </div>
-
-            <div class="dropdown-options">
-
-              <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
-                <i class="bi bi-arrow-left-right"></i> Partner performance analysis
-              </div>
-
-              <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
-                <i class="bi bi-journal"></i> Customer feed back
-              </div>
-              <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
-                <i class="bi bi-journal"></i> Emplyees performance
-              </div>
-                <div class="right-button btn-stock right-button-small clickable" onclick="showComingSoon()" style="opacity:0.5; filter:grayscale(1); cursor:not-allowed;">
-                <i class="bi bi-journal"></i> Notes
-              </div>
-              
-
+            <div class="right-button btn-whatsapp clickable" onclick="openTab('https://vbo.co.in/whtsapp', 'WhatsApp')">
+              <span class="admin-whatsapp-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><circle class="whatsapp-bg" cx="8" cy="8" r="8"/><path class="whatsapp-logo" d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.9 7.9 0 0 0-2.327-5.607M7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.25a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.066-.315-.099-.445.099-.133.197-.513.646-.627.775-.116.133-.232.15-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.104-1.372-.116-.198-.013-.305.089-.403.09-.088.197-.232.296-.346.1-.116.133-.198.198-.33.066-.134.033-.249-.017-.347-.05-.099-.445-1.076-.61-1.47-.161-.389-.323-.335-.445-.341-.114-.007-.247-.007-.379-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.151.904.129 1.246.079.38-.058 1.171-.48 1.338-.943.164-.462.164-.857.114-.943-.049-.084-.182-.133-.38-.232"/></svg>
+              </span>
+              WhatsApp
             </div>
           </div>
 
         </div>
+
+        <section class="admin-analytics" aria-labelledby="analyticsTitle">
+          <div class="analytics-heading">
+            <div>
+              <span>Live operations</span>
+              <h2 id="analyticsTitle">City Performance</h2>
+            </div>
+            <label class="analytics-range-label" for="analyticsRange">
+              <span>Period</span>
+              <select id="analyticsRange" class="analytics-range">
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="yearly" selected>Yearly</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="analytics-grid">
+            <article class="analytics-card trend-card">
+              <div class="analytics-card-head">
+                <div><span>Booking comparison</span><strong id="adminTrendLabel">Weekly Bookings</strong></div>
+                <div class="admin-chart-toggle" role="group" aria-label="Chart type">
+                  <button type="button" class="admin-chart-button active" data-admin-chart="line" aria-pressed="true"><i class="bi bi-graph-up"></i>Line</button>
+                  <button type="button" class="admin-chart-button" data-admin-chart="bar" aria-pressed="false"><i class="bi bi-bar-chart-fill"></i>Bar</button>
+                </div>
+              </div>
+              <div class="admin-series-legend">
+                <span><i class="admin-series-dot rampur"></i>Rampur <strong id="adminRampurTotal">--</strong></span>
+                <span><i class="admin-series-dot moradabad"></i>Moradabad <strong id="adminMoradabadTotal">--</strong></span>
+              </div>
+              <div class="admin-trend-chart" id="adminTrendChart" role="img" aria-label="Rampur and Moradabad booking comparison">
+                <span class="analytics-loading">Loading performance...</span>
+              </div>
+              <div class="admin-chart-axis" id="adminChartAxis"></div>
+            </article>
+
+            <article class="analytics-card status-card">
+              <div class="analytics-card-head">
+                <div><span>Status overview</span><strong>Booking Distribution</strong></div>
+              </div>
+              <div class="city-pies">
+                <div class="city-pie-block">
+                  <div class="admin-donut rampur" id="rampurDonut" role="img" aria-label="Rampur booking status">
+                    <div><strong id="rampurDonutTotal">--</strong><span>Rampur</span></div>
+                  </div>
+                  <div class="pie-legend">
+                    <span><i class="status-dot completed"></i>Done <strong id="rampurCompleted">--</strong></span>
+                    <span><i class="status-dot active"></i>Active <strong id="rampurActive">--</strong></span>
+                    <span><i class="status-dot cancelled"></i>Cancelled <strong id="rampurCancelled">--</strong></span>
+                  </div>
+                </div>
+                <div class="city-pie-block">
+                  <div class="admin-donut moradabad" id="moradabadDonut" role="img" aria-label="Moradabad booking status">
+                    <div><strong id="moradabadDonutTotal">--</strong><span>Moradabad</span></div>
+                  </div>
+                  <div class="pie-legend">
+                    <span><i class="status-dot completed"></i>Done <strong id="moradabadCompleted">--</strong></span>
+                    <span><i class="status-dot active"></i>Active <strong id="moradabadActive">--</strong></span>
+                    <span><i class="status-dot cancelled"></i>Cancelled <strong id="moradabadCancelled">--</strong></span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
 
       </div>
 
