@@ -2,6 +2,8 @@
 <html>
 <head>
   <base target="_top">
+  <title>KwikkWash Moradabad</title>
+  <meta name="description" content="KwikkWash Moradabad operations portal">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5, user-scalable=yes">
 
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -9,9 +11,17 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body data-city="Moradabad">
 
-  <header class="header"></header>
+  <header class="header">
+    <a class="brand" href="https://kwikkwash.com" target="_blank" aria-label="Open KwikkWash website">
+      <span class="brand-mark" aria-hidden="true">KW</span>
+      <span class="brand-copy">
+        <span class="brand-title">KwikkWash</span>
+        <span class="brand-location">Moradabad Operations</span>
+      </span>
+    </a>
+  </header>
 
   <button class="logout-btn" onclick="logout()">Logout</button>
 
@@ -28,17 +38,23 @@
 
         <div class="right-grid">
 
-          <!-- PREBOOKINGS -->
+          <!-- WHATSAPP -->
           <div>
             <div class="right-button btn-internet clickable"
-                 onclick="openTab('https://kwikkwash.com/moradabadlaunch/dashboard', 'PreBookings')">
-              PreBookings
+                 onclick="openTab('https://vbo.co.in/whtsapp', 'WhatsApp')">
+              <span class="button-icon whatsapp-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><circle class="whatsapp-bg" cx="8" cy="8" r="8"/><path class="whatsapp-logo" d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93a7.9 7.9 0 0 0-2.327-5.607M7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.25a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.066-.315-.099-.445.099-.133.197-.513.646-.627.775-.116.133-.232.15-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.104-1.372-.116-.198-.013-.305.089-.403.09-.088.197-.232.296-.346.1-.116.133-.198.198-.33.066-.134.033-.249-.017-.347-.05-.099-.445-1.076-.61-1.47-.161-.389-.323-.335-.445-.341-.114-.007-.247-.007-.379-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.151.904.129 1.246.079.38-.058 1.171-.48 1.338-.943.164-.462.164-.857.114-.943-.049-.084-.182-.133-.38-.232"/></svg>
+              </span>
+              WhatsApp
             </div>
           </div>
           <!-- Customer app -->
           <div>
             <div class="right-button btn-internet clickable"
-                 onclick="openTab('https://kwikkwash.com', 'PreBookings')">
+                 onclick="openTab('https://kwikkwash.com', 'Customer App')">
+              <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg>
+              </span>
               Customer app
             </div>
           </div>
@@ -48,7 +64,10 @@
           <!-- DASHBOARD -->
           <div>
             <div class="right-button btn-cable clickable"
-                 onclick="openTab('https://kwikkwash.com/moradabadcp/', 'Dashboard')">
+                 onclick="openTab('https://kwikkwash.com/moradabadcp/', 'Moradabad Dashboard')">
+              <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 16v-3M12 16V8M17 16v-6"/></svg>
+              </span>
               Dashboard
             </div>
           </div>
@@ -58,6 +77,9 @@
           <div>
             <div class="right-button btn-admin clickable"
                  onclick="toggleOptions(this)">
+              <span class="button-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 19c.4-3.5 2.3-5.2 6-5.2s5.6 1.7 6 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c3.2 0 4.8 1.5 5 4.3"/></svg>
+              </span>
               Team Access
             </div>
 
@@ -66,12 +88,18 @@
               <!-- 001 SURAPSINGH -->
               <div class="right-button btn-admin right-button-small clickable"
                    onclick="openTab('https://kwikkwash.com/rampur/employeeland/001surajpal', '001surajsingh')">
+                <span class="button-icon button-icon-small" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c.5-4.6 2.8-7 7-7s6.5 2.4 7 7"/></svg>
+                </span>
                 001surajsingh
               </div>
 
               <!-- 003 LALSINGH -->
               <div class="right-button btn-admin right-button-small clickable"
                    onclick="openTab('https://kwikkwash.com/rampur/employeeland/003lalsingh', '003lalsingh')">
+                <span class="button-icon button-icon-small" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c.5-4.6 2.8-7 7-7s6.5 2.4 7 7"/></svg>
+                </span>
                 003lalsingh
               </div>
 
@@ -79,6 +107,62 @@
           </div>
 
         </div>
+
+        <section class="performance-section" aria-labelledby="performanceTitle">
+          <div class="performance-heading">
+            <div>
+              <span class="performance-kicker">Live branch insights</span>
+              <h2 id="performanceTitle">Performance Overview</h2>
+            </div>
+            <label class="performance-range-label" for="performanceRange">
+              <span>Period</span>
+              <select id="performanceRange" class="performance-range">
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="yearly" selected>Yearly</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="performance-grid">
+            <article class="performance-card">
+              <div class="performance-card-head">
+                <div><span>Partner comparison</span><strong id="bookingTrendLabel">Weekly Bookings</strong></div>
+                <div class="chart-type-toggle" role="group" aria-label="Chart type">
+                  <button type="button" class="chart-type-button active" data-chart-type="line" aria-pressed="true"><i class="toggle-icon line-icon" aria-hidden="true"></i>Line</button>
+                  <button type="button" class="chart-type-button" data-chart-type="bar" aria-pressed="false"><i class="toggle-icon bar-icon" aria-hidden="true"></i>Bar</button>
+                </div>
+              </div>
+              <div class="partner-series-legend" aria-label="Partner totals">
+                <span><i class="series-dot rampur"></i>Rampur <strong id="rampurSeriesTotal">--</strong></span>
+                <span><i class="series-dot moradabad"></i>Moradabad <strong id="moradabadSeriesTotal">--</strong></span>
+              </div>
+              <div class="line-chart" id="bookingsChart" role="img" aria-label="Bookings over the last seven days">
+                <span class="chart-loading">Loading performance...</span>
+              </div>
+              <div class="chart-axis" id="bookingsAxis"></div>
+            </article>
+
+            <article class="performance-card completion-card">
+              <div class="performance-card-head">
+                <div><span>Job status</span><strong>Completion Rate</strong></div>
+                <strong class="metric-value" id="completionRate">--</strong>
+              </div>
+              <div class="status-chart-layout">
+                <div class="donut-chart" id="statusDonut" role="img" aria-label="Booking completion status">
+                  <div><strong id="donutTotal">--</strong><span>Bookings</span></div>
+                </div>
+                <div class="chart-legend">
+                  <div><span class="legend-dot completed"></span><span>Completed</span><strong id="completedCount">--</strong></div>
+                  <div><span class="legend-dot active"></span><span>In progress</span><strong id="activeCountGraph">--</strong></div>
+                  <div><span class="legend-dot cancelled"></span><span>Cancelled</span><strong id="cancelledCount">--</strong></div>
+                </div>
+              </div>
+            </article>
+
+          </div>
+        </section>
 
       </div>
 
