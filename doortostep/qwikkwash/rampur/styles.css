@@ -833,3 +833,222 @@ footer {
 .btn-cable .right-button-small { color: #c62828; }
 .btn-admin .right-button-small { color: #0d47a1; }
 .btn-stock .right-button-small { color: #e65100; }
+
+/* Compact city operations layout - aligned with HO admin */
+body { height: 100dvh; }
+
+.header {
+  min-height: 42px;
+  padding: 5px 72px 5px 8px;
+  border-bottom-width: 2px;
+}
+
+.brand { gap: 9px; }
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  font-size: 0.75rem;
+}
+
+.brand-title {
+  font-size: 1rem;
+  line-height: 1.05;
+}
+
+.brand-location {
+  margin-top: 2px;
+  font-size: 0.66rem;
+}
+
+.logout-btn {
+  position: fixed;
+  top: 6px;
+  right: 8px;
+  z-index: 50;
+  padding: 0.34rem 0.68rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+}
+
+.container {
+  height: calc(100dvh - 42px);
+  padding: 5px;
+}
+
+.tab-bar {
+  min-height: 30px;
+  margin-bottom: 4px;
+  padding: 3px 42px 3px 3px;
+  border: 1px solid #dde3ea;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.tab-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.tab-contents { min-height: 0; }
+
+.tab-contents .tab-content,
+.tab-contents .tab-content.active {
+  height: 100%;
+  padding: 6px;
+}
+
+.right-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+  flex-grow: 0;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.right-button {
+  min-height: 64px;
+  padding: 0.78rem 0.72rem;
+  flex-direction: row;
+  gap: 8px;
+  border-radius: 9px;
+  font-size: 0.92rem;
+}
+
+.button-icon {
+  width: 25px;
+  height: 25px;
+  margin: 0;
+}
+
+.whatsapp-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.right-button-small,
+.btn-admin.right-button-small {
+  min-height: 38px;
+  padding: 0.58rem 0.7rem !important;
+  border-radius: 8px;
+  font-size: 0.76rem !important;
+}
+
+.button-icon-small {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.dropdown-options {
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.performance-section {
+  margin-top: 9px;
+  padding: 10px;
+  border-radius: 13px;
+}
+
+.performance-heading { margin-bottom: 9px; }
+.performance-heading h2 { font-size: 1.05rem; }
+
+.performance-grid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(380px, 0.85fr);
+  gap: 9px;
+}
+
+.performance-card {
+  padding: 10px;
+  border-radius: 11px;
+}
+
+.performance-card-head .metric-value { font-size: 1.4rem; }
+.status-chart-layout { margin-top: 0.65rem; }
+
+@media screen and (max-width: 1050px) {
+  .performance-grid { grid-template-columns: 1fr; }
+}
+
+@media screen and (max-width: 768px) {
+  .header {
+    min-height: 36px;
+    padding: 4px 58px 4px 5px;
+  }
+
+  .brand { gap: 7px; }
+
+  .brand-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+  }
+
+  .brand-title { font-size: 0.86rem; }
+  .brand-location { display: none; }
+
+  .logout-btn {
+    top: 4px;
+    right: 5px;
+    padding: 0.26rem 0.5rem;
+    font-size: 0.68rem;
+  }
+
+  .container {
+    height: calc(100dvh - 36px);
+    padding: 3px;
+  }
+
+  .tab-bar {
+    min-height: 28px;
+    margin-bottom: 3px;
+    padding: 2px 48px 2px 2px;
+    border-radius: 6px;
+  }
+
+  .tab-btn {
+    padding: 4px 7px;
+    font-size: 0.72rem;
+  }
+
+  .tab-contents .tab-content,
+  .tab-contents .tab-content.active {
+    height: 100% !important;
+    padding: 3px !important;
+  }
+
+  .right-grid {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .right-button {
+    min-height: 52px;
+    padding: 0.56rem 0.62rem !important;
+    border-radius: 8px;
+    font-size: 0.82rem !important;
+  }
+
+  .button-icon {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+  }
+
+  .whatsapp-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .performance-section {
+    margin-top: 6px;
+    padding: 8px;
+  }
+
+  .performance-card { padding: 8px; }
+}

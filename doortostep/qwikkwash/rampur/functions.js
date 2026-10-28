@@ -156,7 +156,7 @@ const PERFORMANCE_API = 'https://app.vbo.co.in/kwikkwash/bookings';
 const performanceState = {
   bookings: null,
   branches: { Rampur: null, Moradabad: null },
-  range: 'weekly',
+  range: 'yearly',
   chartType: 'line'
 };
 
