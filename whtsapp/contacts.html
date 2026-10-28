@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBONotif - Contacts</title>
+    <link rel="stylesheet" href="css/contacts.css">
+    <link rel="stylesheet" href="css/ui-improvements.css">
+</head>
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-name">VBO<span>Notif</span></div>
+            <div class="brand-subtitle">WhatsApp Messaging Platform</div>
+        </div>
+
+        <nav class="nav">
+            <a href="dashboard.html" class="nav-item"><span>▣</span> Dashboard</a>
+            <a href="inbox.html" class="nav-item"><span>◉</span> Inbox</a>
+            <a href="contacts.html" class="nav-item active"><span>◌</span> Contacts</a>
+            <a href="send-message.html" class="nav-item"><span>➤</span> Send Message</a>
+            <a href="templates.html" class="nav-item"><span>▤</span> Templates</a>
+            <a href="wallet.html" class="nav-item"><span>₹</span> Wallet / Credits</a>
+            <a href="reports.html" class="nav-item"><span>▤</span> Reports</a>
+            <a href="integrations.html" class="nav-item"><span>⌘</span> API &amp; Integrations</a>
+            <a href="chatbot.html" class="nav-item"><span>◉</span> Chatbot</a>
+            <a href="partners.html" class="nav-item"><span>&#128101;</span> Partner Logins</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="logoutButton" class="logout-button">⇥ Logout</button>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <h1>Contacts</h1>
+                <p>Manage your WhatsApp contacts</p>
+            </div>
+
+            <div class="account-chip">
+                <div class="account-avatar">V</div>
+                <div>
+                    <strong id="clientName">Loading...</strong>
+                    <small>Active account</small>
+                </div>
+            </div>
+        </header>
+
+        <section class="contacts-content">
+
+            <div class="page-header">
+                <div>
+                    <h2>All Contacts</h2>
+                    <p id="contactSummary">Loading contacts...</p>
+                </div>
+
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search contacts..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
+            <section class="contacts-panel">
+
+                <div class="contacts-table-header">
+                    <div>Contact</div>
+                    <div>WhatsApp Number</div>
+                    <div>Status</div>
+                    <div>Last Interaction</div>
+                    <div>Action</div>
+                </div>
+
+                <div id="contactsList">
+                    <div class="loading">Loading contacts...</div>
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="js/vbonotif-popups.js"></script>
+<script src="js/ui-shell.js"></script>
+<script src="js/contacts.js"></script>
+
+<script src="js/access-guard.js"></script>
+</body>
+</html>
+

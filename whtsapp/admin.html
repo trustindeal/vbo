@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBONotif Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/ui-improvements.css">
+</head>
+<body class="admin-shell">
+
+<div class="sidebar">
+    <div class="brand">
+        <div class="brand-name">VBO<span>Notif</span></div>
+        <div class="brand-subtitle">Admin Panel</div>
+    </div>
+
+    <nav>
+        <a class="nav-item active" href="admin.html">▣ <span>Dashboard</span></a>
+        <a class="nav-item" href="#clients">◉ <span>Clients</span></a>
+        <a class="nav-item" href="#rechargeRequests">₹ <span>Recharge Requests</span></a>
+        <a class="nav-item" href="#adminSchedules">⏱ <span>Schedules</span></a>
+        <button type="button" class="nav-item">⚙ <span>Scheduler Settings</span></button>
+        <a class="nav-item" href="https://business.facebook.com/latest/billing_hub/accounts/?business_id=5513536978971818" target="_blank" rel="noopener">💳 <span>Meta Billing</span></a>
+    </nav>
+
+    <button type="button" class="logout" id="adminLogoutButton">↪ Logout</button>
+</div>
+
+<main class="main">
+    <header class="topbar">
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p>Manage VBONotif clients and wallet operations</p>
+        </div>
+
+        <div class="admin-profile">
+            <div class="avatar">A</div>
+            <div>
+                <strong>Administrator</strong>
+                <small>Admin account</small>
+            </div>
+        </div>
+    </header>
+
+    <section class="content">
+
+        <div class="stats-grid">
+
+    <div class="stat-card">
+        <div class="stat-label">Total Clients</div>
+        <div class="stat-value" id="totalClients">—</div>
+        <div class="stat-note">Active client accounts</div>
+    </div>
+
+    <div class="stat-card warning">
+        <div class="stat-label">Pending Recharge</div>
+        <div class="stat-value" id="pendingCount">0</div>
+        <div class="stat-note">Requests awaiting approval</div>
+    </div>
+
+    <div class="stat-card message-stat-card" id="messageStatsCard">
+        <div class="stat-label">Messages</div>
+        <div class="stat-value">
+            <span id="todayMessages">—</span>
+            <span style="margin: 0 8px; color: #9ca3af;">|</span>
+            <span id="totalMessages">—</span>
+        </div>
+        <div class="stat-note">Click to view full analysis</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Today's Revenue</div>
+        <div class="stat-value" id="todayRevenue">—</div>
+        <div class="stat-note">Client wallet recharge</div>
+    </div>
+
+</div>
+
+<div class="message-modal-overlay" id="messageStatsModal">
+    <div class="message-modal">
+
+        <div class="message-modal-header">
+            <div>
+                <h2 id="messageModalTitle">Message Details</h2>
+                <p id="messageModalSubtitle">Message statistics</p>
+            </div>
+
+            <button
+                type="button"
+                class="message-modal-close"
+                id="messageStatsClose"
+            >×</button>
+        </div>
+
+        <div style="padding: 20px 22px 0;">
+            <h3 style="margin: 0 0 12px; font-size: 15px;">Today</h3>
+
+            <div class="message-breakdown-grid" style="padding: 0;">
+
+                <div class="message-breakdown-item">
+                    <span>Incoming</span>
+                    <strong id="todayModalIncoming">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Sent</span>
+                    <strong id="todayModalSent">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Delivered</span>
+                    <strong id="todayModalDelivered">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Read</span>
+                    <strong id="todayModalRead">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Failed</span>
+                    <strong id="todayModalFailed">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Pending</span>
+                    <strong id="todayModalPending">0</strong>
+                </div>
+
+            </div>
+        </div>
+
+        <div style="padding: 20px 22px 0;">
+            <h3 style="margin: 0 0 12px; font-size: 15px;">All Time</h3>
+
+            <div class="message-breakdown-grid" style="padding: 0;">
+
+                <div class="message-breakdown-item">
+                    <span>Incoming</span>
+                    <strong id="totalModalIncoming">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Sent</span>
+                    <strong id="totalModalSent">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Delivered</span>
+                    <strong id="totalModalDelivered">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Read</span>
+                    <strong id="totalModalRead">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Failed</span>
+                    <strong id="totalModalFailed">0</strong>
+                </div>
+
+                <div class="message-breakdown-item">
+                    <span>Pending</span>
+                    <strong id="totalModalPending">0</strong>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="message-chart-section">
+            <div class="message-chart-header">
+                <div>
+                    <h3 id="messageTrendTitle">Message Trend — Last 7 Days</h3>
+                    <p id="messageTrendRange" class="message-chart-range"></p>
+                </div>
+
+                <div class="message-chart-controls">
+                    <label>
+                        <span>Period</span>
+                        <select id="messageTrendPeriod">
+                            <option value="7">7 Days</option>
+                            <option value="30">30 Days</option>
+                            <option value="90">90 Days</option>
+                            <option value="180">180 Days</option>
+                            <option value="365">1 Year</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Chart</span>
+                        <select id="messageTrendChartType">
+                            <option value="line">Line</option>
+                            <option value="bar">Bar</option>
+                            <option value="pie">Pie</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div id="messageTrendCustomDates" class="message-chart-custom-dates" style="display:none;">
+                <label>
+                    <span>From</span>
+                    <input type="date" id="messageTrendFrom">
+                </label>
+                <label>
+                    <span>To</span>
+                    <input type="date" id="messageTrendTo">
+                </label>
+                <button type="button" id="messageTrendApply">Apply</button>
+            </div>
+
+            <div id="messageChart">
+                <canvas id="messageTrendChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+<section class="panel vbo-analytics" id="adminAnalytics">
+    <div class="panel-header">
+        <div>
+            <h2>Platform Analytics</h2>
+            <p>Client-wise messaging, delivery status and recorded billing</p>
+        </div>
+        <button type="button" class="analytics-refresh" id="refreshAdminAnalytics">Refresh</button>
+    </div>
+    <div id="analyticsMessage" class="analytics-message">Loading analytics...</div>
+    <div class="analytics-summary" id="analyticsSummary"></div>
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <h3>Messages by Client</h3>
+            <div class="analytics-chart-wrap"><canvas id="analyticsClientChart"></canvas></div>
+        </div>
+        <div class="analytics-card">
+            <h3>Message Status</h3>
+            <div class="analytics-chart-wrap"><canvas id="analyticsStatusChart"></canvas></div>
+        </div>
+        <div class="analytics-card analytics-wide">
+            <h3>Recorded Billing by Client (₹)</h3>
+            <div class="analytics-chart-wrap analytics-billing-wrap"><canvas id="analyticsBillingChart"></canvas></div>
+        </div>
+    </div>
+    <div class="analytics-card analytics-table-card">
+        <h3>Client Comparison</h3>
+        <div class="analytics-table-wrap">
+            <table class="analytics-table">
+                <thead>
+                    <tr>
+                        <th>Client</th><th>Total</th><th>Incoming</th><th>Outgoing</th>
+                        <th>Charges</th><th>Refunds</th><th>Net</th><th>Billing</th>
+                    </tr>
+                </thead>
+                <tbody id="analyticsClientRows">
+                    <tr><td colspan="8">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="analytics-footnote" id="analyticsBillingNote"></p>
+</section>
+<section class="panel" id="clients" style="margin-bottom:24px;">
+    <div class="panel-header">
+        <div>
+            <h2>Clients</h2>
+            <p>Manage VBONotif client accounts.</p>
+        </div>
+        <button type="button" class="refresh-button" id="newClientButton">
+            + New Client
+        </button>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Client</th>
+                            <th>Login ID</th>
+                            <th>Password</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="clientsTableBody">
+                <tr>
+                    <td colspan="3" class="empty-state">Loading clients...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div id="editClientModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;width:min(720px,100%);max-height:90vh;overflow:auto;border-radius:12px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+                <h2 style="margin:0;">Edit Client</h2>
+                <p id="editClientSubtitle" style="margin:5px 0 0;color:#6b7280;">Client details</p>
+            </div>
+            <button type="button" id="closeEditClientModal" style="border:0;background:none;font-size:28px;cursor:pointer;">×</button>
+        </div>
+
+        <form id="editClientForm">
+            <input type="hidden" id="editClientName">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <label>
+                    Login Username
+                    <input id="editUsername" name="username" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    New Password
+                    <input id="editPassword" name="password" type="password" placeholder="Leave blank to keep current" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    WhatsApp Phone
+                    <input id="editPhoneNumber" name="phone_number" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Display Name
+                    <input id="editDisplayName" name="display_name" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Wallet Balance
+                    <input id="editBalance" name="balance" type="number" min="0" step="0.01" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Validity Days
+                    <input id="editValidityDays" name="validity_days" type="number" min="1" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Text Message Rate (24 hr window)
+                    <input id="editTextMessage24h" name="text_message_24h" type="number" min="0" step="0.01" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Marketing Template Rate
+                    <input id="editTemplateMarketing" name="template_marketing" type="number" min="0" step="0.01" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Other Template Rate (Utility/Auth/Service)
+                    <input id="editTemplateOther" name="template_other" type="number" min="0" step="0.01" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Minimum Recharge
+                    <input id="editMinimumRecharge" name="minimum_recharge" type="number" min="0" step="0.01" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    UPI ID
+                    <input id="editUpiId" name="upi_id" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Status
+                    <select id="editStatus" name="status" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </label>
+            </div>
+
+            <div style="margin-top:16px; padding-top:12px; border-top:1px solid #e5e7eb;">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="editBotEnabled" name="bot_enabled">
+                    <strong>Enable Static Bot</strong>
+                </label>
+                <div style="margin-top:8px; display:flex; gap:16px; align-items:center;">
+                    <label style="flex:1;">Expiry Date & Time
+                        <input type="datetime-local" id="editBotExpiresAt" name="bot_expires_at" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;margin-top:20px;">
+                        <input type="checkbox" id="editBotSeamless" name="bot_seamless">
+                        Seamless (Lifetime)
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:12px;">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="editDynamicBotEnabled" name="dynamic_bot_enabled">
+                    <strong>Enable Dynamic Bot (API Access)</strong>
+                </label>
+                <div style="margin-top:8px; display:flex; gap:16px; align-items:center;">
+                    <label style="flex:1;">Expiry Date & Time
+                        <input type="datetime-local" id="editDynamicBotExpiresAt" name="dynamic_bot_expires_at" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;margin-top:20px;">
+                        <input type="checkbox" id="editDynamicBotSeamless" name="dynamic_bot_seamless">
+                        Seamless (Lifetime)
+                    </label>
+                </div>
+            </div>
+
+            <section style="margin-top:22px;padding:16px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;">
+                <h3 style="margin:0 0 12px;">API Settings</h3>
+                <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <input type="checkbox" id="editApiEnabled">
+                    Enable public API for this client
+                </label>
+                <label style="display:block;max-width:280px;">
+                    Maximum recipients per request
+                    <input id="editApiRecipientLimit" type="number" min="1" max="1000" step="1" value="20" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+                <p id="editApiKeyState" style="font-size:13px;color:#4b5563;margin:10px 0;">No API key generated</p>
+                <button type="button" id="regenerateApiKeyButton" class="refresh-button">Generate / Regenerate API Key</button>
+                <div id="generatedApiKeyNotice" style="display:none;white-space:normal;overflow-wrap:anywhere;margin-top:12px;padding:12px;border:1px solid #f59e0b;border-radius:8px;background:#fffbeb;color:#92400e;font-family:monospace;"></div>
+                <p style="font-size:12px;color:#6b7280;margin-bottom:0;">The API key is stored as a hash and shown only once when generated. Keep it private.</p>
+            </section>
+
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+                <button type="button" id="cancelEditClient" class="refresh-button">Cancel</button>
+                <button type="submit" class="refresh-button" id="saveClientChanges">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="newClientModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;width:min(720px,100%);max-height:90vh;overflow:auto;border-radius:12px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div>
+                <h2 style="margin:0;">New Client</h2>
+                <p style="margin:5px 0 0;color:#6b7280;">Create a new VBONotif client account.</p>
+            </div>
+            <button type="button" id="closeNewClientModal" style="border:0;background:none;font-size:28px;cursor:pointer;">×</button>
+        </div>
+
+        <form id="newClientForm">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <label>
+                    Client Name *
+                    <input name="client_name" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Login Username *
+                    <input name="username" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Login Password *
+                    <input name="password" type="password" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    WhatsApp Phone
+                    <input name="phone_number" placeholder="919XXXXXXXXX" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Display Name
+                    <input name="display_name" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Initial Wallet Balance
+                    <input name="initial_balance" type="number" min="0" step="0.01" value="0" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Validity Days
+                    <input name="validity_days" type="number" min="1" value="30" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Text Message Rate (24 hr window)
+                    <input name="text_message_24h" type="number" min="0" step="0.01" value="1" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Marketing Template Rate
+                    <input name="template_marketing" type="number" min="0" step="0.01" value="1" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Other Template Rate (Utility/Auth/Service)
+                    <input name="template_other" type="number" min="0" step="0.01" value="1" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Minimum Recharge
+                    <input name="minimum_recharge" type="number" min="0" step="0.01" value="100" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    UPI ID
+                    <input name="upi_id" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Status
+                    <select name="status" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </label>
+            </div>
+
+            <div style="margin-top:16px; padding-top:12px; border-top:1px solid #e5e7eb;">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="bot_enabled">
+                    <strong>Enable Static Bot</strong>
+                </label>
+                <div style="margin-top:8px; display:flex; gap:16px; align-items:center;">
+                    <label style="flex:1;">Expiry Date & Time
+                        <input type="datetime-local" name="bot_expires_at" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;margin-top:20px;">
+                        <input type="checkbox" name="bot_seamless">
+                        Seamless (Lifetime)
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:12px;">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="dynamic_bot_enabled">
+                    <strong>Enable Dynamic Bot (API Access)</strong>
+                </label>
+                <div style="margin-top:8px; display:flex; gap:16px; align-items:center;">
+                    <label style="flex:1;">Expiry Date & Time
+                        <input type="datetime-local" name="dynamic_bot_expires_at" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;margin-top:20px;">
+                        <input type="checkbox" name="dynamic_bot_seamless">
+                        Seamless (Lifetime)
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+                <button type="button" id="cancelNewClient" class="refresh-button">Cancel</button>
+                <button type="submit" class="refresh-button" id="createClientSubmit">Create Client</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- META LINK MODAL -->
+<div id="linkMetaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:11000;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;width:min(760px,100%);max-height:92vh;overflow:auto;border-radius:14px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <div>
+                <h2 style="margin:0;">🔗 Link Meta</h2>
+                <p id="linkMetaSubtitle" style="margin:5px 0 0;color:#6b7280;">Connect WhatsApp Cloud API</p>
+            </div>
+            <button type="button" id="closeLinkMetaModal" style="border:0;background:none;font-size:28px;cursor:pointer;">×</button>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:18px;">
+            <div style="font-size:13px;color:#6b7280;">Client</div>
+            <strong id="linkMetaClientName">—</strong>
+            <div style="margin-top:8px;font-size:13px;color:#6b7280;">
+                Phone: <strong id="linkMetaPhone">—</strong>
+                &nbsp; | &nbsp;
+                Display Name: <strong id="linkMetaDisplayName">—</strong>
+            </div>
+            <div style="margin-top:6px;font-size:12px;color:#9ca3af;">
+                These values come from Client Creation and are not entered again here.
+            </div>
+        </div>
+
+        <form id="linkMetaForm">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+                <label>
+                    Phone Number ID
+                    <details style="display:inline-block;position:relative;vertical-align:middle;margin-left:4px;"><summary style="display:inline-block;list-style:none;cursor:pointer;font-size:13px;color:#374151;">ⓘ</summary><div style="position:absolute;left:18px;top:20px;width:280px;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:12px;line-height:1.5;font-weight:400;color:#374151;z-index:20000;">Meta Business → WhatsApp → API Setup. Copy the Phone Number ID shown for this WhatsApp number.</div></details>
+                    <input id="metaPhoneNumberId" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    WABA ID
+                    <details style="display:inline-block;position:relative;vertical-align:middle;margin-left:4px;"><summary style="display:inline-block;list-style:none;cursor:pointer;font-size:13px;color:#374151;">ⓘ</summary><div style="position:absolute;left:18px;top:20px;width:280px;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:12px;line-height:1.5;font-weight:400;color:#374151;z-index:20000;">Meta Business → WhatsApp Accounts. Open the client's WhatsApp Business Account and copy its WABA ID.</div></details>
+                    <input id="metaWabaId" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Business ID
+                    <details style="display:inline-block;position:relative;vertical-align:middle;margin-left:4px;"><summary style="display:inline-block;list-style:none;cursor:pointer;font-size:13px;color:#374151;">ⓘ</summary><div style="position:absolute;left:18px;top:20px;width:280px;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:12px;line-height:1.5;font-weight:400;color:#374151;z-index:20000;">Meta Business Settings → Business Info. Copy the Business ID.</div></details>
+                    <input id="metaBusinessId" required style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Access Token
+                    <details style="display:inline-block;position:relative;vertical-align:middle;margin-left:4px;"><summary style="display:inline-block;list-style:none;cursor:pointer;font-size:13px;color:#374151;">ⓘ</summary><div style="position:absolute;left:18px;top:20px;width:280px;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:12px;line-height:1.5;font-weight:400;color:#374151;z-index:20000;">Meta Developer App → WhatsApp → API Setup, or the permanent/system-user token created for this business.</div></details>
+                    <input id="metaAccessToken" type="password" autocomplete="new-password" placeholder="Enter new token, or leave blank to keep existing" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Token Expiry
+                    <details style="display:inline-block;position:relative;vertical-align:middle;margin-left:4px;"><summary style="display:inline-block;list-style:none;cursor:pointer;font-size:13px;color:#374151;">ⓘ</summary><div style="position:absolute;left:18px;top:20px;width:280px;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:12px;line-height:1.5;font-weight:400;color:#374151;z-index:20000;">Optional. Enter the token expiry date/time if you want it recorded for monitoring.</div></details>
+                    <input id="metaTokenExpiresAt" type="datetime-local" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                </label>
+
+                <label>
+                    Connection Status
+                    <details style="display:inline-block;position:relative;vertical-align:middle;margin-left:4px;"><summary style="display:inline-block;list-style:none;cursor:pointer;font-size:13px;color:#374151;">ⓘ</summary><div style="position:absolute;left:18px;top:20px;width:280px;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.15);font-size:12px;line-height:1.5;font-weight:400;color:#374151;z-index:20000;">Use Active when Meta credentials are ready and connected. Use Inactive to disable this Meta connection.</div></details>
+                    <select id="metaStatus" style="width:100%;box-sizing:border-box;padding:10px;margin-top:5px;">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </label>
+
+            </div>
+
+            <div style="margin-top:18px;padding:14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;">
+                <strong>📘 Meta Setup Guide</strong>
+                <div style="font-size:13px;line-height:1.6;margin-top:8px;">
+                    1. Open Meta Business Manager and create/open the client's Business Account.<br>
+                    2. Set up WhatsApp Business Account (WABA) and add the dedicated WhatsApp number.<br>
+                    3. Open the WhatsApp API / API Setup section and note the Phone Number ID.<br>
+                    4. Copy the WABA ID and Business ID from Meta Business settings.<br>
+                    5. Create/copy the required WhatsApp Cloud API access token.<br>
+                    6. Make sure the required WhatsApp permissions and webhook setup are completed.<br>
+                    7. Enter the values above and click <strong>Save Meta Connection</strong>.
+                </div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px;">
+                <button type="button" id="metaGuideButton" class="refresh-button">📘 Meta Guide</button>
+                <button type="button" id="cancelLinkMeta" class="refresh-button">Cancel</button>
+                <button type="submit" class="refresh-button" id="saveMetaConnection">Save Meta Connection</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- META GUIDE MODAL -->
+<div id="metaGuideModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:12000;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;width:min(680px,100%);max-height:90vh;overflow:auto;border-radius:14px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <div>
+                <h2 style="margin:0;">📘 Meta Setup Guide</h2>
+                <p style="margin:5px 0 0;color:#6b7280;">Quick guide for connecting a new client</p>
+            </div>
+            <button type="button" id="closeMetaGuideModal" style="border:0;background:none;font-size:28px;cursor:pointer;">×</button>
+        </div>
+
+        <div style="line-height:1.7;font-size:14px;">
+            <p><strong>1. Meta Business</strong><br>
+            Create or open the client's Meta Business account.</p>
+
+            <p><strong>2. WhatsApp Business Account</strong><br>
+            Create/open the WABA and add the client's dedicated WhatsApp number.</p>
+
+            <p><strong>3. Developer / Cloud API</strong><br>
+            Open the WhatsApp Cloud API setup and get the Phone Number ID.</p>
+
+            <p><strong>4. Required IDs</strong><br>
+            Collect the WABA ID and Business ID from Meta.</p>
+
+            <p><strong>5. Access Token</strong><br>
+            Create the appropriate WhatsApp API access token with the required permissions.</p>
+
+            <p><strong>6. Webhook</strong><br>
+            Configure the common VBONotif webhook and subscribe the WABA as required.</p>
+
+            <p><strong>7. Templates</strong><br>
+            Create/approve WhatsApp message templates in Meta whenever template messaging is required.</p>
+
+            <p><strong>8. Link here</strong><br>
+            Enter the Meta IDs and token in the Link Meta form and save the connection.</p>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+            <button type="button" id="closeMetaGuideBottom" class="refresh-button">Close</button>
+        </div>
+    </div>
+</div>
+<section class="panel" id="rechargeRequests">
+            <div class="panel-header">
+                <div>
+                    <h2>Recharge Requests</h2>
+                    <p>Review and approve client wallet recharge requests.</p>
+                </div>
+
+                <button class="refresh-button" id="refreshRequests">
+                    ↻ Refresh
+                </button>
+            </div>
+
+            <div class="global-search-wrap">
+    <input type="search" id="globalEntrySearch" class="global-entry-search" placeholder="Search entries..." autocomplete="off">
+</div>
+<div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Login ID</th>
+                            <th>Password</th>
+                            <th>Amount</th>
+                            <th>UTR / Reference</th>
+                            <th>Requested On</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="rechargeTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                No recharge requests yet.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/vbonotif-popups.js"></script>
+<script src="js/ui-shell.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/admin-analytics.js"></script>
+<script>
+document.getElementById("adminLogoutButton")?.addEventListener("click", function() {
+    localStorage.removeItem("vbonotif_admin_token");
+    localStorage.removeItem("vbonotif_admin_user");
+    window.location.href = "admin-login.html";
+});
+
+/* META_INFO_POPUP_BEHAVIOR */
+function closeMetaInfoPopups(exceptDetails) {
+    document.querySelectorAll("#linkMetaModal details[open]").forEach(function(details) {
+        if (details !== exceptDetails) {
+            details.removeAttribute("open");
+        }
+    });
+}
+
+document.addEventListener("click", function(event) {
+    const clickedDetails = event.target.closest("#linkMetaModal details");
+    if (clickedDetails) {
+        closeMetaInfoPopups(clickedDetails);
+        return;
+    }
+
+    closeMetaInfoPopups();
+});
+
+document.addEventListener("toggle", function(event) {
+    if (event.target.matches("#linkMetaModal details") && event.target.open) {
+        closeMetaInfoPopups(event.target);
+    }
+}, true);
+
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        document.querySelectorAll("#linkMetaModal details[open]").forEach(function(details) {
+            details.removeAttribute("open");
+        });
+    }
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
