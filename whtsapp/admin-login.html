@@ -92,6 +92,25 @@
             cursor: not-allowed;
         }
 
+        .user-login-button {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 13px;
+            border: 1px solid #16a34a;
+            border-radius: 8px;
+            background: white;
+            color: #16a34a;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .user-login-button:hover {
+            background: #f0fdf4;
+        }
+
         .error {
             margin-top: 15px;
             padding: 10px;
@@ -150,6 +169,10 @@
         <button type="submit" id="loginButton">
             Login
         </button>
+
+        <a class="user-login-button" href="https://vbo.co.in/whtsapp/">
+            User Login
+        </a>
 
         <div id="loginError" class="error"></div>
 
