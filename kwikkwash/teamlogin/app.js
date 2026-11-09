@@ -2,6 +2,9 @@ const CLIENT_ID = "224714556804-81spvp5794l9rfrslif4o27k4u5fr1ig.apps.googleuser
 const AUTH_ENDPOINT = "https://script.google.com/macros/s/AKfycbzhGqwlkWCJOJBXNRQ0qD-KC_Ws02UQ3Nti8b9x8_EEb7wMSxTMgXRc4GkHlYpkZ5OCTg/exec";
 const UNASSIGNED_FALLBACK_URL = "https://www.google.com";
 const APP_PATH = "/kwikkwash/teamlogin/";
+const TRUSTED_ACCESS_DURATION = 30 * 24 * 60 * 60 * 1000;
+const ACCESS_URL_KEY = "kwikkwash_team_access_url";
+const ACCESS_TIME_KEY = "kwikkwash_team_access_verified_at";
 
 let deferredInstallPrompt = null;
 
@@ -27,6 +30,47 @@ function isSafeDestination(value) {
   }
 }
 
+function clearTrustedAccess() {
+  try {
+    localStorage.removeItem(ACCESS_URL_KEY);
+    localStorage.removeItem(ACCESS_TIME_KEY);
+  } catch {
+    // Login remains available when browser storage is blocked.
+  }
+}
+
+function saveTrustedAccess(url) {
+  try {
+    localStorage.setItem(ACCESS_URL_KEY, url);
+    localStorage.setItem(ACCESS_TIME_KEY, String(Date.now()));
+  } catch {
+    // Redirect still works; only the remembered-login convenience is skipped.
+  }
+}
+
+function getTrustedAccess() {
+  try {
+    const url = localStorage.getItem(ACCESS_URL_KEY);
+    const verifiedAt = Number(localStorage.getItem(ACCESS_TIME_KEY));
+    const isFresh = Number.isFinite(verifiedAt) && Date.now() - verifiedAt < TRUSTED_ACCESS_DURATION;
+
+    if (url && isFresh && isSafeDestination(url)) return url;
+    clearTrustedAccess();
+  } catch {
+    // Fall through to Google authentication.
+  }
+  return null;
+}
+
+function consumeLogoutRequest() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("logout") !== "1" && params.get("signed_out") !== "1") return false;
+
+  clearTrustedAccess();
+  window.history.replaceState({}, "", APP_PATH);
+  return true;
+}
+
 async function verifyCredential(credential) {
   setStatus("Verifying your team access…", "busy");
   try {
@@ -42,6 +86,7 @@ async function verifyCredential(credential) {
       throw new Error(result?.error || "This account has no assigned team link.");
     }
 
+    saveTrustedAccess(result.url);
     setStatus("Access confirmed. Opening your workspace…", "busy");
     window.location.replace(result.url);
   } catch (error) {
@@ -119,6 +164,16 @@ installButton.addEventListener("click", async () => {
 });
 
 window.addEventListener("DOMContentLoaded", () => {
+  const signedOut = consumeLogoutRequest();
+  const trustedAccessUrl = signedOut ? null : getTrustedAccess();
+
+  if (trustedAccessUrl) {
+    setStatus("Welcome back. Opening your workspace…", "busy");
+    window.location.replace(trustedAccessUrl);
+    return;
+  }
+
+  if (signedOut) setStatus("You have been signed out. Continue with Google to sign in again.");
   initialiseGoogleSignIn();
   updateInstallState();
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "kwikkwash-team-shell-v1";
+const CACHE_NAME = "kwikkwash-team-shell-v2";
 const APP_PATH = "/kwikkwash/teamlogin/";
 const APP_SHELL = [
   APP_PATH,
