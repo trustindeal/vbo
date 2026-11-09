@@ -1,5 +1,10 @@
 const LEGACY_CACHE = "vbo-cache";
-const ISOLATED_PWA_PREFIXES = ["/login/", "/kwikkwash/teamlogin/"];
+const ISOLATED_PWA_PREFIXES = [
+  "/login/",
+  "/kwikkwash/teamlogin/",
+  "/merotra/teamlogin/",
+  "/amanwiz/teamlogin/",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(LEGACY_CACHE).then((cache) => cache.addAll(["/"])));
