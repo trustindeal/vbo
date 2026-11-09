@@ -1,1 +1,1 @@
-importScripts("/legacy-pwa-retirement.js");
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");

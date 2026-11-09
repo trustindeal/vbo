@@ -2,59 +2,6 @@
 <html lang="en">
 <head>
 
-  <script>
-    (() => {
-      const ORGANISER_URL = "https://vbo.co.in/login/";
-      const LEGACY_WORKERS = new Set([
-        "/sw.js",
-        "/service-worker.js",
-        "/OneSignalSDKWorker.js",
-        "/OneSignalSDKUpdaterWorker.js",
-      ]);
-
-      // The marketing site must never promote or install the retired root PWA.
-      window.addEventListener("beforeinstallprompt", (event) => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      });
-
-      // Old home-screen/root app entries now open the current Organiser app.
-      const standalone = window.matchMedia?.("(display-mode: standalone)").matches
-        || window.navigator.standalone === true;
-      if (standalone && window.location.pathname === "/") {
-        window.location.replace(ORGANISER_URL);
-        return;
-      }
-
-      window.addEventListener("load", async () => {
-        if ("serviceWorker" in navigator) {
-          try {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            const legacyRegistrations = registrations.filter((registration) => {
-              const worker = registration.active || registration.waiting || registration.installing;
-              if (!worker) return false;
-              return LEGACY_WORKERS.has(new URL(worker.scriptURL).pathname);
-            });
-            await Promise.allSettled(legacyRegistrations.map((registration) => registration.unregister()));
-          } catch {
-            // Landing-page navigation must remain available if cleanup is blocked.
-          }
-        }
-
-        if ("caches" in window) {
-          try {
-            const cacheNames = await caches.keys();
-            const legacyCaches = cacheNames.filter((name) => /^vbo-cache(?:-v\d+)?$/.test(name));
-            await Promise.allSettled(legacyCaches.map((name) => caches.delete(name)));
-          } catch {
-            // A cache cleanup failure must not affect the public website.
-          }
-        }
-      });
-    })();
-  </script>
-
-
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1LL0RCB2B3"></script>
 <script>
@@ -600,7 +547,7 @@
 
 <div class="sidebar" id="sidebar">
   <a href="#" onclick="toggleMode()"><span class="menu-item-icon">🌙/☀️</span> Toggle Theme</a>
-<a href="https://vbo.co.in/login/" onclick="event.stopPropagation(); toggleMenu();">
+<a href="https://trustindeal.github.io/load/" onclick="event.stopPropagation(); toggleMenu();">
   <span class="menu-item-icon">🔑</span> Login
 </a>
 <a href="https://vbo.co.in/login/install" onclick="event.stopPropagation(); toggleMenu();">
@@ -637,7 +584,7 @@
 
     <div class="buttons-container">
       <a id="installBtn" href="https://vbo.co.in/login/install">📲 Install Organiser</a>
-      <a href="https://vbo.co.in/login/" class="login-btn">🔑 Login</a>
+      <a href="https://trustindeal.github.io/load/" class="login-btn">🔑 Login</a>
     </div>
 
     <!--<footer>

@@ -1,1 +1,2 @@
-importScripts("/legacy-pwa-retirement.js");
+// Compatibility entry point retained for historical registrations.
+importScripts("/sw.js");
