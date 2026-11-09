@@ -1,0 +1,93 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0b2638;
+  background: #e9f4f4;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  min-width: 280px;
+  background:
+    radial-gradient(circle at 15% 12%, rgba(43, 197, 180, .24), transparent 28rem),
+    radial-gradient(circle at 88% 86%, rgba(32, 118, 146, .16), transparent 30rem),
+    linear-gradient(145deg, #f7fbfb 0%, #e5f2f3 55%, #d9eaee 100%);
+}
+button { font: inherit; }
+.shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(22px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+}
+.access-card {
+  width: calc(100vw - 36px);
+  max-width: 430px;
+  min-width: 0;
+  padding: clamp(26px, 7vw, 40px);
+  text-align: center;
+  background: rgba(255, 255, 255, .94);
+  border: 1px solid rgba(11, 38, 56, .1);
+  border-radius: 28px;
+  box-shadow: 0 24px 70px rgba(11, 38, 56, .16);
+  backdrop-filter: blur(16px);
+}
+.brand-mark {
+  position: relative;
+  width: 82px;
+  aspect-ratio: 1;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 26px;
+  color: #effffd;
+  background: linear-gradient(145deg, #123d52, #0b2638);
+  box-shadow: 0 14px 30px rgba(11, 38, 56, .26), inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+.brand-mark span { position: relative; z-index: 2; font-size: 24px; font-weight: 900; letter-spacing: -.04em; }
+.brand-mark i { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #3dd6c2; box-shadow: 0 0 14px rgba(61, 214, 194, .85); }
+.brand-mark i:nth-of-type(1) { top: 13px; left: 16px; }
+.brand-mark i:nth-of-type(2) { top: 13px; right: 16px; }
+.brand-mark i:nth-of-type(3) { bottom: 12px; right: 14px; }
+.eyebrow { margin: 0 0 8px; color: #207692; font-size: 11px; font-weight: 850; letter-spacing: .17em; }
+h1 { margin: 0; font-size: clamp(29px, 8vw, 39px); line-height: 1.06; letter-spacing: -.045em; }
+.intro { max-width: 330px; margin: 12px auto 26px; color: #577386; font-size: 15px; line-height: 1.55; }
+.actions { display: grid; gap: 12px; }
+.google-signin { width: 100%; min-width: 0; min-height: 44px; display: flex; justify-content: center; overflow: hidden; }
+.install-button {
+  min-height: 48px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #0d3a50, #17687a);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(11, 38, 56, .2);
+  transition: transform .2s ease, filter .2s ease;
+}
+.install-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.install-button:active { transform: translateY(0); }
+.install-button:disabled { cursor: default; opacity: .68; transform: none; }
+.install-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.status { min-height: 20px; margin: 17px 0 0; color: #627d8d; font-size: 13px; line-height: 1.45; }
+.status[data-state="error"] { color: #b42318; }
+.status[data-state="busy"] { color: #17687a; }
+.install-help { margin-top: 14px; padding: 12px 14px; text-align: left; border-radius: 14px; color: #284b5c; background: #edf7f7; font-size: 13px; line-height: 1.4; }
+.install-help strong, .install-help span { display: block; }
+.install-help span { margin-top: 3px; color: #627d8d; }
+@media (max-width: 360px) {
+  .shell { padding-inline: 12px; }
+  .access-card { width: calc(100vw - 24px); padding: 24px 18px; border-radius: 22px; }
+  .brand-mark { width: 70px; border-radius: 21px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }

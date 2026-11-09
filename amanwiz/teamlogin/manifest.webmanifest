@@ -1,0 +1,20 @@
+{
+  "id": "/amanwiz/teamlogin/",
+  "name": "Amanwiz",
+  "short_name": "Amanwiz",
+  "description": "Secure ERP access for the Amanwiz team.",
+  "start_url": "/amanwiz/teamlogin/",
+  "scope": "/amanwiz/teamlogin/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f0edfa",
+  "theme_color": "#241447",
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "./assets/amanwiz-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/amanwiz-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/amanwiz-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

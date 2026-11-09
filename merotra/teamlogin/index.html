@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b2638">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Secure ERP access for the Merotra Network team.">
+  <title>Merotra Network</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/merotra-network-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/merotra-network-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <section class="access-card" aria-labelledby="page-title">
+      <div class="brand-mark" aria-hidden="true"><span>MN</span><i></i><i></i><i></i></div>
+      <p class="eyebrow">EXCITEL ISP OPERATIONS</p>
+      <h1 id="page-title">Merotra Network</h1>
+      <p class="intro">Secure ERP access for authorised network and operations teams.</p>
+      <div class="actions">
+        <div id="google-signin" class="google-signin" aria-label="Merotra Network login"></div>
+        <button id="install-button" class="install-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+          <span>Install Merotra Network</span>
+        </button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">Use your registered Google account to continue.</p>
+      <div id="install-help" class="install-help" hidden>
+        <strong>Install from your browser</strong>
+        <span>Open the browser menu and choose <b>Install app</b>. On iPhone, choose <b>Add to Home Screen</b>.</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
