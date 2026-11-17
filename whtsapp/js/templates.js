@@ -31,6 +31,8 @@ let templates = [
     }
 ];
 
+let editingTemplateId = null;
+
 const grid = document.getElementById("templateGrid");
 const emptyState = document.getElementById("emptyTemplates");
 
@@ -205,8 +207,121 @@ function escapeHtml(value) {
         .replace(/'/g, "&#039;");
 }
 
-function openTemplateModal(template) {
+function parseJsonValue(value, fallback) {
+    if (!value) return fallback;
+    if (typeof value !== "string") return value;
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        return fallback;
+    }
+}
 
+function updateButtonRowState(row) {
+    const type = row.querySelector(".template-button-type").value;
+    const valueInput = row.querySelector(".template-button-value");
+    const exampleInput = row.querySelector(".template-button-example");
+
+    valueInput.style.display = ["URL", "PHONE_NUMBER", "FLOW"].includes(type) ? "block" : "none";
+    exampleInput.style.display = ["URL", "FLOW"].includes(type) ? "block" : "none";
+
+    const placeholders = {
+        URL: "https://example.com/{{1}}",
+        PHONE_NUMBER: "+919876543210",
+        FLOW: "Meta Flow ID"
+    };
+    valueInput.placeholder = placeholders[type] || "Value";
+    exampleInput.placeholder = type === "FLOW" ? "Start screen (optional)" : "Dynamic URL example";
+}
+
+function addTemplateButtonRow(button) {
+    const container = document.getElementById("templateButtons");
+    if (container.children.length >= 10) {
+        alert("Meta supports a maximum of 10 buttons in a template component.");
+        return;
+    }
+
+    const row = document.createElement("div");
+    row.className = "template-button-row";
+    row.innerHTML = `
+        <select class="template-button-type">
+            <option value="QUICK_REPLY">Quick Reply</option>
+            <option value="URL">Visit Website</option>
+            <option value="PHONE_NUMBER">Call Phone</option>
+            <option value="FLOW">WhatsApp Flow</option>
+            <option value="CATALOG">Open Catalog</option>
+        </select>
+        <input class="template-button-text" type="text" maxlength="25" placeholder="Button text">
+        <input class="template-button-value" type="text" placeholder="Value">
+        <input class="template-button-example" type="text" placeholder="Example">
+        <button type="button" class="remove-template-button" aria-label="Remove button">×</button>
+    `;
+
+    const source = button || {};
+    const rawType = String(source.type || "QUICK_REPLY").toUpperCase();
+    const type = rawType === "PHONE" ? "PHONE_NUMBER" : rawType;
+    row.querySelector(".template-button-type").value = type;
+    row.querySelector(".template-button-text").value = source.text || "";
+    row.querySelector(".template-button-value").value =
+        source.url || source.phone_number || source.flow_id || "";
+    row.querySelector(".template-button-example").value =
+        Array.isArray(source.example)
+            ? (source.example[0] || "")
+            : (source.example || source.navigate_screen || "");
+
+    row.querySelector(".template-button-type").addEventListener("change", function () {
+        updateButtonRowState(row);
+        updateTemplatePreviewWithVariables();
+    });
+    row.querySelectorAll("input").forEach(function (input) {
+        input.addEventListener("input", updateTemplatePreviewWithVariables);
+    });
+    row.querySelector(".remove-template-button").addEventListener("click", function () {
+        row.remove();
+        updateTemplatePreviewWithVariables();
+    });
+
+    container.appendChild(row);
+    updateButtonRowState(row);
+}
+
+function renderTemplateButtons(buttons) {
+    document.getElementById("templateButtons").innerHTML = "";
+    (buttons || []).forEach(addTemplateButtonRow);
+}
+
+function readTemplateButtons() {
+    return Array.from(document.querySelectorAll(".template-button-row")).map(function (row) {
+        const type = row.querySelector(".template-button-type").value;
+        const text = row.querySelector(".template-button-text").value.trim();
+        const value = row.querySelector(".template-button-value").value.trim();
+        const example = row.querySelector(".template-button-example").value.trim();
+        const button = { type: type, text: text };
+
+        if (type === "URL") {
+            button.url = value;
+            if (example) button.example = example;
+        } else if (type === "PHONE_NUMBER") {
+            button.phone_number = value;
+        } else if (type === "FLOW") {
+            button.flow_id = value;
+            button.flow_action = "NAVIGATE";
+            if (example) button.navigate_screen = example;
+        }
+        return button;
+    });
+}
+
+function apiErrorMessage(data, fallback) {
+    const detail = data && data.detail;
+    if (typeof detail === "string") return detail;
+    if (detail && typeof detail.message === "string") return detail.message;
+    if (detail && typeof detail.meta_title === "string") return detail.meta_title;
+    return fallback;
+}
+
+function openTemplateModal(template) {
+    editingTemplateId = template ? template.id : null;
     document.getElementById("templateModal").classList.add("show");
 
     document.getElementById("modalTitle").textContent =
@@ -218,14 +333,52 @@ function openTemplateModal(template) {
     document.getElementById("templateCategory").value =
         template ? template.category : "UTILITY";
 
+    document.getElementById("templateLanguage").value =
+        template ? template.language : "en_US";
+
+    document.getElementById("templateHeaderType").value =
+        template ? (template.headerType || "NONE") : "NONE";
+
+    document.getElementById("templateHeader").value =
+        template ? (template.headerText || "") : "";
+
+    document.getElementById("templateHeaderHandle").value =
+        template ? (template.headerHandle || "") : "";
+
     document.getElementById("templateBody").value =
         template ? template.body : "";
 
-    updatePreview();
+    document.getElementById("templateFooter").value =
+        template ? (template.footerText || "") : "";
+
+    const config = template ? (template.config || {}) : {};
+    document.getElementById("templateParameterFormat").value =
+        config.parameter_format || "POSITIONAL";
+    document.getElementById("allowCategoryChange").checked =
+        Boolean(config.allow_category_change);
+    document.getElementById("templateMessageTtl").value =
+        config.message_send_ttl_seconds || "";
+    document.getElementById("authSecurityRecommendation").checked =
+        config.auth_add_security_recommendation !== false;
+    document.getElementById("authCodeExpiry").value =
+        config.auth_code_expiration_minutes || 10;
+    document.getElementById("authOtpType").value =
+        config.auth_otp_type || "COPY_CODE";
+    document.getElementById("authButtonText").value =
+        config.auth_otp_button_text || "Copy code";
+    document.getElementById("advancedComponents").value =
+        template && template.components && template.components.length
+            ? JSON.stringify(template.components, null, 2)
+            : "";
+
+    renderTemplateButtons(template ? template.buttons : []);
+    updateTemplateFieldState();
+    updateTemplatePreviewWithVariables();
 }
 
 function closeTemplateModal() {
     document.getElementById("templateModal").classList.remove("show");
+    editingTemplateId = null;
 }
 
 function viewTemplate(id) {
@@ -248,7 +401,7 @@ function editTemplate(id) {
     openTemplateModal(template);
 }
 function updatePreview() {
-
+    const category = document.getElementById("templateCategory").value;
     const header =
         document.getElementById("templateHeader").value;
 
@@ -258,17 +411,30 @@ function updatePreview() {
     const footer =
         document.getElementById("templateFooter").value;
 
-    const button =
-        document.getElementById("buttonText").value;
+    const firstButtonText = document.querySelector(".template-button-text")?.value || "";
+    const authOtpType = document.getElementById("authOtpType").value;
+    const authButtonText = document.getElementById("authButtonText").value;
+    const authExpiry = document.getElementById("authCodeExpiry").value || "10";
+
+    const previewHeader = category === "AUTHENTICATION" ? "" : header;
+    const previewBody = category === "AUTHENTICATION"
+        ? "123456 is your verification code."
+        : (body || "Your message preview will appear here.");
+    const previewFooter = category === "AUTHENTICATION"
+        ? "This code expires in " + authExpiry + " minutes."
+        : footer;
+    const button = category === "AUTHENTICATION"
+        ? (authOtpType === "NO_BUTTONS" ? "" : authButtonText)
+        : firstButtonText;
 
     document.getElementById("previewHeader").textContent =
-        header;
+        previewHeader;
 
     document.getElementById("previewBody").textContent =
-        body || "Your message preview will appear here.";
+        previewBody;
 
     document.getElementById("previewFooter").textContent =
-        footer;
+        previewFooter;
 
     const buttonElement =
         document.getElementById("previewButton");
@@ -351,8 +517,7 @@ document
 [
     "templateHeader",
     "templateBody",
-    "templateFooter",
-    "buttonText"
+    "templateFooter"
 ].forEach(function (id) {
 
     document
@@ -415,11 +580,7 @@ async function submitTemplateToMeta(id) {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-            throw new Error(
-                data.detail?.detail ||
-                data.detail ||
-                "Template submission failed"
-            );
+            throw new Error(apiErrorMessage(data, "Template submission failed"));
         }
 
         alert(
@@ -454,13 +615,26 @@ async function loadTemplates() {
         const data = await response.json();
 
         templates = (data.templates || []).map(function (item) {
+            const legacyButtons = item.button_type ? [{
+                type: item.button_type,
+                text: item.button_text || "",
+                url: item.button_url || ""
+            }] : [];
             return {
                 id: item.id,
                 name: item.template_name || "",
                 category: item.category || "",
                 language: item.language || "",
                 status: (item.status || "DRAFT").toUpperCase(),
-                body: item.body_text || item.content || ""
+                body: item.body_text || item.content || "",
+                headerType: item.header_type || "NONE",
+                headerText: item.header_text || "",
+                headerHandle: item.header_handle || "",
+                footerText: item.footer_text || "",
+                buttons: parseJsonValue(item.button_list, legacyButtons),
+                components: parseJsonValue(item.components_json, []),
+                config: parseJsonValue(item.template_config_json, {}),
+                metaStatusReason: item.meta_status_reason || ""
             };
         });
 
@@ -480,17 +654,36 @@ async function saveTemplate() {
     const language = document.getElementById("templateLanguage").value;
     const headerType = document.getElementById("templateHeaderType").value;
     const headerText = document.getElementById("templateHeader").value.trim();
-    const body = document.getElementById("templateBody").value.trim();
-    const footer = document.getElementById("templateFooter").value.trim();
-    const buttonType = document.getElementById("buttonType").value;
-    const buttonText = document.getElementById("buttonText").value.trim();
+    const headerHandle = document.getElementById("templateHeaderHandle").value.trim();
+    let body = document.getElementById("templateBody").value.trim();
+    let footer = document.getElementById("templateFooter").value.trim();
+    const buttons = category === "AUTHENTICATION" ? [] : readTemplateButtons();
+    let advancedComponents = [];
+
+    const advancedComponentsText = document.getElementById("advancedComponents").value.trim();
+    if (advancedComponentsText) {
+        try {
+            advancedComponents = JSON.parse(advancedComponentsText);
+            if (!Array.isArray(advancedComponents) || !advancedComponents.length) {
+                throw new Error("Advanced components must be a non-empty JSON array.");
+            }
+        } catch (error) {
+            alert(error.message || "Advanced components JSON is invalid.");
+            return;
+        }
+    }
+
+    if (category === "AUTHENTICATION") {
+        body = "{{1}} is your verification code.";
+        footer = "This code expires in " + (document.getElementById("authCodeExpiry").value || "10") + " minutes.";
+    }
 
     if (!name) {
         alert("Template name is required.");
         return;
     }
 
-    if (!body) {
+    if (!body && !advancedComponents.length) {
         alert("Message body is required.");
         return;
     }
@@ -506,19 +699,34 @@ async function saveTemplate() {
         category: category,
         header_type: headerType,
         header_text: headerText,
+        header_handle: headerHandle,
         body_text: body,
         footer_text: footer,
-        button_type: buttonType,
-        button_text: buttonText,
-        variables: variables
+        button_type: buttons[0]?.type || "",
+        button_text: buttons[0]?.text || "",
+        button_url: buttons[0]?.url || buttons[0]?.phone_number || "",
+        button_list: buttons,
+        variables: variables,
+        components: advancedComponents,
+        parameter_format: document.getElementById("templateParameterFormat").value,
+        allow_category_change: document.getElementById("allowCategoryChange").checked,
+        message_send_ttl_seconds: document.getElementById("templateMessageTtl").value
+            ? Number(document.getElementById("templateMessageTtl").value)
+            : null,
+        auth_add_security_recommendation: document.getElementById("authSecurityRecommendation").checked,
+        auth_code_expiration_minutes: Number(document.getElementById("authCodeExpiry").value || 10),
+        auth_otp_type: document.getElementById("authOtpType").value,
+        auth_otp_button_text: document.getElementById("authButtonText").value.trim() || "Copy code"
     };
 
     try {
 
+        const endpoint = "https://app.vbo.co.in/api/v1/whatsapp/templates" +
+            (editingTemplateId ? "/" + editingTemplateId : "");
         const response = await fetch(
-            "https://app.vbo.co.in/api/v1/whatsapp/templates",
+            endpoint,
             {
-                method: "POST",
+                method: editingTemplateId ? "PUT" : "POST",
                 headers: {
                     "Authorization": "Bearer " + token,
                     "Content-Type": "application/json"
@@ -530,10 +738,10 @@ async function saveTemplate() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.detail || "Template save failed");
+            throw new Error(apiErrorMessage(data, "Template save failed"));
         }
 
-        alert("Template saved successfully.");
+        alert(editingTemplateId ? "Template updated successfully." : "Template saved successfully.");
 
         closeTemplateModal();
         await loadTemplates();
@@ -551,31 +759,32 @@ document
     .addEventListener("click", saveTemplate);
 /* Template UX Polish */
 function updateTemplateFieldState() {
-
+    const category = document.getElementById("templateCategory").value;
     const headerType = document.getElementById("templateHeaderType");
     const headerText = document.getElementById("templateHeader");
+    const isAuthentication = category === "AUTHENTICATION";
+    const isMediaHeader = ["IMAGE", "VIDEO", "DOCUMENT"].includes(headerType.value);
 
-    const buttonType = document.getElementById("buttonType");
-    const buttonText = document.getElementById("buttonText");
+    document.getElementById("authenticationFields").classList.toggle("is-hidden", !isAuthentication);
+    document.getElementById("templateBodyField").classList.toggle("is-hidden", isAuthentication);
+    document.getElementById("templateFooterField").classList.toggle("is-hidden", isAuthentication);
+    document.getElementById("templateButtonsField").classList.toggle("is-hidden", isAuthentication);
+    headerType.closest(".template-field").classList.toggle("is-hidden", isAuthentication);
 
-    if (headerType && headerText) {
-        const enabled = headerType.value !== "NONE";
-        headerText.disabled = !enabled;
+    document.getElementById("headerTextField").classList.toggle(
+        "is-hidden",
+        isAuthentication || headerType.value !== "TEXT"
+    );
+    document.getElementById("headerHandleField").classList.toggle(
+        "is-hidden",
+        isAuthentication || !isMediaHeader
+    );
+    headerText.disabled = isAuthentication || headerType.value !== "TEXT";
+    document.getElementById("templateHeaderHandle").disabled = isAuthentication || !isMediaHeader;
 
-        if (!enabled) {
-            headerText.value = "";
-        }
-    }
-
-    if (buttonType && buttonText) {
-        const enabled = buttonType.value !== "";
-
-        buttonText.disabled = !enabled;
-
-        if (!enabled) {
-            buttonText.value = "";
-        }
-    }
+    const noOtpButton = document.getElementById("authOtpType").value === "NO_BUTTONS";
+    document.getElementById("authButtonTextField").classList.toggle("is-hidden", noOtpButton);
+    updateTemplatePreviewWithVariables();
 }
 
 function updateTemplatePreviewWithVariables() {
@@ -587,12 +796,15 @@ function updateTemplatePreviewWithVariables() {
 
     if (!bodyField || !previewBody) return;
 
+    if (document.getElementById("templateCategory").value === "AUTHENTICATION") return;
+
     let text = bodyField.value || "Your message preview will appear here.";
 
     text = text
         .replace(/\{\{1\}\}/g, "Shahzeb")
         .replace(/\{\{2\}\}/g, "#12345")
-        .replace(/\{\{3\}\}/g, "₹500");
+        .replace(/\{\{3\}\}/g, "₹500")
+        .replace(/\{\{[a-z][a-z0-9_]*\}\}/gi, "Example");
 
     previewBody.textContent = text;
 }
@@ -602,14 +814,25 @@ document
     .addEventListener("change", updateTemplateFieldState);
 
 document
-    .getElementById("buttonType")
+    .getElementById("templateCategory")
     .addEventListener("change", updateTemplateFieldState);
+
+document
+    .getElementById("authOtpType")
+    .addEventListener("change", updateTemplateFieldState);
+
+document
+    .getElementById("addTemplateButton")
+    .addEventListener("click", function () {
+        addTemplateButtonRow({ type: "QUICK_REPLY" });
+    });
 
 [
     "templateHeader",
     "templateBody",
     "templateFooter",
-    "buttonText"
+    "authButtonText",
+    "authCodeExpiry"
 ].forEach(function (id) {
 
     const element = document.getElementById(id);
