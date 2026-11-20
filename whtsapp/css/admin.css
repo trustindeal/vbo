@@ -386,7 +386,7 @@ th {
 
 
 /* =========================================================
-   VBONotif Message Analysis - Status Colors
+   VBO Connect Message Analysis - Status Colors
    ========================================================= */
 
 .message-breakdown-item {
@@ -492,7 +492,7 @@ th {
 
 
 /* =========================================================
-   VBONotif Message Status - Distinct Logical Colors
+   VBO Connect Message Status - Distinct Logical Colors
    ========================================================= */
 
 /* Incoming - Blue */
@@ -684,7 +684,7 @@ th {
     color: #9ca3af;
 }
 
-/* VBONotif platform analytics */
+/* VBO Connect platform analytics */
 .vbo-analytics {
     margin: 24px 0;
     padding: 20px;

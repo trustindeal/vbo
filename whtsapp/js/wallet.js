@@ -8,7 +8,7 @@ const API_BASE = "https://app.vbo.co.in/api/v1";
 
 let minimumRecharge = 100;
 let rechargeUpiId = "";
-let rechargeClientName = "VBONotif";
+let rechargeClientName = "VBO Connect";
 
 
 let rechargeHistoryPage = 1;

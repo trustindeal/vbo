@@ -192,7 +192,7 @@
             new Blob(["\uFEFF" + lines.join("\r\n")], {
                 type: "text/csv;charset=utf-8;"
             }),
-            "vbonotif-message-report.csv"
+            "vbo-connect-message-report.csv"
         );
     }
 
@@ -219,7 +219,7 @@
             }
 
             const blob = await response.blob();
-            downloadBlob(blob, "vbonotif-message-report.xlsx");
+            downloadBlob(blob, "vbo-connect-message-report.xlsx");
             showNotice("Excel file downloaded.", false);
         } catch (error) {
             showNotice(error.message || "Excel export failed.", true);

@@ -19,7 +19,7 @@ self.addEventListener("push", (event) => {
     try {
         payload = event.data ? event.data.json() : {};
     } catch (e) {
-        payload = { title: "VBONotif", body: (event.data && event.data.text()) || "" };
+        payload = { title: "VBO Connect", body: (event.data && event.data.text()) || "" };
     }
 
     const title = payload.title || "New WhatsApp message";

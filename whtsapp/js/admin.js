@@ -1661,7 +1661,7 @@ document.addEventListener("click", function (event) {
                         </div>
                     </div>
                     <div class="vbonotif-settings-note">
-                        MPS = messages per second. This is one central limit for the complete VBONotif server. There is no client-wise MPS setting.
+                        MPS = messages per second. This is one central limit for the complete VBO Connect server. There is no client-wise MPS setting.
                     </div>
                 </div>
                 <div class="vbonotif-settings-footer">

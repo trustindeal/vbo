@@ -979,7 +979,7 @@ body {
     justify-content: flex-end;
     min-width: 24px;
 }
-/* VBONotif WhatsApp-style inbox header */
+/* VBO Connect WhatsApp-style inbox header */
 body.inbox-page .sidebar {
     display: none !important;
 }

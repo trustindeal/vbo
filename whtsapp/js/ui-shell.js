@@ -197,7 +197,7 @@
     function showDialog(options) {
         return new Promise(function (resolve) {
             const root = ensureDialogRoot();
-            const title = options.title || "VBONotif";
+            const title = options.title || "VBO Connect";
             const message = String(options.message || "");
             const type = options.type || "info";
             const needsInput = options.input === true;

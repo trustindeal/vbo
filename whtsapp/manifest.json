@@ -1,6 +1,6 @@
 ﻿{
-    "name": "VBONotif — WhatsApp Messaging Platform",
-    "short_name": "VBONotif",
+    "name": "VBO Connect — WhatsApp Messaging Platform",
+    "short_name": "VBO Connect",
     "description": "Multi-client WhatsApp messaging, inbox and automation platform.",
     "start_url": "inbox.html",
     "scope": "./",
