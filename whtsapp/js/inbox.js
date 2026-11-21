@@ -72,7 +72,7 @@ function updateArchiveViewButton() {
     if (blockedIcon) blockedIcon.innerHTML = showingBlocked ? "&#8592;" : blockedIconSvg;
     if (blockedLabel) blockedLabel.textContent = showingBlocked ? "Inbox" : "";
     if (searchInput) {
-        searchInput.placeholder = showingBlocked ? "Search blocked conversations..." : (showingArchived ? "Search archived conversations..." : "Search conversations...");
+        searchInput.placeholder = showingBlocked ? "Search blocked contacts..." : (showingArchived ? "Search archived contacts..." : "Search contacts...");
     }
     if (chatArchiveOption) {
         chatArchiveOption.textContent = showingArchived ? "Restore conversation" : "Archive conversation";
@@ -82,6 +82,39 @@ function updateArchiveViewButton() {
         chatBlockOption.textContent = showingBlocked ? "Unblock conversation" : "Block conversation";
         chatBlockOption.hidden = showingArchived;
     }
+}
+
+function contactHasConversation(contact) {
+    return Number(contact.message_count || 0) > 0 ||
+        Boolean(contact.last_message_time) ||
+        Boolean(contact.last_message);
+}
+
+function contactMatchesSearch(contact, search) {
+    const text = (
+        (contact.name || "") + " " +
+        (contact.profile_name || "") + " " +
+        (contact.phone_number || "") + " " +
+        (contact.wa_id || "") + " " +
+        (contact.city || "") + " " +
+        (contact.email || "") + " " +
+        (contact.project_name || "")
+    ).toLowerCase();
+    return text.includes(search);
+}
+
+function getVisibleInboxContacts() {
+    const search = document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
+    if (search) return contacts.filter(contact => contactMatchesSearch(contact, search));
+
+    return contacts.filter(contact =>
+        contactHasConversation(contact) ||
+        String(contact.wa_id || contact.phone_number || "") === String(selectedWaId || "")
+    );
+}
+
+function refreshInboxContactList() {
+    renderContacts(getVisibleInboxContacts());
 }
 
 async function loadContacts() {
@@ -105,7 +138,7 @@ async function loadContacts() {
         }
 
         contacts = data.contacts || [];
-        renderContacts(contacts);
+        refreshInboxContactList();
 
         const requestedWaId =
             new URLSearchParams(window.location.search).get("wa_id");
@@ -123,27 +156,54 @@ async function loadContacts() {
     }
 }
 
+function getConversationPreview(rawValue, hasConversation) {
+    const raw = String(rawValue || "").trim();
+    if (!raw) return hasConversation ? "Message attachment" : "Start a new chat";
+
+    if (raw.startsWith("[INTERACTIVE_JSON]")) {
+        try {
+            const data = JSON.parse(raw.replace("[INTERACTIVE_JSON]", "").trim());
+            const body = String(data.body || "").replace(/\s+/g, " ").trim();
+            if (body) return body;
+
+            const optionTitles = Array.isArray(data.options)
+                ? data.options.map(option => String(option?.title || "").trim()).filter(Boolean)
+                : [];
+            if (optionTitles.length) {
+                const label = String(data.button_text || "Options").trim();
+                return `${label}: ${optionTitles.slice(0, 3).join(", ")}`;
+            }
+            return "Interactive message";
+        } catch (error) {
+            return "Interactive message";
+        }
+    }
+
+    return raw.replace(/\s+/g, " ").trim();
+}
+
 function renderContacts(items) {
     const list = document.getElementById("contactList");
 
     if (!items.length) {
         list.innerHTML =
-            '<div class="loading">' + (showingBlocked ? "No blocked conversations." : (showingArchived ? "No archived conversations." : "No conversations yet.")) + '</div>';
+            '<div class="loading">' + (showingBlocked ? "No blocked conversations." : (showingArchived ? "No archived conversations." : "No conversations yet. Search contacts to start a chat.")) + '</div>';
         return;
     }
 
     list.innerHTML = items.map(contact => {
         const name =
-            contact.profile_name ||
             contact.name ||
+            contact.profile_name ||
             contact.phone_number ||
             contact.wa_id;
 
-        const initial = name.charAt(0).toUpperCase();
+        const initial = String(name || "?").charAt(0).toUpperCase();
+        const waId = contact.wa_id || contact.phone_number || "";
 
         return `
-            <div class="contact ${selectedWaId === contact.wa_id ? "selected" : ""}"
-                 data-wa-id="${contact.wa_id}">
+            <div class="contact ${String(selectedWaId || "") === String(waId) ? "selected" : ""}"
+                 data-wa-id="${escapeHtml(waId)}">
                 <div class="contact-avatar">${initial}</div>
                 <div class="contact-info">
                     <div class="contact-top">
@@ -156,9 +216,9 @@ function renderContacts(items) {
                         ${Number(contact.unread_count || 0) > 0 ? `<span class="unread-badge">${Number(contact.unread_count)}</span>` : ""}
                     </div>
                     <div class="contact-last">
-                        ${escapeHtml(contact.last_message || "No messages")}
+                        ${escapeHtml(getConversationPreview(contact.last_message, contactHasConversation(contact)))}
                     </div>
-                    <button type="button" class="contact-menu-btn" data-contact-menu-id="${contact.wa_id}" title="Menu" aria-label="Chat menu">&#8942;</button>
+                    <button type="button" class="contact-menu-btn" data-contact-menu-id="${escapeHtml(waId)}" title="Menu" aria-label="Chat menu">&#8942;</button>
                 </div>
             </div>
         `;
@@ -204,11 +264,7 @@ async function openChat(waId) {
     messageNextOffset = 0;
     messageHasMore = false;
 
-    renderContacts(
-        contacts.filter(contact =>
-            true
-        )
-    );
+    refreshInboxContactList();
 
     const empty = document.getElementById("emptyChat");
     const chat = document.getElementById("chatView");
@@ -243,8 +299,8 @@ async function openChat(waId) {
         const contact = data.contact;
 
         document.getElementById("chatName").textContent =
-            contact.profile_name ||
             contact.name ||
+            contact.profile_name ||
             contact.phone_number;
 
         document.getElementById("chatNumber").textContent =
@@ -252,8 +308,8 @@ async function openChat(waId) {
 
         document.getElementById("chatAvatar").textContent =
             (
-                contact.profile_name ||
                 contact.name ||
+                contact.profile_name ||
                 contact.phone_number ||
                 "?"
             ).charAt(0).toUpperCase();
@@ -416,6 +472,9 @@ function __findMessagePreviewByMeta(metaId) {
     });
     if (!target) return "message";
     const raw = String(target.message_text || "").trim();
+    if (raw.startsWith("[INTERACTIVE_JSON]")) {
+        return getConversationPreview(raw, true).slice(0, 80);
+    }
     if (raw && !raw.startsWith("[INTERACTIVE_JSON]")) {
         const cleaned = raw.replace(/\[Template:[^\]]*\]\s*/i, "").replace(/\[Reaction:[^\]]*\]/i, "").trim();
         if (cleaned) return cleaned.slice(0, 80);
@@ -481,7 +540,7 @@ async function renderMessages(messages, scrollToBottom) {
                 .replace(templateMatch[0], "")
                 .trim();
 
-            if (template && template.body_text) {
+            if (!bodyText && template && template.body_text) {
                 bodyText = template.body_text;
             }
 
@@ -579,7 +638,7 @@ async function renderMessages(messages, scrollToBottom) {
                                 : ""}
                         </span>
                     </div>
-                    <button type="button" class="message-reply-btn" data-reply-meta="${escapeHtml(message.meta_message_id || "")}" data-reply-preview="${escapeHtml((rawText || "").slice(0, 100))}" title="Reply" aria-label="Reply">&#8617;</button>
+                    <button type="button" class="message-reply-btn" data-reply-meta="${escapeHtml(message.meta_message_id || "")}" data-reply-preview="${escapeHtml(getConversationPreview(rawText, true).slice(0, 100))}" title="Reply" aria-label="Reply">&#8617;</button>
                     <button type="button" class="message-react-btn" data-react-meta="${escapeHtml(message.meta_message_id || "")}" data-react-wa="${escapeHtml(selectedWaId || "")}" title="React" aria-label="React">&#128522;</button>
                     <button type="button" class="message-menu-btn" data-message-menu-id="${message.id}" title="Menu" aria-label="Message menu">&#8942;</button>
                 </div>
@@ -1728,20 +1787,7 @@ document.getElementById("messageInput").addEventListener("keydown", function(eve
     }
 });
 document.getElementById("searchInput").addEventListener("input", function () {
-    const search = this.value.toLowerCase().trim();
-
-    renderContacts(
-        contacts.filter(contact => {
-            const text = (
-                (contact.profile_name || "") + " " +
-                (contact.name || "") + " " +
-                (contact.phone_number || "") + " " +
-                (contact.wa_id || "")
-            ).toLowerCase();
-
-            return text.includes(search);
-        })
-    );
+    refreshInboxContactList();
 });
 
 document.getElementById("logoutButton").addEventListener("click", async function () {

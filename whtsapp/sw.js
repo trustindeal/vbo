@@ -2,7 +2,7 @@
  * Handles: Web Push notifications, notification click routing, basic offline.
  */
 
-const SW_VERSION = "vbonotif-sw-v1";
+const SW_VERSION = "vbonotif-sw-v2";
 
 self.addEventListener("install", (event) => {
     self.skipWaiting();

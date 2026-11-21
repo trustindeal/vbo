@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VBO Connect - Contacts</title>
-    <link rel="stylesheet" href="css/contacts.css">
+    <link rel="stylesheet" href="css/contacts.css?v=20261121-manage1">
     <link rel="stylesheet" href="css/ui-improvements.css">
 </head>
 <body>
@@ -60,22 +60,39 @@
                     <p id="contactSummary">Loading contacts...</p>
                 </div>
 
-                <div class="search-box">
+                <div class="contact-page-actions">
+                    <select id="dndFilter" class="dnd-filter" aria-label="Filter by marketing permission">
+                        <option value="all">All contacts</option>
+                        <option value="allowed">Marketing allowed</option>
+                        <option value="dnd">Marketing DND</option>
+                    </select>
+                    <div class="search-box">
                     <input
                         type="text"
                         id="searchInput"
                         placeholder="Search contacts..."
                         autocomplete="off"
                     >
+                    </div>
+                    <button type="button" id="addContactButton" class="add-contact-button">+ Add Contact</button>
                 </div>
             </div>
 
             <section class="contacts-panel">
 
+                <div id="bulkContactBar" class="bulk-contact-bar hidden">
+                    <strong><span id="selectedContactCount">0</span> selected</strong>
+                    <button type="button" id="clearContactSelection" class="bulk-secondary">Clear</button>
+                    <button type="button" id="bulkDeleteContacts" class="bulk-danger">Delete Selected</button>
+                </div>
+
                 <div class="contacts-table-header">
+                    <div class="contact-select-cell">
+                        <input type="checkbox" id="selectAllContacts" aria-label="Select all visible contacts">
+                    </div>
                     <div>Contact</div>
                     <div>WhatsApp Number</div>
-                    <div>Status</div>
+                    <div>Marketing</div>
                     <div>Last Interaction</div>
                     <div>Action</div>
                 </div>
@@ -92,9 +109,91 @@
 
 </div>
 
+<div id="contactEditorModal" class="contact-editor-modal hidden" role="dialog" aria-modal="true" aria-labelledby="contactEditorTitle">
+    <form id="contactEditorForm" class="contact-editor-card">
+        <div class="contact-editor-header">
+            <div>
+                <h2 id="contactEditorTitle">Edit Contact</h2>
+                <p>Update contact details used across Inbox and contact groups.</p>
+            </div>
+            <button type="button" id="closeContactEditorButton" class="contact-editor-close" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="contact-editor-body">
+            <input id="contactEditorId" type="hidden">
+            <div class="contact-editor-grid">
+                <label class="contact-editor-field">
+                    <span>Name</span>
+                    <input id="contactEditorName" type="text" maxlength="255" placeholder="Contact name">
+                </label>
+                <label class="contact-editor-field">
+                    <span>WhatsApp Number *</span>
+                    <input id="contactEditorPhone" type="tel" maxlength="40" required placeholder="919876543210">
+                    <small>Include country code; 7 to 15 digits.</small>
+                </label>
+                <label class="contact-editor-field">
+                    <span>Email</span>
+                    <input id="contactEditorEmail" type="email" maxlength="320" placeholder="name@example.com">
+                </label>
+                <label class="contact-editor-field">
+                    <span>City</span>
+                    <input id="contactEditorCity" type="text" maxlength="120" placeholder="City">
+                </label>
+                <label class="contact-editor-field contact-editor-field-wide">
+                    <span>Project Name</span>
+                    <input id="contactEditorProject" type="text" maxlength="255" placeholder="Project name">
+                </label>
+                <div class="contact-editor-field contact-editor-field-wide dnd-editor-box">
+                    <label class="dnd-editor-toggle">
+                        <input id="contactEditorDnd" type="checkbox">
+                        <span>
+                            <strong>Marketing DND</strong>
+                            <small>Marks this contact for exclusion from marketing. OTP and active 24-hour conversations remain unaffected.</small>
+                        </span>
+                    </label>
+                    <label id="contactEditorDndReasonWrap" class="contact-editor-field hidden">
+                        <span>DND reason (optional)</span>
+                        <input id="contactEditorDndReason" type="text" maxlength="500" placeholder="Requested STOP, manual request, etc.">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-editor-footer">
+            <button type="button" id="cancelContactEditorButton" class="contact-editor-secondary">Cancel</button>
+            <button type="submit" id="saveContactEditorButton" class="contact-editor-save">Save Contact</button>
+        </div>
+    </form>
+</div>
+
+<div id="contactDeleteModal" class="contact-editor-modal hidden" role="dialog" aria-modal="true" aria-labelledby="contactDeleteTitle">
+    <div class="contact-delete-card">
+        <div class="contact-editor-header">
+            <div>
+                <h2 id="contactDeleteTitle">Delete contacts</h2>
+                <p id="contactDeleteSummary">Choose how these contacts should be deleted.</p>
+            </div>
+            <button type="button" id="closeContactDeleteButton" class="contact-editor-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="contact-delete-body">
+            <button type="button" id="safeDeleteContacts" class="delete-choice recommended">
+                <span class="delete-choice-title">Safe Delete <em>Recommended</em></span>
+                <span>Deletes only contacts with no message history. Contacts having chats are protected and skipped.</span>
+            </button>
+            <button type="button" id="permanentDeleteContacts" class="delete-choice permanent">
+                <span class="delete-choice-title">Delete with History</span>
+                <span>Permanently deletes selected contacts and their complete message history. This cannot be undone.</span>
+            </button>
+        </div>
+        <div class="contact-editor-footer">
+            <button type="button" id="cancelContactDeleteButton" class="contact-editor-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script src="js/vbonotif-popups.js"></script>
 <script src="js/ui-shell.js"></script>
-<script src="js/contacts.js"></script>
+<script src="js/contacts.js?v=20261121-manage1"></script>
 
 <script src="js/access-guard.js"></script>
 </body>

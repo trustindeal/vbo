@@ -6,7 +6,7 @@
     <title>VBO Connect - Reports</title>
     <link rel="stylesheet" href="css/wallet.css">
     <link rel="stylesheet" href="css/ui-improvements.css">
-    <link rel="stylesheet" href="css/reports.css">
+    <link rel="stylesheet" href="css/reports.css?v=20261122-ledger1">
 </head>
 <body>
 <div class="app">
@@ -35,8 +35,8 @@
     <main class="main reports-main">
         <header class="topbar">
             <div>
-                <h1>Message Reports</h1>
-                <p>Delivery status, message charges, refunds and Meta errors</p>
+                <h1>Message &amp; Billing Reports</h1>
+                <p>Ledger-safe delivery, charges, refunds and message activity</p>
             </div>
         </header>
 
@@ -44,6 +44,13 @@
             <div id="reportNotice" class="report-notice" role="status">Loading reports...</div>
 
             <section class="report-filters">
+                <div class="filter-field">
+                    <label for="reportScope">Report scope</label>
+                    <select id="reportScope">
+                        <option value="sent">Sent &amp; billing</option>
+                        <option value="received">Received messages</option>
+                    </select>
+                </div>
                 <div class="filter-field">
                     <label for="startDate">From date</label>
                     <input id="startDate" type="date">
@@ -62,6 +69,8 @@
                         <option value="read">Read</option>
                         <option value="failed">Failed</option>
                         <option value="rejected">Rejected</option>
+                        <option value="received">Received</option>
+                        <option value="record_deleted">Record deleted</option>
                     </select>
                 </div>
                 <div class="filter-field">
@@ -70,6 +79,7 @@
                         <option value="">All billing statuses</option>
                         <option value="charged">Charged</option>
                         <option value="refunded">Refunded</option>
+                        <option value="pending_charge">Pending charge</option>
                         <option value="unrecorded_verify">Unrecorded / Verify</option>
                     </select>
                 </div>
@@ -78,12 +88,27 @@
                     <select id="messageType">
                         <option value="">All types</option>
                         <option value="text">Text</option>
+                        <option value="otp">Authentication / OTP</option>
                         <option value="template">Template</option>
                         <option value="image">Image</option>
                         <option value="document">Document</option>
                         <option value="video">Video</option>
                         <option value="audio">Audio</option>
                         <option value="interactive">Interactive</option>
+                        <option value="location">Location</option>
+                        <option value="contacts">Contact</option>
+                    </select>
+                </div>
+                <div class="filter-field filter-search">
+                    <label for="reportSearch">Search</label>
+                    <input id="reportSearch" type="search" placeholder="Recipient, name, message or Meta ID">
+                </div>
+                <div class="filter-field">
+                    <label for="pageSize">Rows per page</label>
+                    <select id="pageSize">
+                        <option value="25">25 rows</option>
+                        <option value="50" selected>50 rows</option>
+                        <option value="100">100 rows</option>
                     </select>
                 </div>
                 <div class="filter-actions">
@@ -94,7 +119,7 @@
 
             <section class="report-summary">
                 <article class="summary-card">
-                    <span>Total messages</span>
+                    <span id="totalRecordsLabel">Financial records</span>
                     <strong id="totalMessages">—</strong>
                 </article>
                 <article class="summary-card">
@@ -110,15 +135,16 @@
                     <strong id="netSpending">—</strong>
                 </article>
                 <article class="summary-card warning-card">
-                    <span>Unrecorded / Verify</span>
+                    <span>Audit notes</span>
                     <strong id="unrecordedCount">—</strong>
+                    <small id="auditHint">Verify / deleted records retained</small>
                 </article>
             </section>
 
             <section class="report-results">
                 <div class="results-heading">
                     <div>
-                        <h2>Message details</h2>
+                        <h2 id="reportDetailsTitle">Sent message &amp; billing details</h2>
                         <p id="resultCount">No report loaded</p>
                     </div>
                     <div class="export-actions">
@@ -147,13 +173,44 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="reportPagination" class="report-pagination" hidden>
+                    <span id="pageRange">0–0 of 0</span>
+                    <div>
+                        <button type="button" id="previousPage" class="report-button secondary">Previous</button>
+                        <span id="pageLabel">Page 1 of 1</span>
+                        <button type="button" id="nextPage" class="report-button secondary">Next</button>
+                    </div>
+                </div>
             </section>
         </section>
     </main>
 </div>
+
+<div id="reportDetailModal" class="report-detail-modal hidden" role="dialog" aria-modal="true" aria-labelledby="reportDetailTitle">
+    <div class="report-detail-card">
+        <div class="report-detail-header">
+            <div>
+                <h2 id="reportDetailTitle">Message details</h2>
+                <p id="reportDetailSubtitle">Complete report record</p>
+            </div>
+            <button type="button" id="closeReportDetail" class="report-detail-close" aria-label="Close">&times;</button>
+        </div>
+        <div id="reportDetailMeta" class="report-detail-meta"></div>
+        <div class="report-detail-message-wrap">
+            <div class="report-detail-message-heading">
+                <strong>Message</strong>
+                <button type="button" id="copyReportMessage" class="report-button secondary">Copy</button>
+            </div>
+            <pre id="reportDetailMessage" class="report-detail-message"></pre>
+        </div>
+        <div class="report-detail-footer">
+            <button type="button" id="closeReportDetailFooter" class="report-button primary">Close</button>
+        </div>
+    </div>
+</div>
 <script src="js/vbonotif-popups.js"></script>
 <script src="js/ui-shell.js"></script>
-<script src="js/reports.js"></script>
+<script src="js/reports.js?v=20261122-ledger1"></script>
 <script src="js/access-guard.js"></script>
 </body>
 </html>

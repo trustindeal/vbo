@@ -9,6 +9,10 @@ body {
     color: #111827;
 }
 
+body.contact-editor-open {
+    overflow: hidden;
+}
+
 .app {
     min-height: 100vh;
 }
@@ -188,6 +192,32 @@ body {
     color: #6b7280;
 }
 
+.contact-page-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.dnd-filter,
+.add-contact-button {
+    height: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background: #fff;
+    color: #334155;
+    padding: 0 11px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.add-contact-button {
+    border-color: #16a34a;
+    background: #16a34a;
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 .search-box input {
     width: 280px;
     height: 40px;
@@ -213,11 +243,62 @@ body {
     overflow: hidden;
 }
 
+.bulk-contact-bar {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 20px;
+    border-bottom: 1px solid #bbf7d0;
+    background: #f0fdf4;
+    color: #166534;
+    font-size: 12px;
+}
+
+.bulk-contact-bar.hidden,
+.contact-editor-field.hidden {
+    display: none;
+}
+
+.bulk-contact-bar .bulk-secondary {
+    margin-left: auto;
+}
+
+.bulk-secondary,
+.bulk-danger {
+    min-height: 32px;
+    padding: 0 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.bulk-danger {
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
 .contacts-table-header,
 .contact-row {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1fr 1.5fr 100px;
+    grid-template-columns: 32px minmax(170px, 1.7fr) minmax(125px, 1.1fr) 90px minmax(135px, 1.15fr) 205px;
     align-items: center;
+}
+
+.contact-select-cell {
+    display: flex;
+    align-items: center;
+}
+
+.contact-select-cell input {
+    width: 16px;
+    height: 16px;
+    accent-color: #16a34a;
+    cursor: pointer;
 }
 
 .contacts-table-header {
@@ -314,24 +395,300 @@ body {
     font-size: 12px;
 }
 
-.contact-action {
-    text-align: right;
+.contact-last small {
+    display: block;
+    margin-top: 3px;
+    color: #94a3b8;
+    font-size: 10px;
 }
 
-.open-chat {
+.contact-action {
+    display: flex;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
+.open-chat,
+.edit-contact,
+.delete-contact {
     border: 1px solid #20c969;
     background: #ffffff;
     color: #159447;
     border-radius: 6px;
-    padding: 7px 11px;
+    padding: 6px 8px;
     cursor: pointer;
     font-size: 12px;
     font-weight: 600;
 }
 
-.open-chat:hover {
+.open-chat:hover,
+.edit-contact:hover {
     background: #20c969;
     color: #ffffff;
+}
+
+.edit-contact {
+    border-color: #d1d5db;
+    color: #334155;
+}
+
+.delete-contact {
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.delete-contact:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+.dnd-toggle {
+    min-width: 68px;
+    padding: 6px 9px;
+    border: 1px solid;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.dnd-toggle.is-allowed {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.dnd-toggle.is-dnd {
+    border-color: #fecaca;
+    background: #fff1f2;
+    color: #be123c;
+}
+
+.contact-editor-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.58);
+}
+
+.contact-editor-modal.hidden {
+    display: none;
+}
+
+.contact-editor-card {
+    width: min(680px, 100%);
+    overflow: hidden;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+
+.contact-editor-header,
+.contact-editor-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 17px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.contact-editor-header h2 {
+    margin: 0;
+    font-size: 19px;
+}
+
+.contact-editor-header p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.contact-editor-close {
+    width: 34px;
+    height: 34px;
+    margin-left: auto;
+    border: 0;
+    border-radius: 7px;
+    background: #f1f5f9;
+    color: #475569;
+    cursor: pointer;
+    font-size: 22px;
+}
+
+.contact-editor-body {
+    padding: 20px;
+}
+
+.contact-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.contact-editor-field {
+    display: grid;
+    gap: 7px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.contact-editor-field-wide {
+    grid-column: 1 / -1;
+}
+
+.contact-editor-field input {
+    width: 100%;
+    height: 42px;
+    padding: 0 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    outline: none;
+    color: #111827;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.contact-editor-field input:focus {
+    border-color: #20c969;
+    box-shadow: 0 0 0 3px rgba(32, 201, 105, 0.12);
+}
+
+.contact-editor-field small {
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.dnd-editor-box {
+    padding: 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.dnd-editor-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.dnd-editor-toggle input {
+    width: 17px;
+    height: 17px;
+    margin-top: 1px;
+    accent-color: #dc2626;
+}
+
+.dnd-editor-toggle strong,
+.dnd-editor-toggle small {
+    display: block;
+}
+
+.dnd-editor-toggle small {
+    margin-top: 4px;
+    color: #64748b;
+    font-weight: 400;
+}
+
+.dnd-editor-box > .contact-editor-field {
+    margin-top: 12px;
+}
+
+.contact-delete-card {
+    width: min(590px, 100%);
+    overflow: hidden;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+}
+
+.contact-delete-body {
+    display: grid;
+    gap: 12px;
+    padding: 18px 20px;
+}
+
+.delete-choice {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    text-align: left;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.delete-choice:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+
+.delete-choice.permanent:hover {
+    border-color: #dc2626;
+    background: #fff1f2;
+}
+
+.delete-choice:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.delete-choice-title {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.delete-choice-title em {
+    margin-left: 6px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 9px;
+    font-style: normal;
+    text-transform: uppercase;
+}
+
+.contact-editor-footer {
+    justify-content: flex-end;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 0;
+}
+
+.contact-editor-secondary,
+.contact-editor-save {
+    min-height: 39px;
+    padding: 0 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.contact-editor-save {
+    border-color: #16a34a;
+    background: #16a34a;
+    color: #fff;
+}
+
+.contact-editor-save:disabled {
+    opacity: 0.6;
+    cursor: wait;
 }
 
 .loading,
@@ -365,7 +722,7 @@ body {
 
     .contacts-table-header,
     .contact-row {
-        grid-template-columns: 1.8fr 1.4fr 1fr 1.3fr 85px;
+        grid-template-columns: 32px 1.7fr 1.1fr 90px 1.15fr 205px;
     }
 }
 
@@ -407,6 +764,15 @@ body {
         flex-direction: column;
     }
 
+    .contact-page-actions {
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1 1 100%;
+    }
+
     .search-box input {
         width: 100%;
     }
@@ -417,6 +783,14 @@ body {
 
     .contacts-table-header,
     .contact-row {
-        min-width: 760px;
+        min-width: 900px;
+    }
+
+    .contact-editor-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-editor-field-wide {
+        grid-column: auto;
     }
 }

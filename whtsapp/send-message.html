@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VBO Connect - Send Message</title>
-    <link rel="stylesheet" href="css/send-message.css">
+    <link rel="stylesheet" href="css/send-message.css?v=20261121-groups9">
     <link rel="stylesheet" href="css/ui-improvements.css">
 </head>
 <body>
@@ -182,9 +182,140 @@
 
 </div>
 
+<div id="groupEditorModal" class="group-editor-modal hidden" role="dialog" aria-modal="true" aria-labelledby="groupEditorTitle">
+    <div class="group-editor-card">
+        <div class="group-editor-header">
+            <div>
+                <h2 id="groupEditorTitle">Create Contact Group</h2>
+                <p>Save contacts with flexible details and use their WhatsApp numbers for messaging.</p>
+            </div>
+            <button type="button" id="closeGroupEditorButton" class="group-editor-close" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="group-editor-body">
+            <div class="group-details-grid">
+                <div class="form-group">
+                    <label for="groupEditorName">Group Name *</label>
+                    <input id="groupEditorName" type="text" maxlength="120" placeholder="e.g. Project A Customers">
+                </div>
+                <div class="form-group">
+                    <label for="groupEditorDescription">Description</label>
+                    <input id="groupEditorDescription" type="text" maxlength="500" placeholder="Optional group purpose or note">
+                </div>
+            </div>
+
+            <section id="existingGroupMembersSection" class="group-editor-section hidden">
+                <div class="group-section-heading">
+                    <div>
+                        <h3>Saved Contacts</h3>
+                        <p id="existingGroupMembersSummary">0 contacts</p>
+                    </div>
+                    <div class="group-section-tools">
+                        <input id="groupMemberSearch" class="group-member-search" type="search" placeholder="Search saved contacts">
+                        <button type="button" id="downloadGroupCsvButton" class="secondary-button">Download Group CSV</button>
+                    </div>
+                </div>
+                <div class="group-member-selection-bar">
+                    <label class="group-member-select-all">
+                        <input id="selectAllGroupMembersCheckbox" type="checkbox">
+                        <span>Select all visible</span>
+                    </label>
+                    <span id="selectedGroupMembersCount" class="group-member-selected-count">0 selected</span>
+                    <button type="button" id="clearGroupMemberSelectionButton" class="secondary-button member-action-button" disabled>Clear</button>
+                    <button type="button" id="removeSelectedGroupMembersButton" class="danger-button member-action-button" disabled>Remove Selected</button>
+                </div>
+                <div id="existingGroupMembers" class="existing-group-members"></div>
+            </section>
+
+            <section class="group-editor-section">
+                <div class="group-section-heading">
+                    <div>
+                        <h3 id="groupImportTitle">Add Contacts</h3>
+                        <p>Upload CSV or paste numbers and contact details.</p>
+                    </div>
+                </div>
+
+                <details id="existingContactsDisclosure" class="existing-contact-picker">
+                    <summary class="existing-contact-picker-header">
+                        <div>
+                            <h4>Add from Existing Contacts</h4>
+                            <p>Click to select contacts already available in this account.</p>
+                        </div>
+                        <span id="selectedExistingContactsCount" class="selection-count">0 selected</span>
+                    </summary>
+                    <div class="existing-contact-picker-body">
+                        <div class="existing-contact-picker-actions">
+                            <input id="existingContactSearch" class="existing-contact-search" type="search" placeholder="Search by name, phone, city or project">
+                            <button type="button" id="selectAllExistingContactsButton" class="secondary-button compact-button">Select All</button>
+                            <button type="button" id="clearExistingContactsButton" class="secondary-button compact-button">Clear All</button>
+                        </div>
+                        <div id="existingContactPickerList" class="existing-contact-picker-list">
+                            <div class="group-empty-state">Expand this section to load account contacts.</div>
+                        </div>
+                    </div>
+                </details>
+
+                <div class="group-import-grid">
+                    <div class="csv-upload-box">
+                        <strong>Upload CSV</strong>
+                        <span>Phone is required. Other columns become saved contact fields.</span>
+                        <div class="csv-upload-actions">
+                            <label class="file-picker-button" for="groupCsvFile">Choose CSV</label>
+                            <button type="button" id="downloadCsvTemplateButton" class="secondary-button">Download CSV Format</button>
+                        </div>
+                        <input id="groupCsvFile" class="visually-hidden" type="file" accept=".csv,text/csv">
+                    </div>
+
+                    <div class="manual-import-box">
+                        <label for="groupManualContacts">Manual copy-paste</label>
+                        <textarea id="groupManualContacts" rows="7" placeholder="919876543210&#10;919876543211, Amit, amit@example.com, Delhi, Project A"></textarea>
+                        <small>Accepted order: Phone, Name, Email, City, Project. A header row may include any extra columns as custom fields.</small>
+                    </div>
+                </div>
+
+                <div class="csv-format-guide">
+                    <strong>CSV columns:</strong>
+                    <span>Phone *</span><span>Name</span><span>Email</span><span>City</span><span>Project Name</span><span>Any custom column</span>
+                </div>
+
+                <div class="group-import-actions">
+                    <button type="button" id="prepareGroupImportButton" class="secondary-button">Preview Contacts</button>
+                    <span id="groupImportFileName" class="group-import-file-name">No CSV selected</span>
+                </div>
+
+                <div id="groupImportPreview" class="group-import-preview hidden">
+                    <div id="groupImportSummary" class="group-import-summary"></div>
+                    <div class="group-preview-table-wrap">
+                        <table class="group-preview-table">
+                            <thead>
+                                <tr>
+                                    <th>Phone</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>City</th>
+                                    <th>Project</th>
+                                    <th>Extra</th>
+                                </tr>
+                            </thead>
+                            <tbody id="groupImportPreviewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="group-editor-footer">
+            <button type="button" id="deleteGroupButton" class="danger-button hidden">Delete Group</button>
+            <div class="group-editor-footer-spacer"></div>
+            <button type="button" id="cancelGroupEditorButton" class="secondary-button">Cancel</button>
+            <button type="button" id="saveGroupButton" class="send-button">Create Group</button>
+        </div>
+    </div>
+</div>
+
 <script src="js/vbonotif-popups.js"></script>
 <script src="js/ui-shell.js"></script>
-<script src="js/send-message.js"></script>
+<script src="js/send-message.js?v=20261121-groups9"></script>
 
 <script src="js/access-guard.js"></script>
 </body>
