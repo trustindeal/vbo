@@ -1,4 +1,5 @@
 const token = localStorage.getItem("vbonotif_token");
+const API_BASE = "https://app.vbo.co.in/api/v1";
 
 if (!token) {
     window.location.href = "index.html";
@@ -6,7 +7,7 @@ if (!token) {
 
 async function loadDashboard() {
     try {
-        const response = await fetch("https://app.vbo.co.in/api/v1/auth/me", {
+        const response = await fetch(API_BASE + "/auth/me", {
             method: "GET",
             headers: {
                 "Authorization": "Bearer " + token
@@ -60,14 +61,40 @@ async function loadDashboard() {
         document.getElementById("templateOtherRate").textContent =
             "₹" + Number(pricing.template_other != null ? pricing.template_other : pricing.template_message || 0).toFixed(2);
 
+        await loadMessagesToday();
+
     } catch (error) {
         console.error("Dashboard load error:", error);
     }
 }
 
+async function loadMessagesToday() {
+    const messagesToday = document.getElementById("messagesToday");
+
+    try {
+        const response = await fetch(API_BASE + "/whatsapp/wallet/usage-summary", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("Unable to load today's message count.");
+        }
+
+        const usage = await response.json();
+        messagesToday.textContent = Number(usage.messages_today || 0).toLocaleString("en-IN");
+    } catch (error) {
+        messagesToday.textContent = "—";
+        console.error("Dashboard usage load error:", error);
+    }
+}
+
 document.getElementById("logoutButton").addEventListener("click", async function () {
     try {
-        await fetch("https://app.vbo.co.in/api/v1/auth/logout?token=" +
+        await fetch(API_BASE + "/auth/logout?token=" +
             encodeURIComponent(token), {
             method: "POST"
         });

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VBO Connect Admin</title>
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/admin.css?v=20261122-meta-diagnostics">
     <link rel="stylesheet" href="css/ui-improvements.css">
 </head>
 <body class="admin-shell">
@@ -614,6 +614,16 @@
 
             </div>
 
+            <label class="meta-auto-subscribe-option">
+                <input id="metaSubscribeWebhook" type="checkbox" checked>
+                <span>
+                    <strong>Verify and subscribe webhook automatically</strong>
+                    <small>Recommended. Existing App subscriptions will not be removed or replaced.</small>
+                </span>
+            </label>
+
+            <div id="metaSaveResult" class="meta-save-result" hidden></div>
+
             <div style="margin-top:18px;padding:14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;">
                 <strong>📘 Meta Setup Guide</strong>
                 <div style="font-size:13px;line-height:1.6;margin-top:8px;">
@@ -622,8 +632,8 @@
                     3. Open the WhatsApp API / API Setup section and note the Phone Number ID.<br>
                     4. Copy the WABA ID and Business ID from Meta Business settings.<br>
                     5. Create/copy the required WhatsApp Cloud API access token.<br>
-                    6. Make sure the required WhatsApp permissions and webhook setup are completed.<br>
-                    7. Enter the values above and click <strong>Save Meta Connection</strong>.
+                    6. Configure the callback URL, verify token and messages field once in the client's Meta App.<br>
+                    7. Click <strong>Save Meta Connection</strong>; VBO Connect will verify and subscribe the WABA automatically.
                 </div>
             </div>
 
@@ -634,6 +644,25 @@
             </div>
 
         </form>
+    </div>
+</div>
+
+<!-- META DIAGNOSTICS MODAL -->
+<div id="metaDiagnosticsModal" class="meta-diagnostics-overlay" style="display:none;">
+    <div class="meta-diagnostics-modal" role="dialog" aria-modal="true" aria-labelledby="metaDiagnosticsTitle">
+        <div class="meta-diagnostics-header">
+            <div>
+                <h2 id="metaDiagnosticsTitle">Meta Diagnostics</h2>
+                <p id="metaDiagnosticsSubtitle">Read-only checks</p>
+            </div>
+            <button type="button" id="closeMetaDiagnostics" class="meta-diagnostics-close" aria-label="Close">&times;</button>
+        </div>
+        <div id="metaDiagnosticsSummary" class="meta-diagnostics-summary">Select Run Diagnostics to check this client.</div>
+        <div id="metaDiagnosticsRows" class="meta-diagnostics-rows"></div>
+        <div class="meta-diagnostics-actions">
+            <button type="button" id="closeMetaDiagnosticsBottom" class="refresh-button">Close</button>
+            <button type="button" id="runMetaDiagnostics" class="refresh-button">Run Diagnostics</button>
+        </div>
     </div>
 </div>
 
@@ -665,7 +694,7 @@
             Create the appropriate WhatsApp API access token with the required permissions.</p>
 
             <p><strong>6. Webhook</strong><br>
-            Configure the common VBO Connect webhook and subscribe the WABA as required.</p>
+            Configure the common VBO Connect callback, verify token and messages field once in the client's Meta App. WABA App subscription is handled automatically when saving.</p>
 
             <p><strong>7. Templates</strong><br>
             Create/approve WhatsApp message templates in Meta whenever template messaging is required.</p>
@@ -726,7 +755,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/vbonotif-popups.js"></script>
 <script src="js/ui-shell.js"></script>
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=20261122-meta-diagnostics"></script>
 <script src="js/admin-analytics.js"></script>
 <script>
 document.getElementById("adminLogoutButton")?.addEventListener("click", function() {
@@ -771,9 +800,6 @@ document.addEventListener("keydown", function(event) {
 </script>
 </body>
 </html>
-
-
-
 
 
 

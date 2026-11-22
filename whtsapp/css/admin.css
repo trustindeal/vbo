@@ -825,3 +825,145 @@ th {
         font-size: 18px;
     }
 }
+
+.meta-auto-subscribe-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 18px;
+    padding: 12px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    background: #f0fdf4;
+    cursor: pointer;
+}
+.meta-auto-subscribe-option input {
+    margin-top: 3px;
+    accent-color: #16a34a;
+}
+.meta-auto-subscribe-option span,
+.meta-auto-subscribe-option small {
+    display: block;
+}
+.meta-auto-subscribe-option small {
+    margin-top: 3px;
+    color: #64748b;
+    font-weight: 400;
+}
+.meta-save-result {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.meta-save-result.is-success {
+    border: 1px solid #86efac;
+    background: #f0fdf4;
+    color: #166534;
+}
+.meta-save-result.is-warning {
+    border: 1px solid #fcd34d;
+    background: #fffbeb;
+    color: #92400e;
+}
+.meta-diagnostics-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 12500;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, .52);
+}
+.meta-diagnostics-modal {
+    width: min(720px, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    padding: 22px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+}
+.meta-diagnostics-header,
+.meta-diagnostics-actions,
+.meta-diagnostic-row {
+    display: flex;
+    align-items: center;
+}
+.meta-diagnostics-header {
+    justify-content: space-between;
+    gap: 16px;
+}
+.meta-diagnostics-header h2 {
+    margin: 0;
+}
+.meta-diagnostics-header p {
+    margin: 4px 0 0;
+    color: #64748b;
+}
+.meta-diagnostics-close {
+    border: 0;
+    background: transparent;
+    font-size: 28px;
+    cursor: pointer;
+}
+.meta-diagnostics-summary {
+    margin: 18px 0 12px;
+    padding: 11px 13px;
+    border-radius: 9px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+}
+.meta-diagnostics-summary.is-success {
+    background: #f0fdf4;
+    color: #166534;
+}
+.meta-diagnostics-summary.is-warning {
+    background: #fffbeb;
+    color: #92400e;
+}
+.meta-diagnostics-rows {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.meta-diagnostic-row {
+    justify-content: space-between;
+    gap: 18px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef2f6;
+    font-size: 13px;
+}
+.meta-diagnostic-row:last-child {
+    border-bottom: 0;
+}
+.meta-diagnostic-label {
+    color: #334155;
+    font-weight: 600;
+}
+.meta-diagnostic-value {
+    max-width: 62%;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+.meta-diagnostic-value.pass { color: #15803d; }
+.meta-diagnostic-value.fail { color: #b91c1c; }
+.meta-diagnostic-value.unknown { color: #b45309; }
+.meta-diagnostics-actions {
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+@media (max-width: 620px) {
+    .meta-diagnostic-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .meta-diagnostic-value {
+        max-width: 100%;
+        text-align: left;
+    }
+}

@@ -923,7 +923,7 @@ document.addEventListener("input", function (event) {
                                         : '<span style="display:inline-block;padding:4px 10px;border-radius:12px;background:#f3f4f6;color:#6b7280;font-size:12px;font-weight:600;">Not Linked</span>'
                             }
                         </td>
-                        <td><button type="button" class="refresh-button link-meta-button" data-client-name="${escapeClientHtml(client.client_name || "")}">🔗 Link Meta</button> <button type="button" class="refresh-button edit-client-button" data-client-name="${escapeClientHtml(client.client_name || "")}">Edit</button> <button type="button" class="refresh-button delete-client-button" data-client-name="${escapeClientHtml(client.client_name || "")}">Delete</button></td>
+                        <td><button type="button" class="refresh-button link-meta-button" data-client-name="${escapeClientHtml(client.client_name || "")}">🔗 Link Meta</button> <button type="button" class="refresh-button meta-diagnostics-button" data-client-name="${escapeClientHtml(client.client_name || "")}">Diagnostics</button> <button type="button" class="refresh-button edit-client-button" data-client-name="${escapeClientHtml(client.client_name || "")}">Edit</button> <button type="button" class="refresh-button delete-client-button" data-client-name="${escapeClientHtml(client.client_name || "")}">Delete</button></td>
                     </tr>
                 `;
             }).join("");
@@ -1391,6 +1391,30 @@ document.addEventListener("click", function (event) {
         return localStorage.getItem("vbonotif_admin_token");
     }
 
+    function escapeMetaHtml(value) {
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function metaErrorMessage(error, fallback) {
+        if (error && typeof error === "object" && error.message) return error.message;
+        if (typeof error === "string" && error) return error;
+        return fallback || "Could not verify";
+    }
+
+    function formatMetaDate(value) {
+        if (!value) return "None recorded";
+        const numeric = Number(value);
+        const date = Number.isFinite(numeric) && numeric > 1000000000
+            ? new Date(numeric * 1000)
+            : new Date(String(value).replace(" ", "T"));
+        return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+
     function closeMetaModal() {
         const modal = document.getElementById("linkMetaModal");
         if (modal) modal.style.display = "none";
@@ -1413,6 +1437,11 @@ document.addEventListener("click", function (event) {
         document.getElementById("metaAccessToken").value = "";
         document.getElementById("metaTokenExpiresAt").value = "";
         document.getElementById("metaStatus").value = "active";
+        document.getElementById("metaSubscribeWebhook").checked = true;
+        const saveResult = document.getElementById("metaSaveResult");
+        saveResult.hidden = true;
+        saveResult.textContent = "";
+        saveResult.className = "meta-save-result";
 
         modal.dataset.clientName = clientName;
         modal.style.display = "flex";
@@ -1498,7 +1527,8 @@ document.addEventListener("click", function (event) {
             business_id: document.getElementById("metaBusinessId").value.trim(),
             access_token: document.getElementById("metaAccessToken").value,
             token_expires_at: document.getElementById("metaTokenExpiresAt").value,
-            status: document.getElementById("metaStatus").value
+            status: document.getElementById("metaStatus").value,
+            subscribe_webhook: document.getElementById("metaSubscribeWebhook").checked
         };
 
         if (!payload.phone_number_id || !payload.waba_id || !payload.business_id) {
@@ -1539,8 +1569,30 @@ document.addEventListener("click", function (event) {
                 throw new Error(data.detail || "Meta connection save failed");
             }
 
-            alert("Meta connection saved successfully.");
-            closeMetaModal();
+            const subscription = data.webhook_subscription || {};
+            const result = document.getElementById("metaSaveResult");
+            if (data.setup_status === "ready") {
+                const actionText = subscription.action === "subscribed_now"
+                    ? "Webhook subscribed and confirmed."
+                    : "Webhook subscription already confirmed.";
+                result.className = "meta-save-result is-success";
+                result.textContent = "Connection verified. " + actionText;
+                result.hidden = false;
+                alert("Meta connection is ready. " + actionText);
+                closeMetaModal();
+            } else if (payload.subscribe_webhook && payload.status === "active") {
+                const reason = metaErrorMessage(subscription.error, "Webhook subscription could not be confirmed");
+                result.className = "meta-save-result is-warning";
+                result.textContent = "Credentials saved, but webhook setup is incomplete: " + reason;
+                result.hidden = false;
+                alert("Credentials were saved, but webhook subscription is incomplete.\n\n" + reason + "\n\nCorrect the issue and Save again to retry safely.");
+            } else {
+                result.className = "meta-save-result is-success";
+                result.textContent = "Meta credentials saved. Automatic webhook subscription was not requested.";
+                result.hidden = false;
+                alert("Meta credentials saved successfully.");
+                closeMetaModal();
+            }
 
         } catch (error) {
             alert(error.message);
@@ -1552,9 +1604,99 @@ document.addEventListener("click", function (event) {
         }
     }
 
+    function closeMetaDiagnostics() {
+        const modal = document.getElementById("metaDiagnosticsModal");
+        if (modal) modal.style.display = "none";
+    }
+
+    function diagnosticRow(label, value, status) {
+        const safeStatus = ["pass", "fail", "unknown"].includes(status) ? status : "unknown";
+        return `<div class="meta-diagnostic-row"><span class="meta-diagnostic-label">${escapeMetaHtml(label)}</span><span class="meta-diagnostic-value ${safeStatus}">${escapeMetaHtml(value)}</span></div>`;
+    }
+
+    function renderMetaDiagnostics(data) {
+        const checks = data.checks || {};
+        const token = checks.token || {};
+        const permissions = checks.permissions || {};
+        const app = checks.app || {};
+        const relation = checks.phone_waba || {};
+        const subscription = checks.subscription || {};
+        const manual = data.manual_checks || {};
+        const activity = data.activity || {};
+        const rows = [
+            diagnosticRow("Meta access token", token.label || metaErrorMessage(token.error), token.status),
+            diagnosticRow("Token permissions", permissions.label || "Could not verify", permissions.status),
+            diagnosticRow("Meta App identity", app.app_id ? ((app.name ? app.name + " - " : "") + "App ID " + app.app_id) : "Unknown", app.status),
+            diagnosticRow("Phone Number ID / WABA", relation.status === "pass" ? relation.label : metaErrorMessage(relation.error, relation.label), relation.status),
+            diagnosticRow("WABA App subscription", subscription.status === "pass" ? subscription.label : metaErrorMessage(subscription.error, subscription.label), subscription.status),
+            diagnosticRow("Callback configuration", manual.callback || "Unknown - Manual check required", "unknown"),
+            diagnosticRow("messages webhook field", manual.messages_field || "Unknown - Manual check required", "unknown"),
+            diagnosticRow("App publication", manual.app_publication || "Unknown - Manual check required", "unknown"),
+            diagnosticRow("Token expiry", formatMetaDate(data.token_expiry_recorded || checks.token_expires_at), data.token_expiry_recorded || checks.token_expires_at ? "pass" : "unknown"),
+            diagnosticRow("Last inbound message", formatMetaDate(activity.last_inbound), activity.last_inbound ? "pass" : "unknown"),
+            diagnosticRow("Last outbound message", formatMetaDate(activity.last_outbound), activity.last_outbound ? "pass" : "unknown"),
+            diagnosticRow("Last API error", data.last_api_error || data.last_api_error_note || "None recorded", data.last_api_error ? "fail" : "unknown")
+        ];
+        document.getElementById("metaDiagnosticsRows").innerHTML = rows.join("");
+
+        const critical = [token.status, permissions.status, relation.status, subscription.status];
+        const failed = critical.filter(function (status) { return status === "fail"; }).length;
+        const unknown = critical.filter(function (status) { return status !== "pass" && status !== "fail"; }).length;
+        const summary = document.getElementById("metaDiagnosticsSummary");
+        if (!failed && !unknown) {
+            summary.textContent = "Automated checks passed. Complete the three manual Meta App checks shown below.";
+            summary.className = "meta-diagnostics-summary is-success";
+        } else {
+            summary.textContent = failed + " automated check(s) failed and " + unknown + " could not be verified. Review the marked rows.";
+            summary.className = "meta-diagnostics-summary is-warning";
+        }
+    }
+
+    async function runMetaDiagnostics() {
+        const modal = document.getElementById("metaDiagnosticsModal");
+        const clientName = modal ? modal.dataset.clientName : "";
+        const button = document.getElementById("runMetaDiagnostics");
+        if (!clientName) return;
+        button.disabled = true;
+        button.textContent = "Checking...";
+        document.getElementById("metaDiagnosticsSummary").textContent = "Running read-only Meta and local activity checks...";
+        document.getElementById("metaDiagnosticsRows").innerHTML = "";
+        try {
+            const response = await fetch(
+                metaApiBase + "/whatsapp/admin/clients/" + encodeURIComponent(clientName) + "/meta/diagnostics",
+                { method: "GET", headers: { "Authorization": "Bearer " + getMetaToken() } }
+            );
+            const data = await response.json();
+            if (response.status === 401) {
+                localStorage.removeItem("vbonotif_admin_token");
+                localStorage.removeItem("vbonotif_admin_user");
+                window.location.href = "admin-login.html";
+                return;
+            }
+            if (!response.ok || !data.success) throw new Error(data.detail || "Diagnostics failed");
+            renderMetaDiagnostics(data);
+        } catch (error) {
+            document.getElementById("metaDiagnosticsSummary").textContent = error.message;
+            document.getElementById("metaDiagnosticsRows").innerHTML = diagnosticRow("Diagnostics", error.message, "fail");
+        } finally {
+            button.disabled = false;
+            button.textContent = "Run Diagnostics";
+        }
+    }
+
+    function openMetaDiagnostics(clientName) {
+        const modal = document.getElementById("metaDiagnosticsModal");
+        if (!modal) return;
+        modal.dataset.clientName = clientName;
+        document.getElementById("metaDiagnosticsSubtitle").textContent = clientName + " - read-only checks";
+        modal.style.display = "flex";
+        runMetaDiagnostics();
+    }
+
     function setupMetaLinking() {
         const linkModal = document.getElementById("linkMetaModal");
         const guideModal = document.getElementById("metaGuideModal");
+        const diagnosticsModal = document.getElementById("metaDiagnosticsModal");
 
         const closeLink = document.getElementById("closeLinkMetaModal");
         const cancelLink = document.getElementById("cancelLinkMeta");
@@ -1563,8 +1705,17 @@ document.addEventListener("click", function (event) {
         const guideButton = document.getElementById("metaGuideButton");
         const closeGuide = document.getElementById("closeMetaGuideModal");
         const closeGuideBottom = document.getElementById("closeMetaGuideBottom");
+        const closeDiagnostics = document.getElementById("closeMetaDiagnostics");
+        const closeDiagnosticsBottom = document.getElementById("closeMetaDiagnosticsBottom");
+        const runDiagnostics = document.getElementById("runMetaDiagnostics");
 
         document.addEventListener("click", function (event) {
+            const diagnosticsButton = event.target.closest(".meta-diagnostics-button");
+            if (diagnosticsButton) {
+                const diagnosticsClient = diagnosticsButton.dataset.clientName;
+                if (diagnosticsClient) openMetaDiagnostics(diagnosticsClient);
+                return;
+            }
             const button = event.target.closest(".link-meta-button");
             if (!button) return;
 
@@ -1593,10 +1744,18 @@ document.addEventListener("click", function (event) {
 
         if (closeGuide) closeGuide.addEventListener("click", closeMetaGuide);
         if (closeGuideBottom) closeGuideBottom.addEventListener("click", closeMetaGuide);
+        if (closeDiagnostics) closeDiagnostics.addEventListener("click", closeMetaDiagnostics);
+        if (closeDiagnosticsBottom) closeDiagnosticsBottom.addEventListener("click", closeMetaDiagnostics);
+        if (runDiagnostics) runDiagnostics.addEventListener("click", runMetaDiagnostics);
 
         if (guideModal) {
             guideModal.addEventListener("click", function (event) {
                 if (event.target === guideModal) closeMetaGuide();
+            });
+        }
+        if (diagnosticsModal) {
+            diagnosticsModal.addEventListener("click", function (event) {
+                if (event.target === diagnosticsModal) closeMetaDiagnostics();
             });
         }
     }
