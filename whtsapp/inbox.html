@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VBO Connect - Inbox</title>
-    <link rel="stylesheet" href="css/inbox.css">
+    <link rel="stylesheet" href="css/inbox.css?v=20261124-contact-delete1">
     <link rel="stylesheet" href="css/ui-improvements.css">
     <meta name="theme-color" content="#25D366">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -281,6 +281,31 @@
     <button type="button" id="inboxToastClose" class="inbox-toast-close" aria-label="Dismiss notification">X</button>
 </div>
 
+<div id="inboxContactDeleteModal" class="inbox-contact-delete" hidden role="dialog" aria-modal="true" aria-labelledby="inboxContactDeleteTitle">
+    <div class="inbox-contact-delete-card">
+        <div class="inbox-contact-delete-header">
+            <div>
+                <h2 id="inboxContactDeleteTitle">Delete contact</h2>
+                <p id="inboxContactDeleteSummary">Choose how this contact should be deleted.</p>
+            </div>
+            <button type="button" id="closeInboxContactDelete" class="inbox-contact-delete-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="inbox-contact-delete-body">
+            <button type="button" id="safeDeleteInboxContact" class="inbox-delete-choice recommended">
+                <span class="inbox-delete-choice-title">Safe Delete <em>Recommended</em></span>
+                <span>Deletes the contact only when it has no message history. Existing conversations are protected and skipped.</span>
+            </button>
+            <button type="button" id="permanentDeleteInboxContact" class="inbox-delete-choice permanent">
+                <span class="inbox-delete-choice-title">Delete with History</span>
+                <span>Permanently deletes the contact, group membership and complete message history. This cannot be undone.</span>
+            </button>
+        </div>
+        <div class="inbox-contact-delete-footer">
+            <button type="button" id="cancelInboxContactDelete" class="inbox-contact-delete-cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <div id="inboxCamera" class="inbox-camera" hidden>
     <div class="inbox-camera-panel" role="dialog" aria-modal="true" aria-label="Camera">
         <div class="inbox-camera-header">Camera</div>
@@ -292,7 +317,7 @@
         </div>
     </div>
 </div>
-<script src="js/inbox.js?v=20261121-preview1"></script>
+<script src="js/inbox.js?v=20261124-contact-delete1"></script>
 <script src="js/push-notifications.js"></script>
 <script>window.addEventListener("load", function(){ if (window.VBOPush) window.VBOPush.registerServiceWorker(); });</script>
 <script src="js/access-guard.js"></script>

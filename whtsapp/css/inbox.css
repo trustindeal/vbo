@@ -2032,6 +2032,144 @@ body.inbox-page .contact-menu-item-danger {
 body.inbox-page .contact-menu-item-danger:hover {
     background: #fdecea;
 }
+body.inbox-page .contact-menu-item-delete {
+    margin-top: 4px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Contact deletion choice */
+body.inbox-page .inbox-contact-delete {
+    position: fixed;
+    inset: 0;
+    z-index: 6000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(2px);
+}
+body.inbox-page .inbox-contact-delete[hidden] {
+    display: none;
+}
+body.inbox-page .inbox-contact-delete-card {
+    width: min(590px, 100%);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.3);
+}
+body.inbox-page .inbox-contact-delete-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+body.inbox-page .inbox-contact-delete-header h2 {
+    margin: 0;
+    color: #172033;
+    font-size: 19px;
+}
+body.inbox-page .inbox-contact-delete-header p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.45;
+}
+body.inbox-page .inbox-contact-delete-close {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+}
+body.inbox-page .inbox-contact-delete-close:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+body.inbox-page .inbox-contact-delete-body {
+    display: grid;
+    gap: 12px;
+    padding: 18px 20px;
+}
+body.inbox-page .inbox-delete-choice {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    text-align: left;
+    font-size: 12px;
+    line-height: 1.45;
+}
+body.inbox-page .inbox-delete-choice:hover {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+body.inbox-page .inbox-delete-choice.permanent:hover {
+    border-color: #dc2626;
+    background: #fff1f2;
+}
+body.inbox-page .inbox-delete-choice:disabled,
+body.inbox-page .inbox-contact-delete-close:disabled,
+body.inbox-page .inbox-contact-delete-cancel:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+body.inbox-page .inbox-delete-choice-title {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 800;
+}
+body.inbox-page .inbox-delete-choice-title em {
+    margin-left: 6px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 9px;
+    font-style: normal;
+    text-transform: uppercase;
+}
+body.inbox-page .inbox-contact-delete-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 13px 20px;
+    border-top: 1px solid #e5e7eb;
+}
+body.inbox-page .inbox-contact-delete-cancel {
+    min-height: 39px;
+    padding: 0 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 700;
+}
+body.inbox-page .inbox-contact-delete-cancel:hover {
+    background: #f8fafc;
+}
+@media (max-width: 520px) {
+    body.inbox-page .inbox-contact-delete {
+        align-items: end;
+        padding: 10px;
+    }
+    body.inbox-page .inbox-contact-delete-card {
+        border-radius: 12px;
+    }
+}
 
 /* Push notifications toggle */
 body.inbox-page .push-toggle-wrap {

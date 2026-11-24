@@ -15,6 +15,7 @@ let chatRequestVersion = 0;
 let messageLoadingTimer = null;
 let showingArchived = false;
 let showingBlocked = false;
+let pendingInboxContactDelete = null;
 
 const archiveIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" focusable="false"><path d="m480-240 160-160-56-56-64 64v-168h-80v168l-64-64-56 56 160 160ZM200-640v440h560v-440H200Zm0 520q-33 0-56.5-23.5T120-200v-499q0-14 4.5-27t13.5-24l50-61q11-14 27.5-21.5T250-840h460q18 0 34.5 7.5T772-811l50 61q9 11 13.5 24t4.5 27v499q0 33-23.5 56.5T760-120H200Zm16-600h528l-34-40H250l-34 40Zm264 300Z"/></svg>';
 const blockedIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" focusable="false"><path d="m840-234-80-80v-446q0-17 11.5-28.5T800-800q17 0 28.5 11.5T840-760v526ZM360-714l-80-80v-6q0-17 11.5-28.5T320-840q17 0 28.5 11.5T360-800v86Zm160 160-80-80v-246q0-17 11.5-28.5T480-920q17 0 28.5 11.5T520-880v326Zm160 81h-80v-367q0-17 11.5-28.5T640-880q17 0 28.5 11.5T680-840v367Zm37 343L360-487v224L212-367l157 229q5 8 14 13t19 5h278q10 0 19.5-2.5T717-130ZM402-40q-30 0-56-13.5T303-92L48-465l24-23q19-19 45-22t47 12l116 81v-150L27-820l57-57L876-85l-57 57-44-44q-20 15-44 23.5T680-40H402Zm137-268Zm61-165Z"/></svg>';
@@ -845,6 +846,14 @@ async function confirmInboxAction(message, options) {
     return window.confirm(message);
 }
 
+function showInboxAlert(message, options) {
+    if (window.VBOUI && typeof window.VBOUI.alert === "function") {
+        return window.VBOUI.alert(message, options || {});
+    }
+    window.alert(message);
+    return Promise.resolve(true);
+}
+
 async function apiDeleteMessages(waId, messageIds) {
     const response = await fetch("https://app.vbo.co.in/api/v1/whatsapp/inbox/messages/delete", {
         method: "POST",
@@ -908,6 +917,17 @@ async function apiUnblockContact(waId) {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.success) throw new Error(result.detail || "Unblock failed");
+    return result;
+}
+
+async function apiDeleteInboxContact(contactId, deleteHistory) {
+    const response = await fetch("https://app.vbo.co.in/api/v1/whatsapp/inbox/contacts/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ contact_ids: [Number(contactId)], delete_history: Boolean(deleteHistory) })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) throw new Error(result.detail || "Contact deletion failed");
     return result;
 }
 
@@ -1044,6 +1064,110 @@ async function unblockContactConversation(waId) {
     }
 }
 
+function getInboxContactByWaId(waId) {
+    return (contacts || []).find(function (contact) {
+        return String(contact.wa_id || contact.phone_number || "") === String(waId || "");
+    }) || null;
+}
+
+function openInboxContactDelete(waId) {
+    if (!waId) return;
+    if (localStorage.getItem("vbonotif_role") === "partner") {
+        showInboxAlert("Only the account owner can delete contacts.", {
+            title: "Owner access required",
+            type: "warning"
+        });
+        return;
+    }
+
+    const contact = getInboxContactByWaId(waId);
+    if (!contact || !contact.id) {
+        showInboxAlert("This contact could not be found. Refresh the inbox and try again.", {
+            title: "Contact unavailable",
+            type: "warning"
+        });
+        return;
+    }
+
+    pendingInboxContactDelete = {
+        id: Number(contact.id),
+        waId: String(contact.wa_id || contact.phone_number || waId),
+        name: String(contact.name || contact.profile_name || contact.phone_number || contact.wa_id || "Contact"),
+        messageCount: Number(contact.message_count || 0)
+    };
+
+    const summary = document.getElementById("inboxContactDeleteSummary");
+    if (summary) {
+        const count = pendingInboxContactDelete.messageCount;
+        summary.textContent = pendingInboxContactDelete.name + " has " + count + " message" + (count === 1 ? "" : "s") + ". Choose how it should be deleted.";
+    }
+    const modal = document.getElementById("inboxContactDeleteModal");
+    if (modal) modal.hidden = false;
+}
+
+function closeInboxContactDelete() {
+    const modal = document.getElementById("inboxContactDeleteModal");
+    if (modal) modal.hidden = true;
+    pendingInboxContactDelete = null;
+}
+
+async function executeInboxContactDelete(deleteHistory) {
+    const pending = pendingInboxContactDelete;
+    if (!pending) return;
+
+    const modal = document.getElementById("inboxContactDeleteModal");
+    const buttons = modal ? modal.querySelectorAll("button") : [];
+    buttons.forEach(function (button) { button.disabled = true; });
+
+    try {
+        const result = await apiDeleteInboxContact(pending.id, deleteHistory);
+        closeInboxContactDelete();
+
+        if (Number(result.deleted || 0) > 0) {
+            const currentUrl = new URL(window.location.href);
+            if (String(currentUrl.searchParams.get("wa_id") || "") === String(pending.waId)) {
+                currentUrl.searchParams.delete("wa_id");
+                window.history.replaceState({}, "", currentUrl.pathname + currentUrl.search + currentUrl.hash);
+            }
+            if (String(selectedWaId || "") === String(pending.waId)) {
+                selectedWaId = null;
+                loadedMessages = [];
+                setBulkSelectMode(false);
+                document.getElementById("chatView")?.classList.add("hidden");
+                document.getElementById("emptyChat")?.classList.remove("hidden");
+                document.querySelector(".inbox")?.classList.remove("mobile-chat-open");
+            }
+            await loadContacts();
+            let message = "Contact deleted.";
+            if (deleteHistory && Number(result.message_history_deleted || 0) > 0) {
+                message += " " + Number(result.message_history_deleted) + " message" + (Number(result.message_history_deleted) === 1 ? " was" : "s were") + " permanently deleted.";
+            }
+            await showInboxAlert(message, { title: "Contact deleted", type: "success" });
+            return;
+        }
+
+        await loadContacts();
+        if (Number(result.protected || 0) > 0) {
+            await showInboxAlert(
+                "Safe Delete did not remove this contact because it has message history. Archive the conversation, or choose Delete with History for permanent removal.",
+                { title: "Contact protected", type: "warning" }
+            );
+        } else {
+            await showInboxAlert("The contact was not deleted. It may already have been removed.", {
+                title: "Nothing deleted",
+                type: "warning"
+            });
+        }
+    } catch (error) {
+        await showInboxAlert(error.message || "Unable to delete contact.", {
+            title: "Delete failed",
+            type: "danger"
+        });
+    } finally {
+        buttons.forEach(function (button) { button.disabled = false; });
+    }
+}
+
 let messageMenuEl = null;
 
 function openMessageMenu(anchorEl, messageId) {
@@ -1120,13 +1244,18 @@ function openContactMenu(anchorEl, waId) {
     closeContactMenu();
     const menu = document.createElement("div");
     menu.className = "contact-menu-dropdown";
-    menu.innerHTML = showingBlocked
-        ? '<button type="button" class="contact-menu-item" data-contact-menu-action="unblock" data-contact-menu-for="' + waId + '">Unblock conversation</button>'
+    const safeWaId = escapeHtml(waId);
+    let menuHtml = showingBlocked
+        ? '<button type="button" class="contact-menu-item" data-contact-menu-action="unblock" data-contact-menu-for="' + safeWaId + '">Unblock conversation</button>'
         : showingArchived
-        ? '<button type="button" class="contact-menu-item" data-contact-menu-action="restore" data-contact-menu-for="' + waId + '">Restore conversation</button>'
-        : '<button type="button" class="contact-menu-item" data-contact-menu-action="select" data-contact-menu-for="' + waId + '">Select messages</button>' +
-          '<button type="button" class="contact-menu-item contact-menu-item-danger" data-contact-menu-action="hide" data-contact-menu-for="' + waId + '">Archive conversation</button>' +
-          '<button type="button" class="contact-menu-item contact-menu-item-danger" data-contact-menu-action="block" data-contact-menu-for="' + waId + '">Block conversation</button>';
+        ? '<button type="button" class="contact-menu-item" data-contact-menu-action="restore" data-contact-menu-for="' + safeWaId + '">Restore conversation</button>'
+        : '<button type="button" class="contact-menu-item" data-contact-menu-action="select" data-contact-menu-for="' + safeWaId + '">Select messages</button>' +
+          '<button type="button" class="contact-menu-item contact-menu-item-danger" data-contact-menu-action="hide" data-contact-menu-for="' + safeWaId + '">Archive conversation</button>' +
+          '<button type="button" class="contact-menu-item contact-menu-item-danger" data-contact-menu-action="block" data-contact-menu-for="' + safeWaId + '">Block conversation</button>';
+    if (localStorage.getItem("vbonotif_role") !== "partner") {
+        menuHtml += '<button type="button" class="contact-menu-item contact-menu-item-danger contact-menu-item-delete" data-contact-menu-action="delete-contact" data-contact-menu-for="' + safeWaId + '">Delete contact...</button>';
+    }
+    menu.innerHTML = menuHtml;
     menu.style.visibility = "hidden";
     document.body.appendChild(menu);
     const anchorRect = anchorEl.getBoundingClientRect();
@@ -1966,6 +2095,8 @@ document.addEventListener("click", function (event) {
             blockContactConversation(waId);
         } else if (action === "unblock") {
             unblockContactConversation(waId);
+        } else if (action === "delete-contact") {
+            openInboxContactDelete(waId);
         }
         return;
     }
@@ -2052,6 +2183,23 @@ document.getElementById("chatMenuBlockOption").addEventListener("click", functio
     if (!selectedWaId) return;
     if (showingBlocked) unblockContactConversation(selectedWaId);
     else blockContactConversation(selectedWaId);
+});
+
+document.getElementById("safeDeleteInboxContact")?.addEventListener("click", function () {
+    executeInboxContactDelete(false);
+});
+document.getElementById("permanentDeleteInboxContact")?.addEventListener("click", function () {
+    executeInboxContactDelete(true);
+});
+document.getElementById("closeInboxContactDelete")?.addEventListener("click", closeInboxContactDelete);
+document.getElementById("cancelInboxContactDelete")?.addEventListener("click", closeInboxContactDelete);
+document.getElementById("inboxContactDeleteModal")?.addEventListener("click", function (event) {
+    if (event.target === event.currentTarget) closeInboxContactDelete();
+});
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !document.getElementById("inboxContactDeleteModal")?.hidden) {
+        closeInboxContactDelete();
+    }
 });
 document.getElementById("inboxArchiveButton").addEventListener("click", function () {
     showingArchived = !showingArchived;
