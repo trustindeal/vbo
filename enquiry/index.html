@@ -33,15 +33,25 @@
     .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.primary{min-height:43px;padding:10px 18px;background:var(--blue);border:0;border-radius:9px;color:white;font-weight:750;cursor:pointer}
     .primary:hover{background:#1b50ad}.primary:disabled{opacity:.7}.message{font-size:12px;color:var(--muted);flex:1;min-width:190px}.message.ok{color:#12643b}.message.error{color:var(--red)}
     .smallprint{font-size:11px;line-height:1.5;color:var(--muted);margin:11px 0 0}.smallprint a{color:#1959b3}
+    .success-view{text-align:center;padding:clamp(18px,5vw,42px) clamp(8px,4vw,34px)}
+    .success-mark{width:68px;height:68px;margin:0 auto 17px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#e8f8f0,#d7f2e5);border:1px solid #b9e4ce;color:#127246;box-shadow:0 13px 30px #14744b20}
+    .success-mark svg{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+    .success-kicker{margin:0 0 7px;color:#1f63c7;font-size:11px;font-weight:800;letter-spacing:1.25px;text-transform:uppercase}
+    .success-view h2{max-width:560px;margin:0 auto 9px;color:var(--navy);font-size:clamp(24px,4vw,32px);line-height:1.18;letter-spacing:-.45px}
+    .success-lead{max-width:565px;margin:0 auto;color:#425a73;font-size:15px;line-height:1.65}
+    .success-assurance{max-width:565px;margin:20px auto 0;padding:14px 16px;border:1px solid #d4e3f2;border-radius:11px;background:#f7fbff;color:#294762;font-size:13px;line-height:1.55}
+    .success-assurance strong{display:block;margin-bottom:3px;color:#163f70;font-size:14px}
+    .website-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:45px;margin-top:21px;padding:10px 20px;border-radius:9px;background:var(--blue);color:#fff;text-decoration:none;font-weight:750;box-shadow:0 9px 20px #2264d72b}
+    .website-link:hover{background:#1b50ad}.website-link:focus-visible{outline:3px solid #9abefa;outline-offset:3px}
     footer{text-align:center;font-size:11px;color:#68778a;padding:0 10px 14px}.trap{position:absolute;left:-10000px;opacity:0;height:0;pointer-events:none}
-    @media(max-width:575px){.grid{grid-template-columns:1fr;gap:9px}.topin{padding:9px 13px}main{margin-top:12px}.panel{padding:14px}.cityrow .softbtn{padding:6px 9px;font-size:12px}.country{flex-basis:112px}.primary{width:100%}.controls{gap:6px}.message{min-width:0}.radios{gap:20px}h1{font-size:23px}}
+    @media(max-width:575px){.grid{grid-template-columns:1fr;gap:9px}.topin{padding:9px 13px}main{margin-top:12px}.panel{padding:14px}.cityrow .softbtn{padding:6px 9px;font-size:12px}.country{flex-basis:112px}.primary{width:100%}.controls{gap:6px}.message{min-width:0}.radios{gap:20px}h1{font-size:23px}.success-view{padding:22px 3px 19px}.success-mark{width:60px;height:60px}.website-link{width:100%}}
   </style>
 </head>
 <body>
 <header class="top"><div class="topin"><a href="https://vbo.co.in" class="brand" aria-label="VBO website">VBO<span>.</span></a><small>Trustin Deal Enterprises</small></div></header>
 <main>
-  <h1>Tell us what your business needs</h1>
-  <p class="intro">One quick enquiry for VBO Connect, ISP solutions, Task Manager and other VBO services.</p>
+  <div id="page-intro"><h1>Tell us what your business needs</h1>
+  <p class="intro">One quick enquiry for VBO Connect, ISP solutions, Task Manager and other VBO services.</p></div>
   <section class="panel" aria-label="VBO Service Enquiry">
     <form id="enquiry-form" autocomplete="on">
       <div class="grid">
@@ -75,6 +85,14 @@
       <div class="controls"><button type="submit" id="send" class="primary">Submit Enquiry</button><span id="status" class="message" role="status" aria-live="polite"></span></div>
       <p class="smallprint">No service is activated by submitting. Scope, setup requirements, platform fees and applicable WhatsApp messaging charges will be explained before activation. Location detection is optional; if used, the city lookup provider receives your location, and VBO stores the coordinates with your enquiry. See our <a href="https://vbo.co.in/privacy-policy/index.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
     </form>
+    <div id="success-view" class="success-view" hidden>
+      <div class="success-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div>
+      <p class="success-kicker">Enquiry received</p>
+      <h2 id="success-title" tabindex="-1">Thank you — your next step is now in motion.</h2>
+      <p class="success-lead">The right solution begins with understanding the real need. Our team will review your enquiry carefully and contact you at your preferred time using your chosen contact method.</p>
+      <div class="success-assurance"><strong>A thoughtful review, followed by clear next steps.</strong>We’ll use the details you shared to keep the conversation relevant, focused and useful for your business.</div>
+      <a class="website-link" href="https://vbo.co.in/">Visit VBO website <span aria-hidden="true">→</span></a>
+    </div>
   </section>
 </main>
 <footer>VBO · Trustin Deal Enterprises</footer>
@@ -84,6 +102,7 @@
   'use strict';
   const el = (id) => document.getElementById(id);
   const form = el('enquiry-form'), send = el('send'), status = el('status');
+  const pageIntro = el('page-intro'), successView = el('success-view'), successTitle = el('success-title');
   const date = el('preferred_date'), method = el('contact_method');
   const phoneArea = el('phone-area'), emailArea = el('email-area');
   const phone = el('phone_local'), email = el('contact_email');
@@ -178,15 +197,18 @@
         const error=typeof info==='string'?info:(Array.isArray(info)?info.map(x=>x.msg).join('; '):'Please check your details and retry.');
         throw Error(error);
       }
-      status.textContent=data.message||'Your enquiry has been received.';status.className='message ok';
-      form.reset();date.value=isoDate(new Date());latitude=null;longitude=null;cityStatus.textContent='Location is optional. Detect uses your device location and a city lookup service.';
-      selected=countries.find(x=>x.iso==='IN');el('country-selected').textContent='IN +91';updateContact();
-    }catch(err){status.textContent=err.message||'Please retry.';status.className='message error';}
+      form.hidden=true;pageIntro.hidden=true;successView.hidden=false;successTitle.focus();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(err){
+      status.textContent=err instanceof TypeError
+        ? 'We could not send your enquiry right now. Please check your connection and try again.'
+        : (err.message||'Please check your details and try again.');
+      status.className='message error';
+    }
     finally{send.disabled=false;}
   });
   phone.addEventListener('input',()=>phone.setCustomValidity(''));
 })();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"d4a00f99bdda4858bb707391c21dc077","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
